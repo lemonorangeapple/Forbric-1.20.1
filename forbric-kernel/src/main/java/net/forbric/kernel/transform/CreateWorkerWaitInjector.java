@@ -20,7 +20,7 @@ public final class CreateWorkerWaitInjector implements ClassTransformer {
 		for(var instruction:method.instructions)if(instruction instanceof MethodInsnNode call&&call.getOpcode()==Opcodes.INVOKEVIRTUAL
 				&&call.owner.equals("com/zurrtum/create/client/flywheel/impl/task/ThreadGroupNotifier")&&call.name.equals("awaitNotification")&&call.desc.equals("()V"))calls.add(call);
 		if(calls.size()!=1)return bytes;
-		MethodInsnNode call=calls.getFirst();InsnList receiver=new InsnList();receiver.add(new VarInsnNode(Opcodes.ALOAD,0));
+		MethodInsnNode call=calls.get(0);InsnList receiver=new InsnList();receiver.add(new VarInsnNode(Opcodes.ALOAD,0));
 		receiver.add(new FieldInsnNode(Opcodes.GETFIELD,node.name,"this$0","L"+POOL+";"));method.instructions.insertBefore(call,receiver);
 		call.setOpcode(Opcodes.INVOKESTATIC);call.owner="net/forbric/kernel/interop/CreateTaskWait";call.name="awaitNotification";
 		call.desc="(Ljava/lang/Object;Ljava/lang/Object;)V";call.itf=false;

@@ -16,81 +16,87 @@
 
 package net.forbric.installer.kernel;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
 /**
  * The upstream versions this installer builds against.
  *
- * <p>They are pins, not defaults: each one was chosen because a specific thing breaks at the neighbouring
- * versions, and the reason lives next to the number so nobody "updates" it back into the failure. Everything the
- * install produces is keyed on this set, so bumping any of them invalidates the cached artifacts that depend on
- * it.
+ * <p>There is exactly one place these are declared: the repository-root
+ * {@code VERSIONS.properties}. {@code bundleVersions} copies it into this jar as
+ * {@code /forbric-versions.properties} at build time, and this class reads that resource. So the
+ * installer cannot be built against one version and describe another, and a version bump is a change
+ * to one file rather than to this class.
+ *
+ * <p>There are deliberately no compiled-in defaults: a missing resource or key fails loudly, because
+ * a quiet fallback would be a second source of truth wearing a hard-coded hat.
  */
 final class Pins {
+
+	private static final String RESOURCE = "/forbric-versions.properties";
+
+	private static final Properties VERSIONS = load();
 
 	private Pins() {
 	}
 
+	private static Properties load() {
+		Properties properties = new Properties();
+		try (InputStream in = Pins.class.getResourceAsStream(RESOURCE)) {
+			if (in == null) {
+				throw new IllegalStateException("Pins: " + RESOURCE + " is missing from the installer jar; "
+						+ "VERSIONS.properties did not reach the build resources (see bundleVersions)");
+			}
+			properties.load(in);
+		} catch (IOException error) {
+			throw new IllegalStateException("Pins: could not read " + RESOURCE, error);
+		}
+		return properties;
+	}
+
+	private static String version(String key) {
+		String value = VERSIONS.getProperty("forbric." + key);
+		if (value == null || value.trim().isEmpty()) {
+			throw new IllegalStateException("VERSIONS.properties is missing forbric." + key);
+		}
+		return value.trim();
+	}
+
 	/** The only Minecraft version this generation supports. */
-	static final String MINECRAFT = "26.2";
+	static final String MINECRAFT = version("minecraft.version");
 
 	/** MinecraftForge, in its own {@code <mc>-<fml>} coordinate form. */
-	static final String FORGE = "26.2-65.0.1";
+	static final String FORGE = version("forge.version");
+
+	/** The launcher profile id the installer writes ({@code versions/<profile>/<profile>.json}). */
+	static final String PROFILE = version("profile.name");
 
 	/**
-	 * NeoForge, on the first release line rather than a beta.
-	 *
-	 * <p>This used to be {@code 26.2.0.38-beta}, because {@code .40-beta} deletes {@code ContainerScreenEvent}
-	 * and {@code .43-beta} deletes {@code PlayerInteractEvent$EntityInteractSpecific}, and the reference pack's
-	 * jei / sophisticatedcore / sophisticatedbackpacks still called them. Two things ended that:
-	 * {@code .57} and up are releases rather than betas, and the title screen brands whatever build it is running,
-	 * so a beta carrier tells every player it is a beta; and JEI now declares {@code neoforge [26.2.0.67,)}, which
-	 * {@code .38-beta} does not satisfy — staying put had become the thing that froze the pack.
-	 *
-	 * <p>Re-measured at the bump: {@code .38-beta → .88} removes 12 classes and adds 24; of the 98 jars in the
-	 * reference pack exactly two named anything removed, and the current builds of those mods name none of it.
-	 * Every {@code neoforge} versionRange declared in the pack is satisfied. The one thing only the class diff
-	 * caught is that {@code client.gui.ModListScreen} moved to {@code client.gui.modlist} — which the kernel's
-	 * mods-button redirect names, and which would have failed silently. {@code ForeignTypeCarrierTest} now checks
-	 * every such name against the carrier.
+	 * jline for the dedicated-server console. 1.20.1's version JSON does not list it, so the installer fetches it
+	 * itself — the same jars the dev runner adds by hand.
 	 */
-	static final String NEOFORGE = "26.2.0.88";
+	static final String JLINE = version("console.jline.version");
 
 	/**
-	 * NeoFormRuntime, pinned to the build actually validated rather than the newest published one.
+	 * The canonical runtime namespace of the merged game.
 	 *
-	 * <p>NFRT's own jar digest is part of its cache key, so a different NFRT is entitled to produce different
-	 * bytes. 2.0.18 is the build whose {@code gameJar} result was checked byte-for-byte against the reference
-	 * {@code patched-mc-neoforge-26.2.jar} (sha1 {@code 5b2970209ee12702117309576b08521aa38ae67b}).
+	 * <p>On an obfuscated version this is Fabric's {@code intermediary}: Fabric mods run unmodified and
+	 * every Forge (SRG) artifact -- carrier and guest mods -- is remapped onto it.
 	 */
-	static final String NFRT = "2.0.18";
+	static final String RUNTIME_NAMESPACE = version("runtime.namespace");
 
 	/**
-	 * The NeoForm result Forbric takes out of NFRT.
-	 *
-	 * <p>{@code gameJarNoRecomp} is the binary-patch path — {@code preProcessJar → binaryPatch →
-	 * copyUnpatchedClasses → applyDevTransforms} — and it produces the same 10,963 classes as the {@code gameJar}
-	 * recompile path in about six seconds, with no decompiler, no 4 GB heap and no {@code javac}. Merging from it
-	 * yields a conflict report that is identical to the recompile path's <em>as a set</em> and a merged base with
-	 * the same 30,471 entries.
-	 *
-	 * <p>It must not be {@code gameJarNoRecompWithNeoForge}: that variant routes through
-	 * {@code binaryWithNeoForge} and folds NeoForge's own classes into the jar, which would then define them
-	 * twice — once inside the merged base, once in {@code neoforge-runtime.jar}.
+	 * The Fabric intermediary mapping URL for {@link #MINECRAFT}, with the {@code {version}} placeholder the
+	 * descriptor carries already substituted. Intermediary is the runtime namespace the base is remapped onto.
 	 */
-	static final String NFRT_RESULT = "gameJarNoRecomp";
+	static final String INTERMEDIARY_URL = version("intermediary.url").replace("{version}", MINECRAFT);
 
-	/** The NeoForge artifact NFRT is pointed at. The bare coordinate does not exist on the Maven. */
-	static String neoforgeUserdevCoordinate() {
-		return "net.neoforged:neoforge:" + NEOFORGE + ":userdev";
-	}
-
-	/** NeoFormRuntime's own fat jar. */
-	static String nfrtCoordinate() {
-		return "net.neoforged:neoform-runtime:" + NFRT + ":all";
-	}
+	/** The tsrg entry inside MCPConfig that carries Forge's SRG member names. */
+	static final String SRG_ENTRY = version("forge.srg.entry");
 
 	/** A one-line summary for the build stamp, so a cached artifact records what produced it. */
 	static String stamp() {
-		return "mc=" + MINECRAFT + " forge=" + FORGE + " neoforge=" + NEOFORGE
-				+ " nfrt=" + NFRT + " result=" + NFRT_RESULT;
+		return "mc=" + MINECRAFT + " forge=" + FORGE + " namespace=" + RUNTIME_NAMESPACE;
 	}
 }

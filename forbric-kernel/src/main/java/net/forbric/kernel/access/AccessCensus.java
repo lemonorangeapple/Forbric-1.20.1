@@ -60,7 +60,7 @@ public final class AccessCensus {
 	}
 
 	/** The two ecosystems' own packages: a descriptor naming one is a type this Minecraft does not ship. */
-	private static final List<String> CARRIER_TYPES = List.of("Lnet/minecraftforge/", "Lnet/neoforged/");
+	private static final List<String> CARRIER_TYPES = List.of("Lnet/minecraftforge/", "Lnet/minecraftforge/");
 
 	/**
 	 * Whether a field the widener missed is one an ECOSYSTEM re-typed, judged from what it is now.

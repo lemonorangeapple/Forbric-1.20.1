@@ -55,7 +55,7 @@ class KernelForgeClientInitRuntimeTest {
 	@Test
 	void forgeCaptureFlowsThroughTheInstalledLowestBridgeAndTheSameListenerReloadsOnce() throws Exception {
 		try (var fixture = fixture()) {
-			Object listener = fixture.listeners().getFirst();
+			Object listener = fixture.listeners().get(0);
 			fixture.installBridge();
 			assertEquals("LOWEST", fixture.value("priority"));
 			assertEquals(false, fixture.value("receiveCanceled"));
@@ -67,8 +67,8 @@ class KernelForgeClientInitRuntimeTest {
 			assertEquals(1, fixture.count("forgeCalls"));
 			assertEquals(1, fixture.count("forgePosts"), "the already posted self-destructing event must not be posted again");
 			assertEquals(1, fixture.count("neoCalls"));
-			assertSame(listener, fixture.registered().getFirst());
-			assertSame(listener, fixture.realListeners().getFirst(), "Neo's list replacement must retain the capture");
+			assertSame(listener, fixture.registered().get(0));
+			assertSame(listener, fixture.realListeners().get(0), "Neo's list replacement must retain the capture");
 			assertEquals(0, fixture.applies(listener));
 			fixture.reload();
 			assertEquals(1, fixture.applies(listener), "execute the listener that actually reached the published graph");
@@ -98,7 +98,7 @@ class KernelForgeClientInitRuntimeTest {
 	void disablingTheFunnelCallsOnlyNeoAndLeavesTheExistingLegacyBridgeWorking() throws Exception {
 		System.setProperty("forbric.forgeClientInit", "off");
 		try (var fixture = fixture()) {
-			Object listener = fixture.listeners().getFirst();
+			Object listener = fixture.listeners().get(0);
 			fixture.installBridge();
 			fixture.init();
 			assertEquals(0, fixture.count("forgeCalls"));
@@ -106,7 +106,7 @@ class KernelForgeClientInitRuntimeTest {
 			assertEquals(1, fixture.count("neoCalls"));
 			assertEquals(1, fixture.count("forgePosts"), "only the legacy bridge should post Forge registration");
 			assertEquals(List.of("neo:init", "forge:post", "graph:add", "scratch:close", "neo:update"), fixture.trace());
-			assertSame(listener, fixture.realListeners().getFirst());
+			assertSame(listener, fixture.realListeners().get(0));
 			fixture.reload();
 			assertEquals(1, fixture.applies(listener));
 			assertTrue(fixture.scratchClosed());
@@ -188,7 +188,7 @@ class KernelForgeClientInitRuntimeTest {
 			assertEquals(1, fixture.count("forgePosts"));
 			assertTrue(fixture.realListeners().isEmpty());
 			assertEquals(1, fixture.warnings().size());
-			assertTrue(fixture.warnings().getFirst().contains("bridge is disabled"));
+			assertTrue(fixture.warnings().get(0).contains("bridge is disabled"));
 			assertNull(fixture.drain());
 		}
 	}

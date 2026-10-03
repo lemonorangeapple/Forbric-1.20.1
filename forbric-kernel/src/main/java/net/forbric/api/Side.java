@@ -42,7 +42,7 @@ import java.util.Locale;
  *
  * <p>{@link #distName()} is the name of the matching constant in {@code Dist} — and it is the SAME name in
  * MinecraftForge's {@code net.minecraftforge.api.distmarker.Dist} and NeoForge's
- * {@code net.neoforged.api.distmarker.Dist} (see {@link ForeignType#DIST}; the class names differ, the constants
+ * {@code net.minecraftforge.api.distmarker.Dist} (see {@link ForeignType#DIST}; the class names differ, the constants
  * do not). Fabric's {@code EnvType} spells the server side {@code SERVER} instead, which is why the conversion
  * to and from it stays on the kernel side rather than being folded in here — this package names no ecosystem's
  * types.

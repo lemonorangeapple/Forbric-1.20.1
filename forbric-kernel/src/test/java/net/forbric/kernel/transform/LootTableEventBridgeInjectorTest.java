@@ -73,7 +73,7 @@ class LootTableEventBridgeInjectorTest {
 
 		// Descriptors untouched — the shim declares the same ones, so the swap is the whole edit.
 		for (MethodNode m : after.methods) {
-			for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (!(insn instanceof MethodInsnNode call) || !LootTableEventBridgeInjector.BRIDGE.equals(call.owner)) continue;
 				String expected = LootTableEventBridgeInjector.LOAD_LOOT_TABLE.equals(call.name)
 						? LootTableEventBridgeInjector.LOAD_LOOT_TABLE_DESC : LootTableEventBridgeInjector.LOAD_TAGS_DESC;
@@ -90,7 +90,7 @@ class LootTableEventBridgeInjectorTest {
 		ClassNode after = parse(new LootTableEventBridgeInjector().transform(LootTableEventBridgeInjector.TARGET, bytesOf(OWNER), null));
 		MethodInsnNode call = null;
 		for (MethodNode m : after.methods) {
-			for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn instanceof MethodInsnNode c && LootTableEventBridgeInjector.BRIDGE.equals(c.owner)
 						&& LootTableEventBridgeInjector.LOAD_LOOT_TABLE.equals(c.name)) call = c;
 			}
@@ -140,7 +140,7 @@ class LootTableEventBridgeInjectorTest {
 	private static int calls(ClassNode node, String owner, String name) {
 		int n = 0;
 		for (MethodNode m : node.methods) {
-			for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn instanceof MethodInsnNode c && owner.equals(c.owner) && name.equals(c.name)) n++;
 			}
 		}

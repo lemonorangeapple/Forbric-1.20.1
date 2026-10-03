@@ -17,6 +17,7 @@
 package net.forbric.installer.kernel;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
@@ -24,25 +25,20 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 /**
- * Builds the three jars a Forbric instance runs on, here, on the machine that will run them.
+ * Builds the jars a Forbric instance runs on, here, on the machine that will run them.
  *
- * <p>They cannot be shipped. The merged base is Minecraft with two loaders' patches applied and then byte-merged;
- * the two runtimes are assembled from MinecraftForge's and NeoForge's own distributions. All three carry code
- * this project has no right to hand out, so an installer that shipped them would be redistributing Mojang's,
- * MinecraftForge's and NeoForge's work. Building them from the upstreams' own Mavens, on the user's machine, is
- * the only lawful shape this can take — and it is the shape the previous generation's installer already used for
- * the Forge half.
+ * <p>They cannot be shipped. The game base is Minecraft with MinecraftForge's patches applied, and the runtime is
+ * assembled from MinecraftForge's own distribution. Both carry code this project has no right to hand out, so an
+ * installer that shipped them would be redistributing Mojang's and MinecraftForge's work. Building them from the
+ * upstreams' own Mavens, on the user's machine, is the only lawful shape this can take.
  *
- * <p>The pipeline, with the two halves independent until the merge:
+ * <p>The pipeline is linear since NeoForge was dropped for 1.20.1 — there is one Forge family, so there is no
+ * diamond and no byte-merge:
  *
  * <pre>
- *   forge userdev ─┬→ forge-runtime ───────────────┬→ patched-mc-forge ─┐
- *                  └───────────────────────────────┘                    ├→ patched-mc-merged
- *   neoforge userdev ─┬→ neoforge-runtime ──────────────────────────────┤
- *                     └→ NFRT → patched-mc-neoforge ────────────────────┘
- *   vanilla 26.2.jar ───────────────────────────────────────────────────┘
- *
- *   forge-runtime ────────────────────────────────→ forge-runtime-interop   (what actually gets staged)
+ *   forge userdev ─┬→ forge-runtime ────────────────────────┐
+ *                  └→ patched-mc-forge (SRG) ──────────────┴→ patched-mc-merged (runtime namespace)
+ *   vanilla &lt;mc&gt;.jar ──────────────────────────────────────┘
  * </pre>
  *
  * <p>Everything lands under {@code <mcDir>/.forbric-build/}, one directory that can be deleted wholesale, and
@@ -53,7 +49,6 @@ final class ArtifactBuilder {
 	/** The coordinates {@link Installer} stages and the profile names, without their version suffix. */
 	static final String MERGED = "net.forbric:patched-mc-merged";
 	static final String FORGE_RUNTIME = "net.forbric:forge-runtime";
-	static final String NEOFORGE_RUNTIME = "net.forbric:neoforge-runtime";
 
 	private final Consumer<String> log;
 
@@ -62,7 +57,7 @@ final class ArtifactBuilder {
 	}
 
 	/**
-	 * Produces all three, reusing whatever is already built.
+	 * Produces the game base and the Forge runtime, reusing whatever is already built.
 	 *
 	 * @param mcDir     the Minecraft directory; its {@code versions/<mc>/<mc>.jar} is the vanilla input and its
 	 *                  {@code .forbric-build/} holds every intermediate
@@ -72,7 +67,6 @@ final class ArtifactBuilder {
 	Map<String, Path> build(Path mcDir, String mcVersion, JdkLocator.Jvm jvm) throws IOException {
 		Path build = mcDir.resolve(".forbric-build");
 		Path dl = build.resolve("dl");
-		Path tools = build.resolve("tools");
 		Path out = build.resolve("out");
 		Files.createDirectories(dl);
 		Files.createDirectories(out);
@@ -104,43 +98,33 @@ final class ArtifactBuilder {
 				out.resolve("patched-mc-forge-" + mcVersion + ".jar"), log)
 				.build(forgeUserdev, forgeCfg, forgeRuntime.file);
 
-		// ---- NeoForge ----
+		// ---- the runtime base: remap the SRG Forge base onto intermediary ----
+		//
+		// Forge's patched jar speaks its production namespace (Mojang class names + SRG member names). The
+		// Fabric side of the game runs in intermediary, so the base is converted once, here.
 		log.accept("");
-		log.accept("== NeoForge " + Pins.NEOFORGE + " ==");
-		NeoForgeArtifacts nfa = new NeoForgeArtifacts(mcVersion, Pins.NEOFORGE);
-		Path neoUserdev = dl.resolve("neoforge-userdev.jar");
-		http.ensureWithFallback(nfa.neoforgedUrl(nfa.userdevCoordinate()), nfa.centralUrl(nfa.userdevCoordinate()),
-				neoUserdev);
-		// The same NeoForm userdev config shape on both sides, so the Forge reader serves; see NeoForgeArtifacts.
-		ForgeArtifacts.UserdevConfig neoCfg = ForgeArtifacts.readConfig(neoUserdev);
+		log.accept("== remapping the game base to " + Pins.RUNTIME_NAMESPACE + " ==");
+		Path mappings = build.resolve("mappings");
+		Files.createDirectories(mappings);
+		Path intermediary = intermediaryMappings(http, mappings);
+		Path mojmap = mojangMappings(http, mcDir, mcVersion, mappings);
+		Path tsrg = forgeSrgMappings(http, forgeCfg, mappings);
 
-		ArtifactResult neoRuntime = new NeoForgeRuntimeBuilder(nfa, http, build,
-				out.resolve("neoforge-runtime.jar"), log).build(neoCfg);
-		ArtifactResult neoPatched = new NfrtRunner(http, tools, build.resolve("nfrt"),
-				build.resolve("nfrt-work"), log)
-				.run(jvm, mcDir, out.resolve("patched-mc-neoforge-" + mcVersion + ".jar"),
-						nfa.patchedMcCoordinate(), mcVersion, build.resolve("dl").resolve("server.jar"));
-
-		// ---- the merge, and the interop patch the merge makes necessary ----
-		log.accept("");
-		log.accept("== merging ==");
-		MergedBaseTool merge = new MergedBaseTool(tools, log);
-		ArtifactResult merged = merge.merge(jvm, vanilla, forgePatched.file, neoPatched.file,
-				forgeRuntime.file, neoRuntime.file,
+		ArtifactResult base = new GameJarRemapper(build.resolve("tools"), log).remap(jvm, forgePatched.file,
 				out.resolve("patched-mc-merged-" + mcVersion + ".jar"),
-				out.resolve("merge-conflicts.txt"),
+				intermediary, mojmap, tsrg, java.util.List.of(forgeRuntime.file),
 				MERGED + ":" + mcVersion);
-		ArtifactResult interop = merge.interop(jvm, forgeRuntime.file,
-				out.resolve("forge-runtime-interop.jar"), FORGE_RUNTIME + ":" + mcVersion);
-		// After the interop patch, not before: the check resolves against what actually gets staged.
-		merge.linkCheck(jvm, merged.file, neoRuntime.file, interop.file);
+		ensureVersionJson(base.file, mcVersion, vanilla);
+
+		// The runtime carrier is Forge's own code, compiled against SRG; it must speak the same named namespace as
+		// the base or every net.minecraftforge.registries call dies on a m_ NoSuchMethodError inside Bootstrap.
+		ArtifactResult carrier = new GameJarRemapper(build.resolve("tools"), log).remap(jvm, forgeRuntime.file,
+				out.resolve("forge-runtime-named.jar"), intermediary, mojmap, tsrg,
+				java.util.List.of(base.file), FORGE_RUNTIME + ":" + mcVersion);
 
 		Map<String, Path> result = new LinkedHashMap<>();
-		result.put(MERGED, merged.file);
-		// The INTEROP jar, not the raw runtime: the merge widened interfaces on NeoForge's behalf that the raw
-		// jar's own classes no longer satisfy. It keeps the forge-runtime coordinate so nothing downstream moves.
-		result.put(FORGE_RUNTIME, interop.file);
-		result.put(NEOFORGE_RUNTIME, neoRuntime.file);
+		result.put(MERGED, base.file);
+		result.put(FORGE_RUNTIME, carrier.file);
 
 		log.accept("");
 		log.accept("game artifacts ready:");
@@ -149,5 +133,75 @@ final class ArtifactBuilder {
 					+ " (" + (Files.size(e.getValue()) / (1024 * 1024)) + " MB)");
 		}
 		return result;
+	}
+
+	/**
+	 * The game base must carry a {@code version.json}: the kernel reads the game version from it and the dev
+	 * launcher stages it as the classpath's metadata-only jar. The Forge-patched jar has none, so add one.
+	 */
+	private static void ensureVersionJson(Path jar, String mcVersion, Path vanillaJar) throws IOException {
+		LinkedHashMap<String, byte[]> entries = Zips.readAll(jar);
+		if (entries.containsKey("version.json")) return;
+		// Prefer the vanilla jar's own version.json (DetectedVersion requires stable/world_version/pack_version/...).
+		byte[] version = vanillaJar != null && Files.isRegularFile(vanillaJar)
+				? Zips.readEntry(vanillaJar, "version.json") : null;
+		if (version == null) {
+			version = ("{\"id\":\"" + mcVersion + "\",\"name\":\"" + mcVersion + "\",\"world_version\":3465,"
+					+ "\"series_id\":\"main\",\"protocol_version\":763,"
+					+ "\"pack_version\":{\"resource\":15,\"data\":15},"
+					+ "\"build_time\":\"2023-06-12T13:23:26+00:00\",\"java_component\":\"java-runtime-gamma\","
+					+ "\"java_version\":17,\"stable\":true}").getBytes(StandardCharsets.UTF_8);
+		}
+		entries.put("version.json", version);
+		Zips.writeJar(jar, entries);
+	}
+
+	/** Fabric intermediary ({@code official → intermediary}), extracted from the intermediary jar. */
+	private static Path intermediaryMappings(Http http, Path mappings) throws IOException {
+		Path jar = mappings.resolve("intermediary.jar");
+		http.ensure(Pins.INTERMEDIARY_URL, jar);
+		byte[] tiny = Zips.readEntry(jar, "mappings/mappings.tiny");
+		if (tiny == null) throw new IOException("no mappings/mappings.tiny in " + jar);
+		Path out = mappings.resolve("intermediary.tiny");
+		Files.write(out, tiny);
+		return out;
+	}
+
+	/** Mojang's ProGuard mappings ({@code named → official}), whose URL the version JSON carries. */
+	private static Path mojangMappings(Http http, Path mcDir, String mcVersion, Path mappings) throws IOException {
+		Path versionJson = mcDir.resolve("versions").resolve(mcVersion).resolve(mcVersion + ".json");
+		if (!Files.isRegularFile(versionJson)) {
+			throw new IOException("the vanilla version JSON is missing: " + versionJson);
+		}
+		Object parsed = Json.parse(Files.readString(versionJson));
+		String url = null;
+		if (parsed instanceof Map<?, ?> root && root.get("downloads") instanceof Map<?, ?> downloads
+				&& downloads.get("client_mappings") instanceof Map<?, ?> cm && cm.get("url") instanceof String u) {
+			url = u;
+		}
+		if (url == null) throw new IOException("no downloads.client_mappings.url in " + versionJson);
+		Path out = mappings.resolve("client.txt");
+		http.ensure(url, out);
+		return out;
+	}
+
+	/** MCPConfig's {@code joined.tsrg} ({@code obf → srg}), the SRG source the Forge userdev config names. */
+	private static Path forgeSrgMappings(Http http, ForgeArtifacts.UserdevConfig config, Path mappings)
+			throws IOException {
+		if (config.mcpCoordinate == null) {
+			throw new IOException("the Forge userdev config.json carries no 'mcp' coordinate, so the SRG member "
+					+ "names cannot be read (see forbric-loader/MAPPINGS.md)");
+		}
+		// The artifact is a @zip, so the '.jar' coordinate helper would name the wrong file; build the path here.
+		String[] parts = config.mcpCoordinate.split(":");
+		String path = parts[0].replace('.', '/') + "/" + parts[1] + "/" + parts[2] + "/"
+				+ parts[1] + "-" + parts[2] + ".zip";
+		Path zip = mappings.resolve("mcp_config.zip");
+		http.ensureWithFallback(ForgeArtifacts.FORGE_MVN + "/" + path, ForgeArtifacts.CENTRAL + "/" + path, zip);
+		byte[] tsrg = Zips.readEntry(zip, Pins.SRG_ENTRY);
+		if (tsrg == null) throw new IOException("no " + Pins.SRG_ENTRY + " in " + zip);
+		Path out = mappings.resolve("joined.tsrg");
+		Files.write(out, tsrg);
+		return out;
 	}
 }

@@ -49,9 +49,9 @@ import net.forbric.kernel.util.ForbricLog;
  * business dispatching Fabric roots.
  */
 public final class HudElementBridgeInjector implements ClassTransformer {
-	private static final String TARGET = "net.neoforged.neoforge.client.gui.GuiLayerManager";
+	private static final String TARGET = "net.minecraftforge.client.gui.GuiLayerManager";
 	private static final String METHOD = "add";
-	private static final String LAYER = "Lnet/neoforged/neoforge/client/gui/GuiLayer;";
+	private static final String LAYER = "Lnet/minecraftforge/client/gui/GuiLayer;";
 	private static final String IDENTIFIER = "Lnet/minecraft/resources/Identifier;";
 
 	private static final String HOOK_OWNER = "net/forbric/kernel/boot/KernelHudBridge";

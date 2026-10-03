@@ -169,7 +169,7 @@ public final class HookCallSiteCensus {
 			String key = m.name + m.desc;
 			declared.add(key);
 			if (m.instructions == null) continue;
-			for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn.getOpcode() == Opcodes.NEW && insn instanceof TypeInsnNode t
 						&& t.desc.startsWith(eventNamespace)) {
 					posters.computeIfAbsent(t.desc, k -> new TreeSet<>()).add(key);
@@ -194,7 +194,7 @@ public final class HookCallSiteCensus {
 					if (cn.name.equals(hookClass)) continue;
 					for (MethodNode m : cn.methods) {
 						if (m.instructions == null) continue;
-						for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+						for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 							if (insn instanceof MethodInsnNode mi && mi.owner.equals(hookClass)) {
 								referenced.add(mi.name + mi.desc);
 							}
@@ -234,7 +234,7 @@ public final class HookCallSiteCensus {
 	 * The hook class's ecosystem root: at most the first two segments of its package, with a trailing slash.
 	 *
 	 * <p>{@code net/minecraftforge/event/ForgeEventFactory} → {@code net/minecraftforge/};
-	 * {@code net/neoforged/neoforge/event/EventHooks} → {@code net/neoforged/}. A package shallower than two
+	 * {@code net/minecraftforge/event/EventHooks} → {@code net/minecraftforge/}. A package shallower than two
 	 * segments yields itself, so a one-package fixture still matches its own types.
 	 */
 	static String namespaceOf(String internalName) {
@@ -316,7 +316,7 @@ public final class HookCallSiteCensus {
 				if (cn.name.equals(hookClass)) continue;
 				for (MethodNode m : cn.methods) {
 					if (m.instructions == null) continue;
-					for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+					for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 						if (insn instanceof MethodInsnNode mi && mi.owner.equals(hookClass)) {
 							out.merge(mi.name + mi.desc, 1, Integer::sum);
 						}
@@ -354,10 +354,10 @@ public final class HookCallSiteCensus {
 						if (m.instructions == null) continue;
 						boolean forge = false;
 						boolean neo = false;
-						for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+						for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 							if (!(insn instanceof MethodInsnNode mi)) continue;
 							if (isHookClass(mi.owner, "net/minecraftforge/")) forge = true;
-							if (isHookClass(mi.owner, "net/neoforged/")) neo = true;
+							if (isHookClass(mi.owner, "net/minecraftforge/")) neo = true;
 						}
 						if (forge && neo) both.add(cn.name + "#" + m.name + m.desc);
 					}

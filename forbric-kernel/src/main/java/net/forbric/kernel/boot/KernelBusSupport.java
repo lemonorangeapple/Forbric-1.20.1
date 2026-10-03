@@ -34,7 +34,7 @@ final class KernelBusSupport {
 	 * post} (caught empirically in {@code Options.<init>} → {@code ClientHooks.onRegisterKeyMappings}).
 	 */
 	static Object makeModBus(ClassLoader cl) throws Exception {
-		Class<?> busBuilder = Class.forName("net.neoforged.bus.api.BusBuilder", false, cl);
+		Class<?> busBuilder = Class.forName("net.minecraftforge.eventbus.api.BusBuilder", false, cl);
 		Object builder = busBuilder.getMethod("builder").invoke(null);
 		try {
 			Class<?> modBusEvent = Class.forName(ForeignType.MOD_BUS_EVENT.binary(Ecosystem.NEOFORGE), false, cl);

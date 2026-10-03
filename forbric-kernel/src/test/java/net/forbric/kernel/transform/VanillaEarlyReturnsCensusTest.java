@@ -253,7 +253,7 @@ class VanillaEarlyReturnsCensusTest {
 
 	private static List<FrameNode> frames(MethodNode method) {
 		List<FrameNode> out = new ArrayList<>();
-		for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof FrameNode frame) out.add(frame);
 		}
 		return out;

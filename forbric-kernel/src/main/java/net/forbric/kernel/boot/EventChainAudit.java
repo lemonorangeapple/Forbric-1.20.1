@@ -48,7 +48,7 @@ import net.forbric.kernel.util.ForbricLog;
  */
 public final class EventChainAudit {
 	public static final String PROPERTY = "forbric.eventChainAudit";
-	private static final String NEO_CANCELLABLE = "net.neoforged.bus.api.ICancellableEvent";
+	private static final String NEO_CANCELLABLE = "net.minecraftforge.eventbus.api.ICancellableEvent";
 
 	private static final class Frame {
 		final boolean neo; final Object event; final Class<?> type;
@@ -93,7 +93,7 @@ public final class EventChainAudit {
 	/** Hook facades: a post they make is the post of whoever called them. */
 	private static final Set<String> FACADES = facades();
 	private static Set<String> facades() {
-		Set<String> facades = new HashSet<>(Set.of("net.minecraftforge.client.event.ForgeEventFactoryClient", "net.neoforged.neoforge.common.CommonHooks"));
+		Set<String> facades = new HashSet<>(Set.of("net.minecraftforge.client.event.ForgeEventFactoryClient", "net.minecraftforge.common.CommonHooks"));
 		for (ForeignType pair : List.of(ForeignType.EVENT_FACTORY, ForeignType.EVENT_HOOKS, ForeignType.CLIENT_HOOKS, ForeignType.SERVER_LIFECYCLE_HOOKS))
 			for (Ecosystem family : List.of(Ecosystem.FORGE, Ecosystem.NEOFORGE)) facades.add(pair.binary(family));
 		return Set.copyOf(facades);
@@ -131,7 +131,7 @@ public final class EventChainAudit {
 	/** Whether the first frame below the buses, the hook facades and this class is kernel code. */
 	static boolean postedByKernel() {
 		return WALKER.walk(frames -> frames.map(StackWalker.StackFrame::getClassName).filter(name -> !name.equals(EventChainAudit.class.getName())
-				&& !name.startsWith("net.minecraftforge.eventbus.") && !name.startsWith("net.neoforged.bus.") && !name.startsWith("java.")
+				&& !name.startsWith("net.minecraftforge.eventbus.") && !name.startsWith("net.minecraftforge.bus.") && !name.startsWith("java.")
 				&& !name.startsWith("jdk.") && !name.startsWith("sun.") && !FACADES.contains(name)).findFirst()
 				.map(name -> name.startsWith("net.forbric.kernel.")).orElse(false));
 	}

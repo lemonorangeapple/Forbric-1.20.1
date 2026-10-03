@@ -153,7 +153,7 @@ class PluginDeclinedMixinsTest {
 
 		assertEquals(List.of(TARGET, OTHER_TARGET), plugin.asked, "asked once per target, as Mixin asks");
 		assertEquals(1, ModCatalog.failures().size(), "the mixin was wanted on " + OTHER_TARGET + " and lost there");
-		var finding = net.forbric.api.CompatibilityFindings.confirmedRequired().getFirst();
+		var finding = net.forbric.api.CompatibilityFindings.confirmedRequired().get(0);
 		assertTrue(finding.evidence().stream().anyMatch(e -> e.contains("declines it for " + TARGET)), finding.evidence().toString());
 		assertTrue(finding.evidence().stream().anyMatch(e -> e.endsWith("for " + OTHER_TARGET)), finding.evidence().toString());
 	}

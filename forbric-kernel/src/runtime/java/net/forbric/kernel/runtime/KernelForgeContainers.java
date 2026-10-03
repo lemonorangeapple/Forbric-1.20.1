@@ -21,12 +21,11 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.EnumMap;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import net.forbric.kernel.boot.KernelForgeModContext.Handle;
-import net.minecraftforge.eventbus.api.bus.BusGroup;
+import net.minecraftforge.eventbus.api.BusBuilder;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
@@ -34,95 +33,60 @@ import net.minecraftforge.fml.event.IModBusEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.javafmlmod.FMLModContainer;
 import net.minecraftforge.fml.lowcodemod.LowCodeModContainer;
-import net.minecraftforge.unsafe.UnsafeHacks;
+import net.minecraftforge.forgespi.language.ModFileScanData;
 
 /**
- * The game side of the kernel's TRADITIONAL-Forge loading context: a {@code BusGroup} + {@code FMLModContainer} +
- * {@code FMLJavaModLoadingContext} triple, manufactured without any FancyModLoader discovery, module layer or
- * sorting.
+ * The game side of the kernel's traditional-MinecraftForge loading context: an EventBus-6 {@code IEventBus} plus an
+ * {@code FMLModContainer} plus an {@code FMLJavaModLoadingContext}, manufactured without ModLauncher, module layer,
+ * or FML discovery/sorting.
  *
- * <p>The boot-side door is {@code KernelForgeModContext}, whose javadoc explains why traditional Forge needs its
- * own factory rather than reusing the NeoForge one: events run on EventBus 7 ({@code BusGroup} with a
- * {@code startup()} gate, not an {@code IEventBus}), a {@code @Mod} class is constructed with an
- * {@code FMLJavaModLoadingContext} rather than {@code (IEventBus, Dist, ModContainer)}, and {@code RegisterEvent}
- * is the 3-arg {@code (key, ForgeRegistry, Registry)} flavour.
- *
- * <h2>What is still reflective, and why</h2>
- *
- * <p>Both {@code FMLModContainer} and {@code FMLJavaModLoadingContext} declare only loader-facing constructors
- * (taking a {@code ModFileScanData} and a {@code ModuleLayer} the kernel deliberately does not have), so the
- * instances are allocated WITHOUT a constructor and the fields the mod-facing API reads are written directly.
- * Naming a field in order to write it is reflection by definition; what moving here buys is that every TYPE is
- * checked, so a renamed class is a build failure instead of a {@code ClassNotFoundException} during mod
- * construction. Field NAMES remain strings, and {@link #uset} fails loudly on each while
- * {@link #usetIfPresent} tolerates the ones a Forge revision may not have.
- *
- * <p>{@code ModLoadingContext.setActiveContainer} is likewise reflective: it is not public API, and the kernel is
- * standing exactly where the genuine loader would.
+ * <p>1.20.1's {@code FMLModContainer} constructor eagerly {@code Class.forName}s the mod class, but the kernel
+ * publishes a container for every mod <em>before</em> it knows the {@code @Mod} class (discovery and construction
+ * are separate stages). So the container is allocated around its constructor and the fields the constructor would
+ * have set are filled in, the way the previous generation did.
  */
 public final class KernelForgeContainers {
 	private KernelForgeContainers() {
 	}
 
-	/**
-	 * Manufactures the {@code BusGroup} + container + context for {@code modId}. Identity only — it needs no
-	 * {@code @Mod} class, which is what lets the kernel publish every MinecraftForge container into
-	 * {@code ModList} before any constructor runs; {@link #constructMod} marries the class in afterwards.
-	 *
-	 * <p>It deliberately does NOT make the container active any more. It used to, and with creation and
-	 * construction adjacent that read as "this is the mod loading right now" — which stopped being true the
-	 * moment they were separated. Both callers set it explicitly around the constructor instead, which also
-	 * clears it afterwards; the side effect never was.
-	 */
 	public static Handle create(String modId) throws Exception {
-		BusGroup busGroup = BusGroup.create("modBusFor" + modId, IModBusEvent.class);
-		FMLModContainer container = UnsafeHacks.newInstance(FMLModContainer.class);
-		FMLJavaModLoadingContext jctx = UnsafeHacks.newInstance(FMLJavaModLoadingContext.class);
-
+		FMLModContainer container = KernelUnsafe.newInstance(FMLModContainer.class);
+		Object bus = BusBuilder.builder()
+				.setTrackPhases(true)
+				.markerType(IModBusEvent.class)
+				.build();
+		FMLJavaModLoadingContext jctx = KernelUnsafe.newInstance(FMLJavaModLoadingContext.class);
 		uset(FMLJavaModLoadingContext.class, "container", jctx, container);
-		uset(FMLModContainer.class, "eventBusGroup", container, busGroup);
-		// FMLModContainer.context backs its contextExtension supplier; genuine Forge sets it in the ctor we skipped.
-		usetIfPresent(FMLModContainer.class, "context", container, jctx);
+
+		// ModContainer's constructor (skipped) initialises these; addConfig / registerExtensionPoint / the
+		// activity + dependency maps all NPE on a null.
 		uset(ModContainer.class, "modId", container, modId);
 		uset(ModContainer.class, "namespace", container, modId);
-		uset(ModContainer.class, "contextExtension", container, (Supplier<Object>) () -> jctx);
-		// ModContainer's ctor (skipped by UnsafeHacks.newInstance) initialises these; addConfig /
-		// registerExtensionPoint / the activity + dependency maps all NPE on a null.
+		uset(ModContainer.class, "modInfo", container, new KernelForgeModInfo(modId));
 		uset(ModContainer.class, "configs", container, new EnumMap<ModConfig.Type, Object>(ModConfig.Type.class));
 		uset(ModContainer.class, "extensionPoints", container, new ConcurrentHashMap<>());
 		usetIfPresent(ModContainer.class, "activityMap", container, new HashMap<>());
-		usetIfPresent(ModContainer.class, "dependencies", container, new HashSet<>());
-		// getModInfo() is null without this (the ctor arg we skipped); Forge's own config + display-test paths read it.
-		usetIfPresent(ModContainer.class, "modInfo", container, new KernelForgeModInfo(modId));
+		uset(ModContainer.class, "contextExtension", container, (Supplier<Object>) () -> jctx);
+		// ModContainer's constructor defaults configHandler to empty and the stage to CONSTRUCT; skipping it left
+		// both null, and ConfigTracker.openConfig dereferences configHandler on every config it opens.
+		uset(ModContainer.class, "configHandler", container, java.util.Optional.empty());
+		usetIfPresent(ModContainer.class, "modLoadingStage", container,
+				net.minecraftforge.fml.ModLoadingStage.CONSTRUCT);
+		usetIfPresent(FMLModContainer.class, "scanResults", container, new ModFileScanData());
+		uset(FMLModContainer.class, "eventBus", container, bus);
+		usetIfPresent(FMLModContainer.class, "context", container, jctx);
 
-		return new Handle(modId, busGroup, container, jctx);
+		return new Handle(modId, bus, container, jctx);
 	}
 
 	/**
-	 * The container MinecraftForge's {@code LowCodeModLanguageProvider} builds for a {@code lowcodefml} mod, built
-	 * through its own public constructor.
-	 *
-	 * <p>Unlike {@link #create} nothing here has to be allocated around a constructor: this one takes only the mod's
-	 * info, and ignores its scan data and module layer — which is also why it is safe to hand it neither. It has
-	 * no bus group, as on MinecraftForge; the constructor itself drops the display test a data-only mod has no use
-	 * for.
-	 *
-	 * @param jar the mod's own jar, which its info's owning file is read from
+	 * The container MinecraftForge builds for a {@code lowcodefml} mod, through its own public constructor.
 	 */
 	public static Object lowCode(String modId, java.nio.file.Path jar) {
-		return new LowCodeModContainer(new KernelForgeModInfo(modId, jar), null, null);
+		return new LowCodeModContainer(new KernelForgeModInfo(modId, jar), new ModFileScanData(), null);
 	}
 
-	/**
-	 * Makes {@code container} the active {@code ModLoadingContext} — what every {@code *.get()} reads.
-	 *
-	 * <p>{@code ModLoadingContext.get()} is marked deprecated-for-removal in this carrier. That is worth a line
-	 * because it is a fact the reflective version could not have told us: {@code getMethod("get")} reports no
-	 * deprecation, so the kernel was calling a method Forge intends to delete and nothing said so. There is no
-	 * alternative here — the kernel is standing exactly where the genuine loader stands, and this is how the
-	 * active container is set — so it is suppressed and written down rather than worked around. When the carrier
-	 * is next re-pinned and the method goes, this becomes a build failure instead of a runtime one.
-	 */
+	/** Makes {@code container} the active {@code ModLoadingContext} — what every {@code *.get()} reads. */
 	@SuppressWarnings("removal")
 	public static void setActiveContainer(Object container) throws Exception {
 		ModLoadingContext mlc = ModLoadingContext.get();
@@ -133,7 +97,7 @@ public final class KernelForgeContainers {
 
 	/**
 	 * Constructs {@code modClassName} against {@code handle}, preferring the {@code (FMLJavaModLoadingContext)}
-	 * constructor that traditional-Forge mods declare, and stores the instance on the container.
+	 * constructor traditional-Forge mods declare, and stores the instance on the container.
 	 */
 	public static Object constructMod(String modClassName, Handle handle) throws Exception {
 		Class<?> modCls = Class.forName(modClassName, true, KernelForgeContainers.class.getClassLoader());
@@ -152,15 +116,55 @@ public final class KernelForgeContainers {
 		return mod;
 	}
 
-	/** Opens the EventBus 7 {@code startup()} gate — no event dispatches before this. */
+	/** EventBus 6 has no startup gate; nothing to open. */
 	public static void startup(Object busGroup) {
-		((BusGroup) busGroup).startup();
+	}
+
+	/**
+	 * Seeds the {@code FMLLoader} statics Forge reads everywhere but ModLauncher would have set: the
+	 * {@code VersionInfo} (whose absence NPEs {@code ForgeVersion.<clinit>}) and the current {@code Dist}.
+	 * Without this, constructing {@code ForgeMod} dies before its {@code DeferredRegister}s ever register.
+	 */
+	public static void seedLoaderStatics(String forgeVersion, String mcVersion, String mcpVersion, boolean client)
+			throws Exception {
+		ClassLoader cl = KernelForgeContainers.class.getClassLoader();
+		Class<?> fmlLoader = Class.forName("net.minecraftforge.fml.loading.FMLLoader", false, cl);
+		Object versionInfo = Class.forName("net.minecraftforge.fml.loading.VersionInfo", false, cl)
+				.getConstructor(String.class, String.class, String.class, String.class)
+				.newInstance(forgeVersion, mcVersion, mcpVersion, "net.minecraftforge");
+		setStatic(fmlLoader, "versionInfo", versionInfo);
+		// Forge's patched Block.initClient asks the launch handler isData(); ModLauncher would have set it.
+		try {
+			Class<?> handlerType = Class.forName(client
+					? "net.minecraftforge.fml.loading.targets.ForgeClientLaunchHandler"
+					: "net.minecraftforge.fml.loading.targets.ForgeServerLaunchHandler", true, cl);
+			setStatic(fmlLoader, "commonLaunchHandler", KernelUnsafe.newInstance(handlerType));
+		} catch (Throwable absent) {
+			net.forbric.kernel.util.ForbricLog.debug("[Forbric/ForgeCtx] could not seed the Forge launch handler: %s",
+					absent);
+		}
+		Class<?> distType = Class.forName("net.minecraftforge.api.distmarker.Dist", true, cl);
+		setStatic(fmlLoader, "dist", distType.getField(client ? "CLIENT" : "DEDICATED_SERVER").get(null));
+		// FMLConfig reads its own fml.toml through FMLPaths, which ModLauncher would have rooted at the game dir.
+		// The game is launched with cwd == game dir, so user.dir is that root. Without this, a config value read
+		// during config registration NPEs inside FMLConfig$ConfigValue.
+		java.nio.file.Path gameDir = java.nio.file.Path.of(System.getProperty("user.dir", ".")).toAbsolutePath();
+		Class<?> fmlPaths = Class.forName("net.minecraftforge.fml.loading.FMLPaths", true, cl);
+		fmlPaths.getMethod("loadAbsolutePaths", java.nio.file.Path.class).invoke(null, gameDir);
+		Class<?> fmlConfig = Class.forName("net.minecraftforge.fml.loading.FMLConfig", true, cl);
+		fmlConfig.getMethod("load").invoke(null);
+	}
+
+	private static void setStatic(Class<?> owner, String name, Object value) throws Exception {
+		Field field = owner.getDeclaredField(name);
+		field.setAccessible(true);
+		field.set(null, value);
 	}
 
 	/** Writes a field that MUST exist; a missing one is a real change in the carrier and has to be loud. */
 	private static void uset(Class<?> owner, String fieldName, Object target, Object value) throws Exception {
 		Field field = owner.getDeclaredField(fieldName);
-		UnsafeHacks.setField(field, target, value);
+		KernelUnsafe.setField(field, target, value);
 	}
 
 	/** Writes a field only some Forge revisions declare. */

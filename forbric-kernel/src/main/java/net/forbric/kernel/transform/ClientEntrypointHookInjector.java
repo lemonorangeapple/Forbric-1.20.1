@@ -138,7 +138,7 @@ public final class ClientEntrypointHookInjector implements ClassTransformer {
 	}
 
 	private static AbstractInsnNode firstNewOptions(MethodNode ctor) {
-		for (AbstractInsnNode insn = ctor.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = ctor.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn.getOpcode() == Opcodes.NEW && ((TypeInsnNode) insn).desc.equals(OPTIONS)) return insn;
 		}
 		return null;

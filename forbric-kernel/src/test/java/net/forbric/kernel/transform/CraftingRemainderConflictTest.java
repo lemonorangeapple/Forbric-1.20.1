@@ -53,7 +53,7 @@ class CraftingRemainderConflictTest {
 		assertNotNull(override, "Item must settle the conflict it was given");
 		List<AbstractInsnNode> calls = Arrays.stream(override.instructions.toArray()).filter(MethodInsnNode.class::isInstance).toList();
 		assertEquals(1, calls.size());
-		MethodInsnNode call = (MethodInsnNode) calls.getFirst();
+		MethodInsnNode call = (MethodInsnNode) calls.get(0);
 		assertEquals(ITEM, call.owner);
 		assertEquals("(Lnet/minecraft/world/item/ItemInstance;)Lnet/minecraft/world/item/ItemStackTemplate;", call.desc,
 				"NeoForge's overload: every default answers self.getCraftingRemainder(), and a NeoForge override is reached too");
@@ -76,8 +76,8 @@ class CraftingRemainderConflictTest {
 			List<MethodInsnNode> calls = Arrays.stream(remainder.instructions.toArray()).filter(MethodInsnNode.class::isInstance)
 					.map(MethodInsnNode.class::cast).filter(c -> c.name.equals(REMAINDER)).toList();
 			assertEquals(1, calls.size(), node.name);
-			assertEquals(ITEM, calls.getFirst().owner, node.name);
-			assertEquals("()Lnet/minecraft/world/item/ItemStackTemplate;", calls.getFirst().desc, node.name);
+			assertEquals(ITEM, calls.get(0).owner, node.name);
+			assertEquals("()Lnet/minecraft/world/item/ItemStackTemplate;", calls.get(0).desc, node.name);
 		}
 	}
 
@@ -95,7 +95,7 @@ class CraftingRemainderConflictTest {
 	}
 
 	private static byte[] fabricItem() throws Exception {
-		Assumptions.assumeTrue(Files.isRegularFile(FABRIC_API) && Files.isRegularFile(JARS.getFirst()), "actual game and Fabric API required");
+		Assumptions.assumeTrue(Files.isRegularFile(FABRIC_API) && Files.isRegularFile(JARS.get(0)), "actual game and Fabric API required");
 		try (ZipFile zip = new ZipFile(FABRIC_API.toFile())) {
 			ZipEntry nested = zip.stream().filter(e -> e.getName().startsWith("META-INF/jars/fabric-item-api-v1-")).findFirst().orElseThrow();
 			try (ZipInputStream in = new ZipInputStream(zip.getInputStream(nested))) {

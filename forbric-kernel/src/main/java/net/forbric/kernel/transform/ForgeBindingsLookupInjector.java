@@ -90,7 +90,7 @@ public final class ForgeBindingsLookupInjector implements ClassTransformer {
 	/** {@code ServiceLoader.load(layer, X.class)} → {@code ServiceLoader.load(X.class, X.class.getClassLoader())}. */
 	private static int lookupOnTheClasspath(MethodNode m) {
 		int rewritten = 0;
-		for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn.getOpcode() != Opcodes.INVOKESTATIC) continue;
 			MethodInsnNode load = (MethodInsnNode) insn;
 			if (!SERVICE_LOADER.equals(load.owner) || !LOAD.equals(load.name) || !LOAD_LAYER_DESC.equals(load.desc)) {

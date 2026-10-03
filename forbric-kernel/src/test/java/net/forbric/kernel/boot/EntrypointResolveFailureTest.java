@@ -57,9 +57,9 @@ class EntrypointResolveFailureTest {
 		assertEquals(1, invokeMain(loader), "the healthy mod still runs");
 		assertEquals(1, healthyRuns);
 		assertEquals(List.of("brokennet"), ModCatalog.failures().stream().map(ModCatalog.Entry::modId).toList());
-		assertEquals("its main entrypoint threw", ModCatalog.failures().getFirst().statusDetail());
+		assertEquals("its main entrypoint threw", ModCatalog.failures().get(0).statusDetail());
 		KernelLoadReport.writeTo(directory.resolve("load-report.txt"));
-		CompatibilityFinding finding = CompatibilityFindings.confirmedRequired().getFirst();
+		CompatibilityFinding finding = CompatibilityFindings.confirmedRequired().get(0);
 		assertEquals("brokennet", finding.modId());
 		assertEquals("initialization:entrypoint:main", finding.id());
 	}
@@ -77,9 +77,9 @@ class EntrypointResolveFailureTest {
 		runPreLaunch(loader);
 
 		assertEquals(List.of("brokenpre"), ModCatalog.failures().stream().map(ModCatalog.Entry::modId).toList());
-		assertEquals("its preLaunch entrypoint threw", ModCatalog.failures().getFirst().statusDetail());
+		assertEquals("its preLaunch entrypoint threw", ModCatalog.failures().get(0).statusDetail());
 		KernelLoadReport.writeTo(directory.resolve("load-report.txt"));
-		CompatibilityFinding finding = CompatibilityFindings.confirmedRequired().getFirst();
+		CompatibilityFinding finding = CompatibilityFindings.confirmedRequired().get(0);
 		assertEquals("brokenpre", finding.modId());
 		assertEquals("initialization:entrypoint:preLaunch", finding.id());
 	}
@@ -119,9 +119,9 @@ class EntrypointResolveFailureTest {
 		assertTrue(loader.getEntrypointContainers("modmenu", Object.class).isEmpty(), "a second query");
 		List<CompatibilityFinding> found = CompatibilityFindings.all();
 		assertEquals(1, found.size(), found.toString());
-		assertEquals("entrypoint:modmenu:probe.ModMenuIntegration", found.getFirst().id());
-		assertEquals(CompatibilityFinding.Confidence.SUSPECTED, found.getFirst().confidence());
-		assertFalse(found.getFirst().required());
+		assertEquals("entrypoint:modmenu:probe.ModMenuIntegration", found.get(0).id());
+		assertEquals(CompatibilityFinding.Confidence.SUSPECTED, found.get(0).confidence());
+		assertFalse(found.get(0).required());
 		assertTrue(ModCatalog.failures().isEmpty(), "the mod itself started");
 	}
 

@@ -12,7 +12,7 @@ class OptionalMixinDependenciesTest {
 	@Test void absentCompatPartnerIsNotARequiredFeatureFailure(){assertEquals("immediatelyfast",OptionalMixinDependencies.absent(mixin(),id->false));}
 	@Test void installedPartnerAndAdditionalFeaturesStillReportRealFailures(){
 		assertNull(OptionalMixinDependencies.absent(mixin(),id->true));
-		ClassNode changed=mixin();changed.methods.add(changed.methods.getFirst());assertNull(OptionalMixinDependencies.absent(changed,id->false));
+		ClassNode changed=mixin();changed.methods.add(changed.methods.get(0));assertNull(OptionalMixinDependencies.absent(changed,id->false));
 		changed=mixin();changed.name="some/OtherMixin";assertNull(OptionalMixinDependencies.absent(changed,id->false));
 	}
 }

@@ -27,6 +27,6 @@ final class StagedFabricMixinFixture {
   try(ZipFile z=new ZipFile(p.toFile())){return MixinFit.parse(z.getInputStream(z.getEntry(name+".class")).readAllBytes());}
  }
  static MethodNode method(ClassNode c,String name){return c.methods.stream().filter(m->m.name.equals(name)).findFirst().orElseThrow();}
- static AnnotationNode at(ClassNode c,String name){return MixinFit.atNodes(MixinFit.injectorOf(method(c,name))).getFirst();}
+ static AnnotationNode at(ClassNode c,String name){return MixinFit.atNodes(MixinFit.injectorOf(method(c,name))).get(0);}
  static byte[] bytes(ClassNode c){ClassWriter w=new ClassWriter(0);c.accept(w);return w.toByteArray();}
 }

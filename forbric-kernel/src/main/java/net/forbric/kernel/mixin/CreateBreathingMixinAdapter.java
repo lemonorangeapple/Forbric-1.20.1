@@ -10,7 +10,7 @@ public final class CreateBreathingMixinAdapter {
 	private CreateBreathingMixinAdapter() { }
 	public static int adapt(ClassNode mixin,Function<String,ClassNode> targets){
 		if(!mixin.name.equals(MIXIN)||CreateInjectionAdapters.named(mixin,"forbric$createBreathing")!=null)return 0;
-		MethodNode lava=CreateInjectionAdapters.named(mixin,"breatheInLava"),water=CreateInjectionAdapters.named(mixin,"canBreatheInWater");ClassNode living=targets.apply(LIVING),hooks=targets.apply("net/neoforged/neoforge/common/CommonHooks");
+		MethodNode lava=CreateInjectionAdapters.named(mixin,"breatheInLava"),water=CreateInjectionAdapters.named(mixin,"canBreatheInWater");ClassNode living=targets.apply(LIVING),hooks=targets.apply("net/minecraftforge/common/CommonHooks");
 		if(lava==null||water==null||living==null||hooks==null||MixinFit.injectorOf(lava)==null||MixinFit.injectorOf(water)==null)return 0;
 		String nativeDesc="(L"+LIVING+";L"+LEVEL+";II)V", nativeCall="L"+hooks.name+";onLivingBreathe"+nativeDesc;
 		MethodNode host=CreateInjectionAdapters.named(living,"baseTick");if(host==null||CarpetMixinAdapter.count(host,nativeCall)!=1)return 0;

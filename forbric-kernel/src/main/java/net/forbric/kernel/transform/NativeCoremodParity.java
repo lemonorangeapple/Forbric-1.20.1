@@ -65,12 +65,12 @@ public final class NativeCoremodParity {
 	static final String FINALIZE_DESC = "(Lnet/minecraft/world/level/ServerLevelAccessor;Lnet/minecraft/world/DifficultyInstance;"
 			+ "Lnet/minecraft/world/entity/EntitySpawnReason;Lnet/minecraft/world/entity/SpawnGroupData;)Lnet/minecraft/world/entity/SpawnGroupData;";
 	static final String TRIAL_SPAWNER = "net/minecraft/world/level/block/entity/trialspawner/TrialSpawner";
-	static final String NEO_HOOKS = "net/neoforged/neoforge/event/EventHooks";
+	static final String NEO_HOOKS = "net/minecraftforge/event/EventHooks";
 	static final String NEO_SPAWNER_HOOK = "finalizeMobSpawnSpawner";
 	static final String NEO_SPAWNER_DESC = "(Lnet/minecraft/world/entity/Mob;Lnet/minecraft/world/level/ServerLevelAccessor;"
 			+ "Lnet/minecraft/world/DifficultyInstance;Lnet/minecraft/world/entity/EntitySpawnReason;"
-			+ "Lnet/minecraft/world/entity/SpawnGroupData;Lnet/neoforged/neoforge/common/extensions/IOwnedSpawner;Z)"
-			+ "Lnet/neoforged/neoforge/event/entity/living/FinalizeSpawnEvent;";
+			+ "Lnet/minecraft/world/entity/SpawnGroupData;Lnet/minecraftforge/common/extensions/IOwnedSpawner;Z)"
+			+ "Lnet/minecraftforge/event/entity/living/FinalizeSpawnEvent;";
 
 	/** One field-to-getter rewrite: {@code GETFIELD owner.field:desc} becomes {@code owner.getter()desc}. */
 	record FieldGetter(String field, String desc, String getter, String property) {

@@ -20,7 +20,7 @@ public final class CreateInteractionMixinAdapters {
 		MethodNode original=CreateInjectionAdapters.named(mixin,"skip");ClassNode target=targets.apply("net/minecraft/world/level/SignalGetter");MethodNode host=target==null?null:CreateInjectionAdapters.named(target,"getSignal");
 		String live="L"+STATE+";shouldCheckWeakPower(Lnet/minecraft/world/level/SignalGetter;L"+POS+";Lnet/minecraft/core/Direction;)Z";
 		if(original==null||host==null||Type.getArgumentTypes(original.desc).length!=5||!Type.getArgumentTypes(original.desc)[3].equals(Type.getObjectType(OP))||CarpetMixinAdapter.count(host,live)!=1)return 0;
-		AnnotationNode inject=MixinFit.injectorOf(original);if(inject==null)return 0;CarpetMixinAdapter.set(MixinFit.atNodes(inject).getFirst(),"target",live);
+		AnnotationNode inject=MixinFit.injectorOf(original);if(inject==null)return 0;CarpetMixinAdapter.set(MixinFit.atNodes(inject).get(0),"target",live);
 		String desc="(L"+STATE+";Lnet/minecraft/world/level/SignalGetter;L"+POS+";Lnet/minecraft/core/Direction;L"+OP+";)Z";
 		MethodNode outer=new MethodNode(Opcodes.ACC_PRIVATE,original.name,desc,null,null);outer.visibleAnnotations=new ArrayList<>(List.of(inject));InsnList c=outer.instructions;
 		load(c,0,1,2,3);c.add(new VarInsnNode(Opcodes.ALOAD,5));c.add(new InsnNode(Opcodes.ICONST_1));c.add(new LdcInsnNode("0,1"));c.add(new InsnNode(Opcodes.ICONST_3));c.add(new TypeInsnNode(Opcodes.ANEWARRAY,"java/lang/Object"));c.add(new InsnNode(Opcodes.DUP));c.add(new InsnNode(Opcodes.ICONST_2));c.add(new VarInsnNode(Opcodes.ALOAD,4));c.add(new InsnNode(Opcodes.AASTORE));reordered(c);c.add(new VarInsnNode(Opcodes.ALOAD,4));finish(mixin,original,outer,inject,Opcodes.IRETURN,6);return 1;
@@ -29,15 +29,15 @@ public final class CreateInteractionMixinAdapters {
 		String authored="(Lnet/minecraft/world/entity/Entity;L"+BLOCK+";L"+OP+";L"+STATE+";)D";
 		MethodNode original=mixin.methods.stream().filter(m->m.desc.equals(authored)&&MixinFit.injectorOf(m)!=null).findFirst().orElse(null);ClassNode target=targets.apply("net/minecraft/world/entity/Entity");if(original==null||target==null)return 0;
 		if(!original.desc.equals("(Lnet/minecraft/world/entity/Entity;L"+BLOCK+";L"+OP+";L"+STATE+";)D"))return 0;
-		List<String> sourceSelectors=MixinFit.stringList(MixinFit.value(MixinFit.injectorOf(original),"method"));if(sourceSelectors.size()!=1||sourceSelectors.getFirst().indexOf('(')<0)return 0;String hostName=sourceSelectors.getFirst().substring(0,sourceSelectors.getFirst().indexOf('('));
+		List<String> sourceSelectors=MixinFit.stringList(MixinFit.value(MixinFit.injectorOf(original),"method"));if(sourceSelectors.size()!=1||sourceSelectors.get(0).indexOf('(')<0)return 0;String hostName=sourceSelectors.get(0).substring(0,sourceSelectors.get(0).indexOf('('));
 		String call="getBlockBounciness(L"+POS+";L"+STATE+";)D";List<MethodNode> hosts=target.methods.stream().filter(m->m.name.equals(hostName)&&CarpetMixinAdapter.count(m,"L"+target.name+";"+call)==1).toList();if(hosts.size()!=1)return 0;
-		AnnotationNode inject=MixinFit.injectorOf(original);List<AnnotationNode> ats=MixinFit.atNodes(inject);if(ats.size()!=1)return 0;CarpetMixinAdapter.set(inject,"method",List.of(hosts.getFirst().name+hosts.getFirst().desc));CarpetMixinAdapter.set(ats.getFirst(),"target","L"+target.name+";"+call);
+		AnnotationNode inject=MixinFit.injectorOf(original);List<AnnotationNode> ats=MixinFit.atNodes(inject);if(ats.size()!=1)return 0;CarpetMixinAdapter.set(inject,"method",List.of(hosts.get(0).name+hosts.get(0).desc));CarpetMixinAdapter.set(ats.get(0),"target","L"+target.name+";"+call);
 		MethodNode outer=new MethodNode(Opcodes.ACC_PRIVATE,original.name,"(Lnet/minecraft/world/entity/Entity;L"+POS+";L"+STATE+";L"+OP+";)D",null,null);outer.visibleAnnotations=new ArrayList<>(List.of(inject));InsnList c=outer.instructions;
 		load(c,0,1,3);c.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL,STATE,"getBlock","()L"+BLOCK+";",false));fixed(c,List.of(Type.getObjectType(target.name),Type.getObjectType(POS),Type.getObjectType(STATE)),new int[]{1,2,3},4);c.add(new VarInsnNode(Opcodes.ALOAD,3));finish(mixin,original,outer,inject,Opcodes.DRETURN,5);return 1;
 	}
 	private static int leftClick(ClassNode mixin,Function<String,ClassNode> targets){
 		MethodNode handler=CreateInjectionAdapters.named(mixin,"onLeftClick2");ClassNode target=targets.apply("net/minecraft/client/multiplayer/MultiPlayerGameMode");if(handler==null||target==null)return 0;AnnotationNode inject=MixinFit.injectorOf(handler);if(inject==null)return 0;
-		List<MethodNode> hosts=target.methods.stream().filter(m->m.name.equals("lambda$startDestroyBlock$1")&&m.desc.contains("LeftClickBlock;")&&CarpetMixinAdapter.count(m,"L"+target.name+";destroyBlock(L"+POS+";)Z")==1).toList();if(hosts.size()!=1)return 0;String selector=hosts.getFirst().name+hosts.getFirst().desc;
+		List<MethodNode> hosts=target.methods.stream().filter(m->m.name.equals("lambda$startDestroyBlock$1")&&m.desc.contains("LeftClickBlock;")&&CarpetMixinAdapter.count(m,"L"+target.name+";destroyBlock(L"+POS+";)Z")==1).toList();if(hosts.size()!=1)return 0;String selector=hosts.get(0).name+hosts.get(0).desc;
 		if(MixinFit.stringList(MixinFit.value(inject,"method")).equals(List.of(selector)))return 0;CarpetMixinAdapter.set(inject,"method",List.of(selector));return 1;
 	}
 	private static int breaking(ClassNode mixin,Function<String,ClassNode> targets,boolean server){
@@ -45,8 +45,8 @@ public final class CreateInteractionMixinAdapters {
 		if(original==null||host==null||MixinFit.injectorOf(original)==null||Type.getArgumentTypes(original.desc).length!=(server?6:7))return 0;
 		List<MethodInsnNode> calls=new ArrayList<>();for(var i:host.instructions)if(i instanceof MethodInsnNode call&&(server?call.owner.equals(owner)&&call.name.equals("removeBlock"):call.owner.equals(STATE)&&call.name.equals("onDestroyedByPlayer")))calls.add(call);
 		if(calls.isEmpty()||(!server&&calls.size()!=1)||calls.stream().map(c->c.desc).distinct().count()!=1)return 0;
-		MethodInsnNode live=calls.getFirst();Type[] nativeArgs=Type.getArgumentTypes(live.desc);List<Type> params=new ArrayList<>(List.of(Type.getObjectType(live.owner)));params.addAll(List.of(nativeArgs));params.add(Type.getObjectType(OP));params.add(Type.getObjectType(BLOCK));
-		AnnotationNode inject=MixinFit.injectorOf(original);CarpetMixinAdapter.set(MixinFit.atNodes(inject).getFirst(),"target","L"+live.owner+";"+live.name+live.desc);
+		MethodInsnNode live=calls.get(0);Type[] nativeArgs=Type.getArgumentTypes(live.desc);List<Type> params=new ArrayList<>(List.of(Type.getObjectType(live.owner)));params.addAll(List.of(nativeArgs));params.add(Type.getObjectType(OP));params.add(Type.getObjectType(BLOCK));
+		AnnotationNode inject=MixinFit.injectorOf(original);CarpetMixinAdapter.set(MixinFit.atNodes(inject).get(0),"target","L"+live.owner+";"+live.name+live.desc);
 		MethodNode outer=new MethodNode(Opcodes.ACC_PRIVATE,original.name,Type.getMethodDescriptor(Type.BOOLEAN_TYPE,params.toArray(Type[]::new)),null,null);outer.visibleAnnotations=new ArrayList<>(List.of(inject));
 		int[] slots=new int[params.size()];int slot=1;for(int i=0;i<params.size();i++){slots[i]=slot;slot+=params.get(i).getSize();}int op=1+nativeArgs.length;
 		outer.invisibleParameterAnnotations=new List[params.size()];outer.invisibleParameterAnnotations[op+1]=original.invisibleParameterAnnotations[server?5:6];

@@ -34,7 +34,7 @@ class ForgeLootPoolConditionsInjectorTest {
 		MethodNode build = build(out);
 		assertEquals(1, puts(build));
 		List<AbstractInsnNode> real = Arrays.stream(build.instructions.toArray()).filter(i -> i.getOpcode() >= 0).toList();
-		assertEquals(Opcodes.ARETURN, real.getLast().getOpcode());
+		assertEquals(Opcodes.ARETURN, real.get(real.size() - 1).getOpcode());
 		assertTrue(real.get(real.size() - 2) instanceof FieldInsnNode put && put.name.equals("forge_condition"), "stored right before the return");
 		assertTrue(real.get(real.size() - 3) instanceof MethodInsnNode call && call.name.equals("ofNullable"));
 		new Analyzer<>(new BasicVerifier()).analyze(BUILDER, build);

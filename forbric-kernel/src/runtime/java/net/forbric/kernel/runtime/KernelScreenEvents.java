@@ -5,8 +5,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import net.forbric.kernel.util.ForbricLog;
 import net.minecraft.client.gui.screens.Screen;
-import net.neoforged.neoforge.client.event.ScreenEvent;
-import net.neoforged.neoforge.common.NeoForge;
+import net.minecraftforge.client.event.ScreenEvent;
+import net.minecraftforge.common.MinecraftForge;
 
 /**
  * NeoForge's {@code ScreenEvent.Opening} and {@code Closing}, posted from the merged {@code Gui.setScreen}.
@@ -34,7 +34,7 @@ public final class KernelScreenEvents {
 		replacement = NOTHING;
 		try {
 			ScreenEvent.Opening event = new ScreenEvent.Opening(current, forgeChoice);
-			NeoForge.EVENT_BUS.post(event);
+			MinecraftForge.EVENT_BUS.post(event);
 			if (event.isCanceled()) return null;
 			if (event.getNewScreen() != forgeChoice) replacement = event.getNewScreen();
 		} catch (Throwable t) {
@@ -53,7 +53,7 @@ public final class KernelScreenEvents {
 	/** After MinecraftForge's Closing, for the same screen. */
 	public static void postNeoForgeClosing(Screen closing) {
 		try {
-			NeoForge.EVENT_BUS.post(new ScreenEvent.Closing(closing));
+			MinecraftForge.EVENT_BUS.post(new ScreenEvent.Closing(closing));
 		} catch (Throwable t) {
 			warn("ScreenEvent.Closing", t);
 		}

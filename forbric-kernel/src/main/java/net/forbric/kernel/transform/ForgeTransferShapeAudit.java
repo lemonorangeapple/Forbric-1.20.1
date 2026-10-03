@@ -48,7 +48,7 @@ public final class ForgeTransferShapeAudit {
 			"net.minecraft.world.item.ItemStack", Set.of("<init>", "isEmpty", "getCount", "getMaxStackSize", "grow", "shrink", "copy", "copyWithCount", "setCount", "getComponentsPatch", "isSameItemSameComponents", "getPopTime", "setPopTime", "typeHolder", "getItem", "getComponents", "getPrototype", "getOrDefault", "get"),
 			"net.minecraft.world.item.Item", Set.of("builtInRegistryHolder", "components", "getDefaultMaxStackSize", "computeDefaultResource"),
 			"net.minecraftforge.items.ItemHandlerHelper", Set.of("canItemStacksStack", "copyStackWithSize"),
-			"net.neoforged.neoforge.common.extensions.IItemExtension", Set.of("getMaxStackSize"));
+			"net.minecraftforge.common.extensions.IItemExtension", Set.of("getMaxStackSize"));
 	private static final Map<String, String> AUDITED = Map.ofEntries(
 			Map.entry("net.minecraftforge.items.ItemStackHandler", "be15e7bbc1b280544259474b1cc4eddd66fc6a17f0451486259e1ce4e56bef93"),
 			Map.entry("net.minecraftforge.items.ItemHandlerHelper", "ad43a680f428c4302b0163475ff2f7b92c3ddd752b8d572f70883fc623ad2d0d"),
@@ -66,13 +66,13 @@ public final class ForgeTransferShapeAudit {
 			Map.entry("net.minecraft.core.component.DataComponentHolder", "0fd6a2b373f4eda5cc83153ab696a5e7a7427c932166545d143798d3ded301b2"),
 			Map.entry("net.minecraft.core.component.DataComponentGetter", "e86a858ee320a0b6bfc583fdb9dfd747d58d5176109ddb24725092da528a2d6c"),
 			Map.entry("net.minecraft.nbt.CompoundTag", "95517a0b2c8dd3ead429407f35f480f16f389c1a9ee07fc18247138782086e83"),
-			Map.entry("net.neoforged.neoforge.transfer.item.ItemResource", "5e684403e1c0bccf9771146f56c7b434f6a025e6424a09989bd68a7d4b6247be"),
-			Map.entry("net.neoforged.neoforge.transfer.fluid.FluidResource", "1ecc381a45ce0c90ae66faa02037b50c14f50f17c76fb1e2a4a334eadc3a3466"),
-			Map.entry("net.neoforged.neoforge.common.MutableDataComponentHolder", "beaa9c59bd4505bad17e5da5e51bcdb8571cef110c0825d8178bf9d42fb14d52"),
-			Map.entry("net.neoforged.neoforge.transfer.resource.DataComponentHolderResource", "a86fd4ab64d88829d617c1a77658e0cc82c31582356f5032d7e4c97c567aeb6e"),
-			Map.entry("net.neoforged.neoforge.common.extensions.IItemExtension", "7040f6660c671ecf6a8dadf0911a83dfef146128c20bf61a5cbb1c21efc00654"));
-	public static final List<String> ITEM_HELPERS = List.of("net.minecraftforge.items.ItemHandlerHelper", "net.minecraft.world.item.ItemStack", "net.minecraft.world.item.Item", "net.minecraft.core.NonNullList", "net.minecraft.core.component.PatchedDataComponentMap", "net.minecraft.core.component.DataComponentPatch", "net.minecraft.core.component.DataComponentHolder", "net.minecraft.core.component.DataComponentGetter", "net.minecraftforge.common.capabilities.CapabilityProvider", "net.minecraftforge.common.capabilities.CapabilityProvider$ItemStacks", "net.neoforged.neoforge.transfer.item.ItemResource", "net.neoforged.neoforge.transfer.resource.DataComponentHolderResource", "net.neoforged.neoforge.common.MutableDataComponentHolder", "net.neoforged.neoforge.common.extensions.IItemExtension");
-	public static final List<String> FLUID_HELPERS = List.of("net.minecraftforge.fluids.FluidStack", "net.minecraft.nbt.CompoundTag", "net.minecraft.core.component.DataComponentPatch", "net.minecraft.core.component.DataComponentHolder", "net.minecraft.core.component.DataComponentGetter", "net.neoforged.neoforge.transfer.fluid.FluidResource", "net.neoforged.neoforge.transfer.resource.DataComponentHolderResource");
+			Map.entry("net.minecraftforge.transfer.item.ItemResource", "5e684403e1c0bccf9771146f56c7b434f6a025e6424a09989bd68a7d4b6247be"),
+			Map.entry("net.minecraftforge.transfer.fluid.FluidResource", "1ecc381a45ce0c90ae66faa02037b50c14f50f17c76fb1e2a4a334eadc3a3466"),
+			Map.entry("net.minecraftforge.common.MutableDataComponentHolder", "beaa9c59bd4505bad17e5da5e51bcdb8571cef110c0825d8178bf9d42fb14d52"),
+			Map.entry("net.minecraftforge.transfer.resource.DataComponentHolderResource", "a86fd4ab64d88829d617c1a77658e0cc82c31582356f5032d7e4c97c567aeb6e"),
+			Map.entry("net.minecraftforge.common.extensions.IItemExtension", "7040f6660c671ecf6a8dadf0911a83dfef146128c20bf61a5cbb1c21efc00654"));
+	public static final List<String> ITEM_HELPERS = List.of("net.minecraftforge.items.ItemHandlerHelper", "net.minecraft.world.item.ItemStack", "net.minecraft.world.item.Item", "net.minecraft.core.NonNullList", "net.minecraft.core.component.PatchedDataComponentMap", "net.minecraft.core.component.DataComponentPatch", "net.minecraft.core.component.DataComponentHolder", "net.minecraft.core.component.DataComponentGetter", "net.minecraftforge.common.capabilities.CapabilityProvider", "net.minecraftforge.common.capabilities.CapabilityProvider$ItemStacks", "net.minecraftforge.transfer.item.ItemResource", "net.minecraftforge.transfer.resource.DataComponentHolderResource", "net.minecraftforge.common.MutableDataComponentHolder", "net.minecraftforge.common.extensions.IItemExtension");
+	public static final List<String> FLUID_HELPERS = List.of("net.minecraftforge.fluids.FluidStack", "net.minecraft.nbt.CompoundTag", "net.minecraft.core.component.DataComponentPatch", "net.minecraft.core.component.DataComponentHolder", "net.minecraft.core.component.DataComponentGetter", "net.minecraftforge.transfer.fluid.FluidResource", "net.minecraftforge.transfer.resource.DataComponentHolderResource");
 	/** ForgeEnergyAdapters writes only through this class's own code and restores only its energy field. */
 	public static final List<String> ENERGY_HELPERS = List.of("net.minecraftforge.energy.EnergyStorage");
 	private static final Map<String, String> DECLINED = new ConcurrentHashMap<>();

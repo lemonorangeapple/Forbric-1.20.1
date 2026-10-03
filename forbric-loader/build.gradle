@@ -9,6 +9,12 @@ base {
 
 version = '0.1.0'
 
+// Target versions come from VERSIONS.properties -- the single source of truth. Do not
+// hardcode a Minecraft / loader version anywhere in this file.
+apply from: file('../gradle/forbric-versions.gradle')
+def fabricLoaderRef = forbricVersion('fabric.loader')
+def forgeVersion = forbricVersion('forge.version')
+
 java {
 	// Loader core targets Java 17 bytecode (the substrate is Java 8/17 multi-release; the MRJ slice is added
 	// later). We compile with whatever JDK (>= 17) runs Gradle, pinning the output to release 17 — rather than
@@ -32,9 +38,11 @@ sourceSets {
 			srcDir 'src/stub/java'
 		}
 	}
-	// The byte-merge tools (MergedBaseBuilder, RuntimeInteropPatcher, MergedLinkChecker). They are build-time
-	// programs, not loader code: they read jars and write jars, they never run inside the game, and nothing in
-	// src/main references them. So they compile on their own, against ASM alone, and ship in their own jar.
+	// The build-time tools: GameJarRemapper (Forge SRG → intermediary, item 11) and MergedLinkChecker (a
+	// dangling-reference check). They are build-time programs, not loader code: they read jars and write jars,
+	// they never run inside the game, and nothing in src/main references them. So they compile on their own and
+	// ship in their own jar. The byte-merge tools (MergedBaseBuilder, RuntimeInteropPatcher, ...) were removed
+	// with NeoForge: one Forge family means there is nothing to merge.
 	tools {
 		java {
 			srcDir 'src/tools/java'
@@ -92,6 +100,7 @@ dependencies {
 	api "org.ow2.sat4j:org.ow2.sat4j.pb:${project.sat4j_version}"
 	api "net.fabricmc:tiny-remapper:${project.tiny_remapper_version}"
 	api "net.fabricmc:class-tweaker:${project.class_tweaker_version}"
+	api "net.fabricmc:access-widener:${project.access_widener_version}"
 	api "net.fabricmc:mapping-io:${project.mapping_io_version}"
 
 	// MixinExtras must NOT be parent-loaded — its runtime-generated LocalRef classes must be defined in Knot's
@@ -114,6 +123,12 @@ dependencies {
 	toolsImplementation "org.ow2.asm:asm:${project.asm_version}"
 	toolsImplementation "org.ow2.asm:asm-commons:${project.asm_version}"
 	toolsImplementation "org.ow2.asm:asm-tree:${project.asm_version}"
+	// GameJarRemapper (SRG -> intermediary) needs the substrate's remap stack, shaded into the tools jar so
+	// the installer can run it as a subprocess. tiny-remapper pulls asm/asm-analysis/asm-util transitively.
+	toolsImplementation "net.fabricmc:tiny-remapper:${project.tiny_remapper_version}"
+	toolsImplementation "net.fabricmc:mapping-io:${project.mapping_io_version}"
+	toolsImplementation "org.ow2.asm:asm-analysis:${project.asm_version}"
+	toolsImplementation "org.ow2.asm:asm-util:${project.asm_version}"
 
 	testImplementation "org.junit.jupiter:junit-jupiter:${project.junit_version}"
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -129,7 +144,7 @@ tasks.withType(JavaCompile).configureEach {
 def substrateVersionSource = file("${fabricLoader}/src/main/java/net/fabricmc/loader/impl/FabricLoaderImpl.java")
 // Standalone merge tools do not need bootstrap. Only the loader's compilation/resources require the substrate.
 def fabricLoaderVersion = substrateVersionSource.isFile()
-		? (substrateVersionSource.text =~ /VERSION\s*=\s*"(.*?)"/)[0][1] : project.fabric_loader_ref
+		? (substrateVersionSource.text =~ /VERSION\s*=\s*"(.*?)"/)[0][1] : fabricLoaderRef
 tasks.named('compileJava') {
 	doFirst {
 		if (!substrateVersionSource.isFile()) throw new GradleException('Loader sources need ./bootstrap.sh from the repository root')
@@ -155,13 +170,13 @@ def substrateIdentity = [
 		 '"name": "Fabric Loader (Forbric build)"'],
 		['"description": "The base mod loader."',
 		 '"description": "The base mod loader. This is Forbric\'s build of FabricMC\'s fabric-loader ' +
-				 '(see the fabric_loader_ref pin in gradle.properties), carrying Forbric\'s substrate patches. ' +
+				 '(see the forbric.fabric.loader pin in VERSIONS.properties), carrying Forbric\'s substrate patches. ' +
 				 'Report problems with this build to Forbric, not to FabricMC."'],
 		['"homepage": "https://fabricmc.net"',
 		 '"homepage": "' + forbricRepo + '"'],
-		['"issues": "https://github.com/FabricMC/fabric-loader/issues"',
+		['"issues": "https://github.com/FabricMC/fabric/issues"',
 		 '"issues": "' + forbricRepo + '/issues"'],
-		['"sources": "https://github.com/FabricMC/fabric-loader"',
+		['"sources": "https://github.com/FabricMC/fabric"',
 		 '"sources": "' + forbricRepo + '"'],
 		['"FabricMC"',
 		 '"FabricMC",\n    "The Forbric Project"'],
@@ -190,7 +205,7 @@ processResources {
 		if (!missed.isEmpty()) {
 			throw new GradleException('the substrate fabric.mod.json was not rewritten: ' +
 					missed.collect { it[0] } + ' did not match. fabric-loader ' +
-					"${project.fabric_loader_ref} reformatted the file; update substrateIdentity in build.gradle.")
+					"${fabricLoaderRef} reformatted the file; update substrateIdentity in build.gradle.")
 		}
 		if (!text.contains('"id": "fabricloader"')) {
 			throw new GradleException('the builtin mod id is no longer "fabricloader" -- every Fabric mod ' +
@@ -247,15 +262,14 @@ tasks.register('runtimeJar', Jar) {
 
 assemble.dependsOn 'runtimeJar'
 
-// The merge tools, shaded with the ASM they need. The installer ships this jar as a resource and runs it as a
-// subprocess (4 GB heap, which the installer's own JVM cannot grant itself), so it has to be self-contained:
-// there is no classpath to put ASM on at that point. Shading three small libraries is what buys that.
+// The build tools, shaded with everything they need (ASM, tiny-remapper, mapping-io). The installer ships this
+// jar as a resource and runs GameJarRemapper as a subprocess (4 GB heap, which the installer's own JVM cannot
+// grant itself), so it has to be self-contained: there is no classpath to put those libraries on at that point.
 //
-// It is deliberately NOT wired into `assemble`. Building it means resolving ASM, and the two things that want
-// it -- forbric-kernel-installer's buildMergeTools task and anyone reproducing run/build-merged-base.sh -- ask
-// for it by name.
+// It is deliberately NOT wired into `assemble`. Building it means resolving those libraries, and the one thing
+// that wants it -- forbric-kernel-installer's buildMergeTools task -- asks for it by name.
 tasks.register('mergeToolsJar', Jar) {
-	description = "Build the merge-tools jar (net.forbric.tools + shaded ASM) the installer runs as a subprocess."
+	description = "Build the tools jar (net.forbric.tools + shaded ASM/tiny-remapper/mapping-io) the installer runs as a subprocess."
 	archiveBaseName = 'forbric-merge-tools'
 	from sourceSets.tools.output
 	// One reviewed baseline serves development, release gates and the installed build tool.
@@ -345,7 +359,7 @@ tasks.register('generateInstallerManifest') {
 			// full-forge install path errors clearly if it is absent from the manifest.
 			def bridgeJar = file('run/forge-runtime/forbric-bridge.jar')
 			if (bridgeJar.isFile()) {
-				entries << entry('net.forbric:forbric-bridge:26.2-65.0.1', 'forge-bridge', bridgeJar)
+				entries << entry('net.forbric:forbric-bridge:' + forgeVersion, 'forge-bridge', bridgeJar)
 			} else {
 				println "generateInstallerManifest: NOTE ${bridgeJar} absent — full-forge installs will fail until " +
 						"run/assemble-minecraftforge-runtime.sh has produced the bridge jar"

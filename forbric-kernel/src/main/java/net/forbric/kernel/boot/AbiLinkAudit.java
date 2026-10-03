@@ -55,11 +55,11 @@ public final class AbiLinkAudit {
 	static final String SWITCH = "forbric.abiAudit";
 
 	/** What is judged: everything under either family's root… */
-	static final String[] FAMILIES = { "net/neoforged/", "net/minecraftforge/" };
+	static final String[] FAMILIES = { "net/minecraftforge/", "net/minecraftforge/" };
 	/** …except the loading layer the kernel replaces. */
-	static final String[] OUT_OF_SCOPE = { "net/neoforged/fml/loading/", "net/minecraftforge/fml/loading/",
-			"net/minecraftforge/fml/relauncher/", "net/neoforged/neoforgespi/locating/", "net/minecraftforge/forgespi/locating/" };
-	private static final byte[][] NEEDLES = { ByteScan.needle("net/neoforged/"), ByteScan.needle("net/minecraftforge/") };
+	static final String[] OUT_OF_SCOPE = { "net/minecraftforge/fml/loading/", "net/minecraftforge/fml/loading/",
+			"net/minecraftforge/fml/relauncher/", "net/minecraftforge/forgespi/locating/", "net/minecraftforge/forgespi/locating/" };
+	private static final byte[][] NEEDLES = { ByteScan.needle("net/minecraftforge/"), ByteScan.needle("net/minecraftforge/") };
 
 	/** One jar with dangling references: which family, and the classes (internal names) that resolve nowhere. */
 	public record Finding(String jar, String family, List<String> missing) {
@@ -131,7 +131,7 @@ public final class AbiLinkAudit {
 			}
 			if (missing.isEmpty()) continue;
 			String first = missing.iterator().next();
-			out.add(new Finding(jar.getFileName().toString(), first.startsWith("net/neoforged/") ? "NeoForge" : "MinecraftForge",
+			out.add(new Finding(jar.getFileName().toString(), first.startsWith("net/minecraftforge/") ? "NeoForge" : "MinecraftForge",
 					List.copyOf(missing)));
 		}
 		return out;

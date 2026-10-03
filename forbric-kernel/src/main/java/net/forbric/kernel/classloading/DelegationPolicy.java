@@ -94,7 +94,7 @@ public final class DelegationPolicy {
 			"net.minecraft.",
 			"com.mojang.blaze3d.",
 			"net.minecraftforge.",
-			"net.neoforged.",
+			"net.minecraftforge.",
 			"net.fabricmc.fabric.",
 			"net.forbric.kernel.runtime.",
 			"com.llamalad7.mixinextras.",

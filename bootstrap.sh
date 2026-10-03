@@ -19,9 +19,10 @@ SUBSTRATE="$HERE/fabric-loader"
 PATCHES="$HERE/forbric-loader/patches/fabric-loader"
 REMOTE="${FABRIC_LOADER_REMOTE:-https://github.com/FabricMC/fabric-loader.git}"
 
-# Single source of truth for which upstream release Forbric's patches apply to.
-REF="$(sed -n 's/^fabric_loader_ref[[:space:]]*=[[:space:]]*//p' "$HERE/forbric-loader/gradle.properties" | tr -d '[:space:]')"
-[ -n "$REF" ] || { echo "bootstrap: fabric_loader_ref missing from forbric-loader/gradle.properties" >&2; exit 1; }
+# Single source of truth for which upstream release Forbric's patches apply to: the
+# forbric.fabric.loader key in the repository-root VERSIONS.properties.
+REF="$(sed -n 's/^forbric\.fabric\.loader[[:space:]]*=[[:space:]]*//p' "$HERE/VERSIONS.properties" | tr -d '[:space:]')"
+[ -n "$REF" ] || { echo "bootstrap: forbric.fabric.loader missing from VERSIONS.properties" >&2; exit 1; }
 
 check_only=0
 [ "${1:-}" = "--check" ] && check_only=1

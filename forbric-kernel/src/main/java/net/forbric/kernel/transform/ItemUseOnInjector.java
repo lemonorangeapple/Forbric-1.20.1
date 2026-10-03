@@ -56,7 +56,7 @@ public final class ItemUseOnInjector implements ClassTransformer {
 	public static final String PROPERTY = "forbric.itemUseOn";
 	static final String STACK = "net.minecraft.world.item.ItemStack";
 	static final String FORGE_HOOKS = "net.minecraftforge.common.ForgeHooks";
-	static final String NEO_HOOKS = "net.neoforged.neoforge.common.CommonHooks";
+	static final String NEO_HOOKS = "net.minecraftforge.common.CommonHooks";
 	static final String STACK_INTERNAL = "net/minecraft/world/item/ItemStack";
 	static final String ITEM = "net/minecraft/world/item/Item";
 	static final String CONTEXT = "net/minecraft/world/item/context/UseOnContext";
@@ -66,9 +66,9 @@ public final class ItemUseOnInjector implements ClassTransformer {
 	public static final String RELAY = "forbric$useOnItem";
 	public static final String RELAY_DESC = "(L" + ITEM + ";L" + CONTEXT + ";)L" + RESULT + ";";
 	static final String BRIDGE = "forbric$useOnItemFor";
-	static final String EVENT = "net/neoforged/neoforge/event/entity/player/UseItemOnBlockEvent";
+	static final String EVENT = "net/minecraftforge/event/entity/player/UseItemOnBlockEvent";
 	static final String PHASE = EVENT + "$UsePhase";
-	static final String BUS = "net/neoforged/bus/api/IEventBus";
+	static final String BUS = "net/minecraftforge/eventbus/api/IEventBus";
 
 	static boolean enabled() {
 		return !"off".equalsIgnoreCase(System.getProperty(PROPERTY, "on"));
@@ -151,10 +151,10 @@ public final class ItemUseOnInjector implements ClassTransformer {
 			if (call.owner.equals(STACK_INTERNAL) && call.name.equals(BRIDGE)) return 0;   // already done
 			if (call.owner.equals(ITEM) && call.name.equals("useOn") && call.desc.equals(USE_ON_DESC)) calls.add(call);
 		}
-		if (calls.size() != 1 || calls.getFirst().getOpcode() != Opcodes.INVOKEVIRTUAL) {
+		if (calls.size() != 1 || calls.get(0).getOpcode() != Opcodes.INVOKEVIRTUAL) {
 			return declined(owner + ".onPlaceItemIntoWorld does not make exactly one Item.useOn call");
 		}
-		place.instructions.set(calls.getFirst(), new MethodInsnNode(Opcodes.INVOKESTATIC, STACK_INTERNAL, BRIDGE, RELAY_DESC, false));
+		place.instructions.set(calls.get(0), new MethodInsnNode(Opcodes.INVOKESTATIC, STACK_INTERNAL, BRIDGE, RELAY_DESC, false));
 		return 1;
 	}
 
@@ -193,13 +193,13 @@ public final class ItemUseOnInjector implements ClassTransformer {
 	static InsnList neoForgePost() {
 		InsnList post = new InsnList();
 		LabelNode proceed = new LabelNode();
-		post.add(new FieldInsnNode(Opcodes.GETSTATIC, "net/neoforged/neoforge/common/NeoForge", "EVENT_BUS", "L" + BUS + ";"));
+		post.add(new FieldInsnNode(Opcodes.GETSTATIC, "net/minecraftforge/common/NeoForge", "EVENT_BUS", "L" + BUS + ";"));
 		post.add(new TypeInsnNode(Opcodes.NEW, EVENT));
 		post.add(new InsnNode(Opcodes.DUP));
 		post.add(new VarInsnNode(Opcodes.ALOAD, 1));
 		post.add(new FieldInsnNode(Opcodes.GETSTATIC, PHASE, "ITEM_AFTER_BLOCK", "L" + PHASE + ";"));
 		post.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, EVENT, "<init>", "(L" + CONTEXT + ";L" + PHASE + ";)V", false));
-		post.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, BUS, "post", "(Lnet/neoforged/bus/api/Event;)Lnet/neoforged/bus/api/Event;", true));
+		post.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, BUS, "post", "(Lnet/minecraftforge/eventbus/api/Event;)Lnet/minecraftforge/eventbus/api/Event;", true));
 		post.add(new TypeInsnNode(Opcodes.CHECKCAST, EVENT));
 		post.add(new InsnNode(Opcodes.DUP));
 		post.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, EVENT, "isCanceled", "()Z", false));

@@ -56,7 +56,7 @@ class DeadEventAuditStagedTest {
 		for (MethodNode m : node.methods) {
 			if (!m.name.equals("getTooltipLines")) continue;
 			found = true;
-			for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (!(insn instanceof MethodInsnNode call)) continue;
 				if ("net/minecraftforge/event/ForgeEventFactory".equals(call.owner) && "onItemTooltip".equals(call.name)) forge = true;
 				if (call.owner.startsWith("net/neoforged/")) neo = true;

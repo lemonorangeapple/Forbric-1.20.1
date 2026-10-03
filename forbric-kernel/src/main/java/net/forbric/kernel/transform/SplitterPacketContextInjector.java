@@ -48,7 +48,7 @@ import net.forbric.kernel.util.ForbricLog;
  * <p>{@code -Dforbric.splitterPacketContext=off} leaves the splitter encoding exactly where it did.
  */
 public final class SplitterPacketContextInjector implements ClassTransformer {
-	private static final String SPLITTER = "net.neoforged.neoforge.network.filters.GenericPacketSplitter";
+	private static final String SPLITTER = "net.minecraftforge.network.filters.GenericPacketSplitter";
 	private static final String HOOK_OWNER = "net/forbric/kernel/runtime/KernelPacketContext";
 	private static final String HOOK_NAME = "encodeInFabricContext";
 	private static final String BODY_NAME = "encode$forbriccontext";

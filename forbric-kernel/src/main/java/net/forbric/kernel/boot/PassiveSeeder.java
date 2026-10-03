@@ -201,7 +201,18 @@ public final class PassiveSeeder {
 		try {
 			Class<?> fmlLoader = Class.forName(ForeignType.FML_LOADER.binary(Ecosystem.NEOFORGE), false, gameLoader);
 
-			Method getCurrentOrNull = fmlLoader.getDeclaredMethod("getCurrentOrNull");
+			// 1.20.1's FMLLoader has no getCurrentOrNull/makeCurrent (those are NeoForge's): seed an empty
+			// LoadingModList so FMLLoader.getLoadingModList() answers instead of NPE-ing in ServerPacksSource.
+			Method getCurrentOrNull;
+			try {
+				getCurrentOrNull = fmlLoader.getDeclaredMethod("getCurrentOrNull");
+			} catch (NoSuchMethodException notNeoForge) {
+				seedModuleLayerManager(gameLoader, fmlLoader);
+				seedEmptyLoadingModList(gameLoader, fmlLoader, null);
+				ForbricLog.info("[Forbric/Seed] MinecraftForge FMLLoader present — seeded an empty LoadingModList "
+						+ "(zero mods; 1.20.1 has no FancyModLoader discovery)");
+				return;
+			}
 			getCurrentOrNull.setAccessible(true);
 			if (getCurrentOrNull.invoke(null) != null) {
 				ForbricLog.debug("[Forbric/Seed] NeoForge FMLLoader already current — not re-seeding");
@@ -254,18 +265,74 @@ public final class PassiveSeeder {
 	 * {@code FeatureFlags.<clinit>} (via {@code FeatureFlagLoader.loadModdedFlags}) during {@code Bootstrap.bootStrap}.
 	 * Zero mods = empty list. This seeds data, not lifecycle.
 	 */
+	/**
+	 * Forge's patched vanilla code calls {@code ModLoader.get()}, whose constructor walks
+	 * {@code FMLLoader.getGameLayer()} -> {@code FMLLoader.moduleLayerManager}. The kernel bypasses ModLauncher, so
+	 * that field is null; seed a minimal {@code IModuleLayerManager} whose layers are empty, which lets Forge's
+	 * bookkeeping finish without a module layer.
+	 */
+	static void seedModuleLayerManager(ClassLoader gameLoader) {
+		try {
+			seedModuleLayerManager(gameLoader,
+					Class.forName(ForeignType.FML_LOADER.binary(Ecosystem.FORGE), false, gameLoader));
+		} catch (Throwable ignored) {
+			// the per-class method has already logged
+		}
+	}
+
+	static void seedModuleLayerManager(ClassLoader gameLoader, Class<?> fmlLoader) {
+		try {
+			Field field = fmlLoader.getDeclaredField("moduleLayerManager");
+			field.setAccessible(true);
+			Class<?> manager = Class.forName("cpw.mods.modlauncher.api.IModuleLayerManager", false, gameLoader);
+			Object proxy = java.lang.reflect.Proxy.newProxyInstance(gameLoader, new Class<?>[] {manager},
+					(p, method, args) -> {
+						Class<?> type = method.getReturnType();
+						if (java.util.Optional.class.isAssignableFrom(type)) {
+							// Forge's ModStateManager reads getLayer(GAME).orElseThrow(); give it the boot layer.
+							return java.util.Optional.of(java.lang.ModuleLayer.boot());
+						}
+						if (type == boolean.class) return false;
+						if (type == int.class) return 0;
+						if (List.class.isAssignableFrom(type)) return List.of();
+						if (java.util.Map.class.isAssignableFrom(type)) return Map.of();
+						return null;
+					});
+			// Set unconditionally: a later init may have reset the field to null.
+			field.set(null, proxy);
+			// If ModLoader was loaded by a different loader than gameLoader, that copy's field is the one read at
+			// runtime; set it there too.
+			Class<?> modLoader = Class.forName("net.minecraftforge.fml.ModLoader", false, gameLoader);
+			if (modLoader.getClassLoader() != fmlLoader.getClassLoader()) {
+				Class<?> other = Class.forName("net.minecraftforge.fml.loading.FMLLoader", false,
+						modLoader.getClassLoader());
+				Field otherField = other.getDeclaredField("moduleLayerManager");
+				otherField.setAccessible(true);
+				otherField.set(null, proxy);
+			}
+			ForbricLog.info("[Forbric/Seed] seeded a minimal IModuleLayerManager (FMLLoader CL="
+					+ fmlLoader.getClassLoader() + ", ModLoader CL=" + modLoader.getClassLoader() + ")");
+		} catch (Throwable t) {
+			ForbricLog.warn("[Forbric/Seed] could not seed IModuleLayerManager: " + t);
+		}
+	}
+
 	private static void seedEmptyLoadingModList(ClassLoader gameLoader, Class<?> fmlLoader, Object loaderInstance) {
 		try {
 			Field field = fmlLoader.getDeclaredField("loadingModList");
 			field.setAccessible(true);
-			if (field.get(loaderInstance) != null) return; // already built
+			// 1.20.1's FMLLoader.loadingModList is STATIC (26.2's was instance-scoped), so read/set with null.
+			if (field.get(null) != null) return; // already built
 
-			Class<?> lmlCls = Class.forName(ForeignType.LOADING_MOD_LIST.binary(Ecosystem.NEOFORGE), false, gameLoader);
-			// of(modFiles, gameLibraries, plugins, modInfos, issues, dependencies) — all empty for zero mods.
-			Method of = lmlCls.getMethod("of", List.class, List.class, List.class, List.class, List.class, Map.class);
-			Object empty = of.invoke(null, List.of(), List.of(), List.of(), List.of(), List.of(), Map.of());
-			field.set(loaderInstance, empty);
-			ForbricLog.debug("[Forbric/Seed] seeded empty NeoForge LoadingModList (zero mods)");
+			Class<?> lmlCls = Class.forName(ForeignType.LOADING_MOD_LIST.binary(Ecosystem.FORGE), false, gameLoader);
+			// 1.20.1 signature: of(List<ModFile>, List<ModInfo>, EarlyLoadingException) — all empty for zero mods.
+			Method of = lmlCls.getMethod("of", List.class, List.class,
+					Class.forName("net.minecraftforge.fml.loading.EarlyLoadingException", false, gameLoader));
+			Object empty = of.invoke(null, List.of(), List.of(), null);
+			// of(...) leaves brokenFiles null, and Forge's ModLoader Ctor streams it.
+			lmlCls.getMethod("setBrokenFiles", List.class).invoke(empty, List.of());
+			field.set(null, empty);
+			ForbricLog.debug("[Forbric/Seed] seeded empty MinecraftForge LoadingModList (zero mods)");
 		} catch (Throwable t) {
 			ForbricLog.warn("[Forbric/Seed] could not seed empty LoadingModList", unwrap(t));
 		}
@@ -1178,7 +1245,7 @@ public final class PassiveSeeder {
 			boolean indexed) {
 		try {
 			Class<?> modFileCls = Class.forName(ForeignType.MOD_FILE.binary(Ecosystem.NEOFORGE), false, gameLoader);
-			Class<?> contentsCls = Class.forName("net.neoforged.fml.jarcontents.JarContents", false, gameLoader);
+			Class<?> contentsCls = Class.forName("net.minecraftforge.fml.jarcontents.JarContents", false, gameLoader);
 			Class<?> typeCls = Class.forName(ForeignType.MOD_FILE_TYPE.binary(Ecosystem.NEOFORGE), false, gameLoader);
 
 			Object modFile = allocate(gameLoader, modFileCls);
@@ -1192,7 +1259,7 @@ public final class PassiveSeeder {
 			setInstanceField(modFileCls, "fileProperties", modFile, Map.of());
 			setInstanceField(modFileCls, "loaders", modFile, List.of());
 			try {
-				Class<?> attrs = Class.forName("net.neoforged.neoforgespi.locating.ModFileDiscoveryAttributes",
+				Class<?> attrs = Class.forName("net.minecraftforge.forgespi.locating.ModFileDiscoveryAttributes",
 						false, gameLoader);
 				setInstanceField(modFileCls, "discoveryAttributes", modFile, attrs.getField("DEFAULT").get(null));
 			} catch (Throwable optional) {
@@ -1414,9 +1481,9 @@ public final class PassiveSeeder {
 	public static void seedNeoForgeRegistries(ClassLoader gameLoader) {
 		try {
 			// Ensure the static NeoForgeRegistries.* registry objects are created first.
-			Class.forName("net.neoforged.neoforge.registries.NeoForgeRegistries", true, gameLoader);
+			Class.forName("net.minecraftforge.registries.NeoForgeRegistries", true, gameLoader);
 
-			Class<?> setupCls = Class.forName("net.neoforged.neoforge.registries.NeoForgeRegistriesSetup", false, gameLoader);
+			Class<?> setupCls = Class.forName("net.minecraftforge.registries.NeoForgeRegistriesSetup", false, gameLoader);
 			Class<?> eventCls = Class.forName(ForeignType.NEW_REGISTRY_EVENT.binary(Ecosystem.NEOFORGE), false, gameLoader);
 
 			Constructor<?> eventCtor = eventCls.getDeclaredConstructor();
@@ -1472,9 +1539,9 @@ public final class PassiveSeeder {
 	 */
 	public static boolean applyNeoForgeRegistryModifications(ClassLoader gameLoader) {
 		try {
-			Class<?> setupCls = Class.forName("net.neoforged.neoforge.registries.NeoForgeRegistriesSetup", false,
+			Class<?> setupCls = Class.forName("net.minecraftforge.registries.NeoForgeRegistriesSetup", false,
 					gameLoader);
-			Class<?> eventCls = Class.forName("net.neoforged.neoforge.registries.ModifyRegistriesEvent", false,
+			Class<?> eventCls = Class.forName("net.minecraftforge.registries.ModifyRegistriesEvent", false,
 					gameLoader);
 
 			Constructor<?> eventCtor = eventCls.getDeclaredConstructor();
@@ -1810,6 +1877,8 @@ public final class PassiveSeeder {
 
 	private static void setStaticIfNull(Class<?> owner, String field, Object value) throws Exception {
 		Field f = owner.getDeclaredField(field);
+		// 1.20.1's ModList keeps some of these as INSTANCE fields (26.2's were static); field.get(null) on those NPEs.
+		if (!java.lang.reflect.Modifier.isStatic(f.getModifiers())) return;
 		f.setAccessible(true);
 		if (f.get(null) == null) f.set(null, value);
 	}

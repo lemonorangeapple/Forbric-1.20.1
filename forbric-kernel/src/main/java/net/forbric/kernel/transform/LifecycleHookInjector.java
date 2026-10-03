@@ -38,10 +38,10 @@ import net.forbric.kernel.util.ForbricLog;
  * <p><b>The merged-base facts.</b> NeoForge won the byte-merge of both entries:
  * <ul>
  *   <li><b>Server</b> — {@code net.minecraft.server.Main.main} calls
- *       {@code net.neoforged.neoforge.server.loading.ServerModLoader.load(Z)V} between {@code Bootstrap.bootStrap()}
+ *       {@code net.minecraftforge.server.loading.ServerModLoader.load(Z)V} between {@code Bootstrap.bootStrap()}
  *       and {@code new DedicatedServerSettings(...)}.</li>
  *   <li><b>Client</b> — {@code net.minecraft.client.main.Main.main} calls
- *       {@code net.neoforged.neoforge.client.loading.ClientModLoader.begin()V} at bc 814, after
+ *       {@code net.minecraftforge.client.loading.ClientModLoader.begin()V} at bc 814, after
  *       {@code Bootstrap.validate()} (and after {@code BackgroundWaiter.runAndTick} ran the bootstrap lambda that
  *       froze the registries), and before {@code new Minecraft} → {@code Minecraft.<init>} → the
  *       {@code ClientHooks.initClientHooks} that fires the client mod-bus events (reload listeners, renderers) the
@@ -147,32 +147,39 @@ public final class LifecycleHookInjector implements ClassTransformer {
 	private final boolean fabricServerHook;
 	/** Whether {@link #EARLY_FAILURE} reports to the kernel first. Client only; see the class comment. */
 	private final boolean reportsEarlyFailures;
+	/**
+	 * Whether a missing trigger must stop the boot. True for the server, whose entry has no other kernel call. False
+	 * for the client on 1.20.1: traditional Forge ships no {@code ClientModLoader.begin} there, and the kernel's
+	 * client lifecycle is driven from {@code Minecraft.<init>} by {@code ClientEntrypointHookInjector} instead.
+	 */
+	private final boolean required;
 
 	private volatile boolean transformedRequiredEntry;
 	private volatile boolean redirectedAtRequiredEntry;
 
 	private LifecycleHookInjector(String transformClass, String transformMethod, Trigger[] triggers,
-			boolean fabricServerHook, boolean reportsEarlyFailures) {
+			boolean fabricServerHook, boolean reportsEarlyFailures, boolean required) {
 		this.transformClass = transformClass;
 		this.transformMethod = transformMethod;
 		this.triggers = triggers;
 		this.fabricServerHook = fabricServerHook;
 		this.reportsEarlyFailures = reportsEarlyFailures;
+		this.required = required;
 	}
 
 	/** The injector for the dedicated-server entry ({@code Main.main}). */
 	public static LifecycleHookInjector forServer() {
-		return new LifecycleHookInjector(SERVER_MAIN, "main", SERVER_TRIGGERS, true, false);
+		return new LifecycleHookInjector(SERVER_MAIN, "main", SERVER_TRIGGERS, true, false, true);
 	}
 
 	/** The injector for the client ({@code net.minecraft.client.main.Main.main}). */
 	public static LifecycleHookInjector forClient() {
-		return new LifecycleHookInjector(CLIENT_MAIN, "main", CLIENT_TRIGGERS, false, true);
+		return new LifecycleHookInjector(CLIENT_MAIN, "main", CLIENT_TRIGGERS, false, true, false);
 	}
 
 	/** Backwards-compatible default: the server entry (existing callers/tests). */
 	public LifecycleHookInjector() {
-		this(SERVER_MAIN, "main", SERVER_TRIGGERS, true, false);
+		this(SERVER_MAIN, "main", SERVER_TRIGGERS, true, false, true);
 	}
 
 	@Override
@@ -288,7 +295,7 @@ public final class LifecycleHookInjector implements ClassTransformer {
 	 * redirected (moved/renamed). The kernel checks this after the game class loads and aborts.
 	 */
 	public boolean missedRequiredExcision() {
-		return transformedRequiredEntry && !redirectedAtRequiredEntry;
+		return required && transformedRequiredEntry && !redirectedAtRequiredEntry;
 	}
 
 	/** True once the targeted entry has been transformed (whether or not a trigger was found). */

@@ -225,7 +225,7 @@ public final class MixinStubRebind {
 		if (ecosystem == null) return 0;   // no known owner: nothing says what it was compiled against
 		List<String> targetNames = MixinOverloadPin.targetsOf(mixin);
 		if (targetNames.size() != 1) return 0;   // one target: a selector means one method
-		ClassNode target = targets.apply(targetNames.getFirst());
+		ClassNode target = targets.apply(targetNames.get(0));
 		if (target == null || target.methods == null) return 0;
 		int moved = 0;
 		for (Map.Entry<MethodNode, Plan> planned : plans(mixin, target, ecosystem,
@@ -412,7 +412,7 @@ public final class MixinStubRebind {
 		if (MixinFit.value(injector, "locals") != null || MixinFit.value(injector, "slice") != null) return null;
 		List<String> selectors = MixinFit.stringList(MixinFit.value(injector, "method"));
 		if (selectors.size() != 1) return null;
-		MethodNode stub = bound(target, selectors.getFirst());
+		MethodNode stub = bound(target, selectors.get(0));
 		if (stub == null) return null;
 		Delegation delegation = delegation(target, stub);
 		if (delegation == null) return null;
@@ -421,7 +421,7 @@ public final class MixinStubRebind {
 		Row row = carrierStubs().get(target.name + "#" + stub.name + stub.desc + " -> " + delegate.desc);
 		// And only where the mod's own platform ran this selector on code: a NeoForge mod on NeoForge's stub was
 		// compiled against the stub and gets exactly that.
-		if (row == null || !row.moves(ecosystem, selectorDescriptor(selectors.getFirst()) == null)) return null;
+		if (row == null || !row.moves(ecosystem, selectorDescriptor(selectors.get(0)) == null)) return null;
 
 		List<AnnotationNode> points = MixinFit.atNodes(injector);
 		if (points.isEmpty()) return null;
@@ -492,7 +492,7 @@ public final class MixinStubRebind {
 				if (!typedLocalEnabled() || !theOnlyLocalOfItsType(target, delegate, params[i], points)) return null;
 				continue;
 			}
-			if (names.size() != 1 || MixinFit.value(local, "argsOnly") != null || !hasLocal(delegate, names.getFirst(), params[i])) return null;
+			if (names.size() != 1 || MixinFit.value(local, "argsOnly") != null || !hasLocal(delegate, names.get(0), params[i])) return null;
 		}
 		if (!withinAllow(injector, handler, points, delegate)) return null;
 		if (lost) {
@@ -522,7 +522,7 @@ public final class MixinStubRebind {
 	private static int pick(Type[] arguments, Type type, Object ordinal) {
 		List<Integer> ofType = new ArrayList<>();
 		for (int i = 0; i < arguments.length; i++) if (arguments[i].equals(type)) ofType.add(i);
-		if (ordinal == null) return ofType.size() == 1 ? ofType.getFirst() : -1;
+		if (ordinal == null) return ofType.size() == 1 ? ofType.get(0) : -1;
 		return ordinal instanceof Integer n && n >= 0 && n < ofType.size() ? ofType.get(n) : -1;
 	}
 
@@ -573,7 +573,7 @@ public final class MixinStubRebind {
 		if (names.size() != 1 || params.length == 0 || body.localVariables == null || body.instructions == null) return -1;
 		int slot = -1;
 		for (LocalVariableNode local : body.localVariables) {
-			if (!local.name.equals(names.getFirst())) continue;
+			if (!local.name.equals(names.get(0))) continue;
 			if (slot >= 0 && slot != local.index) return -1;
 			slot = local.index;
 		}
@@ -688,7 +688,7 @@ public final class MixinStubRebind {
 		if (ONE_VALUE.contains(injector.desc)) return plain >= 1 ? 1 : -1;
 		List<AnnotationNode> points = MixinFit.atNodes(injector);
 		if (points.size() != 1) return -1;
-		AnnotationNode at = points.getFirst();
+		AnnotationNode at = points.get(0);
 		String value = MixinFit.asString(MixinFit.value(at, "value"));
 		String target = MixinFit.asString(MixinFit.value(at, "target"));
 		if (MODIFY_ARG.equals(injector.desc)) {
@@ -779,17 +779,17 @@ public final class MixinStubRebind {
 				|| Boolean.TRUE.equals(MixinFit.value(injector, "argsOnly"))) return false;
 		Type[] params = Type.getArgumentTypes(handler.desc);
 		if (params.length == 0 || !params[0].equals(Type.getReturnType(handler.desc))) return false;
-		String name = names.getFirst();
+		String name = names.get(0);
 		if (stub.localVariables != null && stub.localVariables.stream().anyMatch(local -> local.name.equals(name))) return false;
 		if (delegate.localVariables == null) return false;
 		List<LocalVariableNode> entries = delegate.localVariables.stream().filter(local -> local.name.equals(name)).toList();
 		if (entries.isEmpty()) return false;
-		int slot = entries.getFirst().index;
+		int slot = entries.get(0).index;
 		for (LocalVariableNode entry : entries) if (entry.index != slot || !entry.desc.equals(params[0].getDescriptor())) return false;
 
 		List<AnnotationNode> points = MixinFit.atNodes(injector);
 		if (points.size() != 1) return false;
-		AnnotationNode at = points.getFirst();
+		AnnotationNode at = points.get(0);
 		String value = MixinFit.asString(MixinFit.value(at, "value"));
 		if (!LOCAL_POINTS.contains(value) || MixinFit.value(at, "slice") != null || MixinFit.value(at, "shift") != null
 				|| MixinFit.value(at, "target") != null) return false;
@@ -973,7 +973,7 @@ public final class MixinStubRebind {
 		MethodNode found = null;
 		int[] mapping = null;
 		AbstractInsnNode after = null;
-		for (AbstractInsnNode insn = stub.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = stub.instructions.get(0); insn != null; insn = insn.getNext()) {
 			int op = insn.getOpcode();
 			if (op < 0) continue;
 			if (call != null) { after = insn; break; }
@@ -992,7 +992,7 @@ public final class MixinStubRebind {
 				stack.add(-1);   // a non-capturing lambda or method reference: a constant
 			} else if (op == Opcodes.DUP) {
 				if (stack.isEmpty()) return null;
-				stack.add(stack.getLast());
+				stack.add(stack.get(stack.size() - 1));
 			} else if (op == Opcodes.CHECKCAST) {
 				if (stack.isEmpty()) return null;
 				stack.set(stack.size() - 1, -1);
@@ -1000,7 +1000,7 @@ public final class MixinStubRebind {
 				Type[] args = Type.getArgumentTypes(m.desc);
 				if (m.name.equals("<init>") && op == Opcodes.INVOKESPECIAL) {
 					if (stack.size() < args.length + 1) return null;
-					for (int k = 0; k <= args.length; k++) stack.removeLast();   // the args and the dup'd instance
+					for (int k = 0; k <= args.length; k++) stack.remove(stack.size() - 1);   // the args and the dup'd instance
 					continue;
 				}
 				if (op == Opcodes.INVOKESTATIC && args.length == 0 && !(m.owner.equals(owner.name) && m.name.equals(stub.name))) {
@@ -1012,7 +1012,7 @@ public final class MixinStubRebind {
 				if (!delegationCall) return null;
 				int receiver = isStatic ? 0 : 1;
 				if (stack.size() != args.length + receiver) return null;
-				if (!isStatic && stack.getFirst() != -2) return null;
+				if (!isStatic && stack.get(0) != -2) return null;
 				int[] positions = new int[stubParams.length];
 				Arrays.fill(positions, -1);
 				for (int j = 0; j < args.length; j++) {

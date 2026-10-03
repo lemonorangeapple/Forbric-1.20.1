@@ -76,7 +76,7 @@ import net.forbric.kernel.util.ForbricLog;
 public final class ModelFormatFunnelInjector implements ClassTransformer {
 	public static final String PROPERTY = "forbric.modelFormatFunnel";
 
-	static final String TARGET = "net/neoforged/neoforge/client/model/UnbakedModelParser$Deserializer";
+	static final String TARGET = "net/minecraftforge/client/model/UnbakedModelParser$Deserializer";
 	static final String METHOD = "deserialize";
 	static final String DESC = "(Lcom/google/gson/JsonElement;Ljava/lang/reflect/Type;"
 			+ "Lcom/google/gson/JsonDeserializationContext;)Lnet/minecraft/client/resources/model/UnbakedModel;";

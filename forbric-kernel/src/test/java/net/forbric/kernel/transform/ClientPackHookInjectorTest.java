@@ -112,7 +112,7 @@ class ClientPackHookInjectorTest {
 		// EVERY Forge-family mod registers a built-in client resource pack, so an optional pack stopped appearing
 		// in the resource-pack screen and an alwaysActive one left the mod rendering missing textures, silently.
 		// So: the kernel hook comes FIRST, and the original body is still there behind it.
-		assertSame(m.instructions.getFirst(), firstReal(m),
+		assertSame(m.instructions.get(0), firstReal(m),
 				"the kernel hook must be the first thing the method does, before the carrier touches the repository");
 		assertEquals(Opcodes.ALOAD, firstReal(m).getOpcode());
 		assertTrue(postsThePackFinderEvent(m),
@@ -123,7 +123,7 @@ class ClientPackHookInjectorTest {
 
 	/** The first instruction that is not a label, line number or frame. */
 	private static org.objectweb.asm.tree.AbstractInsnNode firstReal(MethodNode m) {
-		org.objectweb.asm.tree.AbstractInsnNode insn = m.instructions.getFirst();
+		org.objectweb.asm.tree.AbstractInsnNode insn = m.instructions.get(0);
 		while (insn != null && insn.getOpcode() < 0) insn = insn.getNext();
 		return insn;
 	}

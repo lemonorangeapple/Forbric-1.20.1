@@ -60,7 +60,7 @@ import net.forbric.kernel.util.Reflect;
  *       {@link #FML_EBS_LOGIC}, which builds listeners PER METHOD. gate-m4 lost {@code NoChatReports$Events} and
  *       {@code GeckoLibClient} to this.</li>
  *   <li><b>A NeoForge subscriber cannot be registered on a MinecraftForge {@code BusGroup}.</b> It carries
- *       {@code net.neoforged.bus.api.SubscribeEvent}, which MinecraftForge's scan does not recognise, so the class
+ *       {@code net.minecraftforge.eventbus.api.SubscribeEvent}, which MinecraftForge's scan does not recognise, so the class
  *       registers zero listeners and fails with {@code No listeners found}. gate-m4 lost collective's
  *       {@code RegisterCollectiveNeoForgeEvents}; gate-m7-neo lost all six of Architectury's, i.e. its ENTIRE event
  *       layer, silently, on a dedicated server.</li>
@@ -77,9 +77,9 @@ import net.forbric.kernel.util.Reflect;
  */
 public final class KernelEventSubscribers {
 	private static final String SUBSCRIBE_FORGE = "Lnet/minecraftforge/eventbus/api/listener/SubscribeEvent;";
-	private static final String SUBSCRIBE_NEO = "Lnet/neoforged/bus/api/SubscribeEvent;";
+	private static final String SUBSCRIBE_NEO = "Lnet/minecraftforge/eventbus/api/SubscribeEvent;";
 	private static final String EBS_FORGE = "Lnet/minecraftforge/fml/common/Mod$EventBusSubscriber;";
-	private static final String EBS_NEO = "Lnet/neoforged/fml/common/EventBusSubscriber;";
+	private static final String EBS_NEO = "Lnet/minecraftforge/fml/common/EventBusSubscriber;";
 
 	/**
 	 * FML's own {@code @EventBusSubscriber} registration logic. The CLASS is package-private but this entry point is
@@ -426,12 +426,12 @@ public final class KernelEventSubscribers {
 		static NeoBusApi resolve(ClassLoader cl) {
 			try {
 				return new NeoBusApi(
-						Class.forName("net.neoforged.neoforge.common.NeoForge", false, cl)
+						Class.forName("net.minecraftforge.common.NeoForge", false, cl)
 								.getField("EVENT_BUS").get(null),
-						Class.forName("net.neoforged.bus.api.SubscribeEvent", false, cl),
-						Class.forName("net.neoforged.bus.api.Event", false, cl),
+						Class.forName("net.minecraftforge.eventbus.api.SubscribeEvent", false, cl),
+						Class.forName("net.minecraftforge.eventbus.api.Event", false, cl),
 						Class.forName(ForeignType.MOD_BUS_EVENT.binary(Ecosystem.NEOFORGE), false, cl),
-						Class.forName("net.neoforged.bus.api.IEventBus", false, cl).getMethod("register", Object.class));
+						Class.forName("net.minecraftforge.eventbus.api.IEventBus", false, cl).getMethod("register", Object.class));
 			} catch (Throwable t) {
 				ForbricLog.debug("[Forbric/EBS] NeoForge bus API absent");
 				return null;

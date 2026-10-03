@@ -45,7 +45,7 @@ final class C2meBlockUpdateRetarget {
 		if (index != null && !Integer.valueOf(-1).equals(index) && !Integer.valueOf(0).equals(index)) return null;
 		List<AnnotationNode> points = MixinFit.atNodes(injector);
 		if (points.size() != 1) return null;
-		AnnotationNode at = points.getFirst();
+		AnnotationNode at = points.get(0);
 		if (!"INVOKE".equals(MixinFit.value(at, "value")) || !ANCHOR.equals(MixinFit.value(at, "target"))
 				|| MixinFit.value(at, "shift") != null || MixinFit.value(at, "args") != null) return null;
 		Object ordinal = MixinFit.value(at, "ordinal");

@@ -15,7 +15,7 @@ class FabricServerLanguageMixinAdapterTest {
   MethodNode shim=StagedFabricMixinFixture.method(mixin,"forbric$captureLanguageMap");assertEquals("(Ljava/util/Map;Ljava/util/Map;)V",shim.desc);
   assertEquals(1,java.util.Arrays.stream(shim.instructions.toArray()).filter(i->i instanceof MethodInsnNode c&&c.name.equals("captureLanguageMap")).count());
   new org.objectweb.asm.tree.analysis.Analyzer<>(new org.objectweb.asm.tree.analysis.BasicVerifier()).analyze(mixin.name,shim);
-  MethodNode read=StagedFabricMixinFixture.method(mixin,"readCorrectVanillaResource");assertTrue(MixinFit.stringList(MixinFit.value(MixinFit.injectorOf(read),"method")).getFirst().contains("BiConsumer;Ljava/util/function/BiConsumer;"));
+  MethodNode read=StagedFabricMixinFixture.method(mixin,"readCorrectVanillaResource");assertTrue(MixinFit.stringList(MixinFit.value(MixinFit.injectorOf(read),"method")).get(0).contains("BiConsumer;Ljava/util/function/BiConsumer;"));
   assertEquals(0,FabricServerLanguageMixinAdapter.adapt(mixin,n->target));
  }
  @Test void nativeVanillaAndDisabledAdapterRemainUnchanged()throws Exception{

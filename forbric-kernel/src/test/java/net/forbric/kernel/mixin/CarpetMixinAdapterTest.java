@@ -65,7 +65,7 @@ class CarpetMixinAdapterTest {
 	}
 	@Test void handSwapRunsBeforeTheNativeEventReadsTheHands()throws Exception {
 		ClassNode c=mixin(NAMES.get(1));assertEquals(1,adapt(c));
-		AnnotationNode inject=MixinFit.injectorOf(method(c,"onHandSwap")),a=MixinFit.atNodes(inject).getFirst();
+		AnnotationNode inject=MixinFit.injectorOf(method(c,"onHandSwap")),a=MixinFit.atNodes(inject).get(0);
 		assertEquals(CarpetMixinAdapter.SWAP_EVENT,MixinFit.value(a,"target"));assertEquals(0,MixinFit.value(a,"ordinal"));
 		assertEquals(true,MixinFit.value(inject,"cancellable"));verify(c);assertEquals(0,adapt(c));
 	}
@@ -77,9 +77,9 @@ class CarpetMixinAdapterTest {
 				.filter(v->v.index==slot).findFirst().orElseThrow().name).toList());
 		ClassNode c=mixin(NAMES.get(2));assertEquals(1,adapt(c));MethodNode handler=method(c,"onBlockBroken");AnnotationNode inject=MixinFit.injectorOf(handler);
 		assertNull(MixinFit.value(inject,"locals"));assertEquals(true,MixinFit.value(inject,"cancellable"));
-		assertEquals(CarpetMixinAdapter.DROPS,MixinFit.value(MixinFit.atNodes(inject).getFirst(),"target"));
+		assertEquals(CarpetMixinAdapter.DROPS,MixinFit.value(MixinFit.atNodes(inject).get(0),"target"));
 		assertNull(handler.invisibleParameterAnnotations[0]);assertNull(handler.invisibleParameterAnnotations[1]);
-		assertEquals(List.of(4,5,6),List.of(2,3,4).stream().map(p->MixinFit.value(handler.invisibleParameterAnnotations[p].getFirst(),"index")).toList());
+		assertEquals(List.of(4,5,6),List.of(2,3,4).stream().map(p->MixinFit.value(handler.invisibleParameterAnnotations[p].get(0),"index")).toList());
 		assertEquals(1,c.methods.stream().filter(m->m.name.startsWith("onBlockBroken")).count(),"the authored handler itself, no wrapper");
 		verify(c);assertEquals(0,adapt(c));
 	}
@@ -97,7 +97,7 @@ class CarpetMixinAdapterTest {
 		assertEquals(new HashSet<>(CarpetFluidMixinAdapter.REGISTRIES),new HashSet<>(MixinFit.mixinTargets(c)),"placement asks MinecraftForge's, a neighbour change NeoForge's");
 		MethodNode original=method(c,"receiveFluidToDeepslate$forbricOriginal"),outer=method(c,"forbric$carpetDeepslate");
 		assertTrue((original.access&Opcodes.ACC_STATIC)!=0);assertNull(MixinFit.injectorOf(original));
-		assertEquals(5,MixinFit.value(outer.invisibleParameterAnnotations[3].getFirst(),"index"));
+		assertEquals(5,MixinFit.value(outer.invisibleParameterAnnotations[3].get(0),"index"));
 		assertEquals(List.of("interact(L"+CarpetMixinAdapter.LEVEL+";"+CarpetMixinAdapter.POS+CarpetMixinAdapter.POS+"L"+CarpetFluidMixinAdapter.FLUID_STATE+";)V"),
 				MixinFit.atNodes(MixinFit.injectorOf(outer)).stream().map(a->MixinFit.value(a,"target")).toList(),"the one interact call in either registry");assertNotNull(method(c,"forbric$carpetFizz").desc);
 		verify(c);assertEquals(0,adapt(c));
@@ -108,7 +108,7 @@ class CarpetMixinAdapterTest {
 	 * neutered, so placement falls back to NeoForge's and the deepslate rule lives there alone.
 	 */
 	@Test void fluidAdaptersBindToTheHostsTheFluidRepairLeaves()throws Exception {
-		String neo=CarpetFluidMixinAdapter.REGISTRIES.getFirst(),forge=CarpetFluidMixinAdapter.REGISTRIES.get(1);
+		String neo=CarpetFluidMixinAdapter.REGISTRIES.get(0),forge=CarpetFluidMixinAdapter.REGISTRIES.get(1);
 		java.util.function.Function<String,ClassNode> repaired=name->{ClassNode t=target(name);
 			if(!CarpetFluidMixinAdapter.REGISTRIES.contains(name))return t;
 			byte[] out=new net.forbric.kernel.transform.FluidInteractionsInjector().transform(name.replace('/','.'),bytes(t),null);
@@ -119,7 +119,7 @@ class CarpetMixinAdapterTest {
 				"L"+host.getValue()+";canInteract"+CarpetFluidMixinAdapter.INTERACT),"premise: "+host.getKey()+" asks "+host.getValue());
 		ClassNode blackstone=mixin(NAMES.get(3));assertEquals(2,CarpetFluidMixinAdapter.adapt(blackstone,repaired));
 		for(var host:asks.entrySet()){MethodNode m=method(blackstone,"forbric$carpetBlackstone$"+host.getKey());
-			assertEquals("L"+host.getValue()+";canInteract"+CarpetFluidMixinAdapter.INTERACT,MixinFit.value(MixinFit.atNodes(MixinFit.injectorOf(m)).getFirst(),"target"));
+			assertEquals("L"+host.getValue()+";canInteract"+CarpetFluidMixinAdapter.INTERACT,MixinFit.value(MixinFit.atNodes(MixinFit.injectorOf(m)).get(0),"target"));
 			for(var i:m.instructions)assertFalse(i instanceof MethodInsnNode c&&c.name.equals("canInteract"),
 					host.getKey()+": no fallback to the other registry — NeoForge's own placement runs no mod's rule");}
 		ClassNode deepslate=mixin(NAMES.get(4));assertEquals(1,CarpetFluidMixinAdapter.adapt(deepslate,repaired));

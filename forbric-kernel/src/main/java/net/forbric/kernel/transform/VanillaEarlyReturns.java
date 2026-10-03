@@ -276,7 +276,7 @@ public final class VanillaEarlyReturns implements ClassTransformer {
 		int fixed = Type.getArgumentsAndReturnSizes(method.desc) >> 2;
 		if ((method.access & Opcodes.ACC_STATIC) != 0) fixed--;
 		List<Edge> out = new ArrayList<>();
-		for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof JumpInsnNode jump && jump.getOpcode() != Opcodes.JSR) {
 				AbstractInsnNode target = resolve(jump.label);
 				if (!isReturn(target)) continue;
@@ -320,7 +320,7 @@ public final class VanillaEarlyReturns implements ClassTransformer {
 	/** Labels control can arrive at other than by falling through: jump and switch targets, handler starts. */
 	private static Set<LabelNode> entries(MethodNode method) {
 		Set<LabelNode> out = new HashSet<>();
-		for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof JumpInsnNode jump) out.add(jump.label);
 			else if (insn instanceof TableSwitchInsnNode table) { out.addAll(table.labels); out.add(table.dflt); }
 			else if (insn instanceof LookupSwitchInsnNode lookup) { out.addAll(lookup.labels); out.add(lookup.dflt); }
@@ -546,7 +546,7 @@ public final class VanillaEarlyReturns implements ClassTransformer {
 	static List<List<Object>> stateAt(String owner, MethodNode method, FrameNode at) {
 		List<Object> locals = initialLocals(owner, method);
 		List<Object> stack = new ArrayList<>();
-		for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (!(insn instanceof FrameNode frame)) continue;
 			switch (frame.type) {
 				case Opcodes.F_NEW, Opcodes.F_FULL -> {
@@ -602,7 +602,7 @@ public final class VanillaEarlyReturns implements ClassTransformer {
 
 	static List<AbstractInsnNode> returns(MethodNode method) {
 		List<AbstractInsnNode> out = new ArrayList<>();
-		for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (isReturn(insn)) out.add(insn);
 		}
 		return out;

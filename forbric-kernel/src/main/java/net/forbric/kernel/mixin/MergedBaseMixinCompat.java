@@ -167,6 +167,29 @@ public final class MergedBaseMixinCompat {
 			"fabric-registry-sync-v0.client.mixins.json:MinecraftMixin",
 			"fabric-loot-api-v3.mixins.json:ReloadableServerRegistriesMixin",
 			"fabric-creative-tab-api-v1.client.mixins.json:CreativeModeInventoryScreenMixin",
+			// MinecraftForge re-types the carrier these @Shadow fields name, so Mixin cannot locate them at all:
+			//   BlockColors.blockColors  vanilla IdMapper<BlockColor>        -> Map<Holder$Reference<Block>, BlockColor>
+			//   ItemColors.itemColors    vanilla IdMapper<ItemColor>         -> Map<Holder$Reference<Item>, ItemColor>
+			//   ParticleEngine.providers vanilla Int2ObjectMap<...>          -> re-typed by the same holder pass
+			// A shadow that fails costs the TARGET CLASS every other mod's mixins too (Mixin discards the whole
+			// transformed class), so suppressing is strictly better than letting them fail. Verified against the
+			// vanilla obf jar: eoo.b is `hk<eon>` (IdMapper<BlockColor>); the Forge-patched f_92571_ is a Map.
+			"fabric-registry-sync-v0.client.mixins.json:BlockColorsMixin",
+			"fabric-registry-sync-v0.client.mixins.json:ItemColorsMixin",
+			"fabric-registry-sync-v0.client.mixins.json:ParticleManagerMixin",
+			"fabric-rendering-v1.mixins.json:BlockColorsMixin",
+			"fabric-rendering-v1.mixins.json:ItemColorsMixin",
+			"fabric-particles-v1.client.mixins.json:ParticleManagerAccessor",
+			// The loot duck interfaces these two install are provided by LootTableFabricSupplierTransformer instead
+			// (Forge turns LootTable.pools into a List), so the mixins have nothing left to do.
+			"fabric-loot-tables-v1.mixins.json:LootTableMixin",
+			"fabric-loot-api-v2.mixins.json:LootTableAccessor",
+			// Forge patches ShaderInstance::<init> around the `this()` call, where @ModifyArg handlers cannot be
+			// static; the mixin was written against vanilla's shape.
+			"fabric-rendering-v1.mixins.json:shader.ShaderProgramMixin",
+			// TheEndBiomeSourceMixin extends BiomeSourceMixin, which the merged base drops; a mixin whose super
+			// class is not in the target hierarchy cannot be applied at all.
+			"fabric-biome-api-v1.mixins.json:TheEndBiomeSourceMixin",
 			// MOD-vs-MOD, not merged-base: Shoulder Surfing's @Redirect deletes the call site CustomSkinLoader's
 			// raw-ASM cape patch needs. See the javadoc entry below — this one arbitrates between two mods.
 			"shouldersurfing.common.mixins.json:CapeLayerMixin",

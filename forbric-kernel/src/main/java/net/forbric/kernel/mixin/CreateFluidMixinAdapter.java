@@ -23,7 +23,7 @@ public final class CreateFluidMixinAdapter {
 		AnnotationNode injection = MixinFit.injectorOf(original);
 		List<AnnotationNode> points = injection == null ? List.of() : MixinFit.atNodes(injection);
 		if (!CarpetMixinAdapter.selects(injection, "shouldSpreadLiquid(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z") || points.size() != 1
-				|| !"HEAD".equals(MixinFit.value(points.getFirst(), "value"))
+				|| !"HEAD".equals(MixinFit.value(points.get(0), "value"))
 				|| !Boolean.TRUE.equals(MixinFit.value(injection, "cancellable"))) return 0;
 		// The audited upstream handler only calls Create's registry and cancels with false when handled.
 		List<MethodInsnNode> bodyCalls = new ArrayList<>();
@@ -41,7 +41,7 @@ public final class CreateFluidMixinAdapter {
 					&& call.getOpcode() == Opcodes.INVOKESTATIC && CarpetFluidMixinAdapter.REGISTRIES.contains(call.owner)
 					&& call.name.equals("canInteract") && call.desc.equals(CarpetFluidMixinAdapter.INTERACT)) nativeCalls.add(call);
 			if (nativeCalls.size() != 1) return 0;
-			hosts.add(host); calls.add(nativeCalls.getFirst());
+			hosts.add(host); calls.add(nativeCalls.get(0));
 		}
 		original.visibleAnnotations.remove(injection);
 		original.name += "$forbricOriginal";

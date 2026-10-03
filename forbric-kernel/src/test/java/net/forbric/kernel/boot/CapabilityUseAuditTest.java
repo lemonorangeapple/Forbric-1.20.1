@@ -68,9 +68,9 @@ class CapabilityUseAuditTest {
 			CapabilityUseAudit.note("pipez.jar", classNaming("net/minecraftforge/common/capabilities/Capability"));
 			CapabilityUseAudit.report(false, java.util.Set.of());
 			var failures = net.forbric.api.ModCatalog.failures();
-			assertTrue(failures.size() == 1 && failures.getFirst().modId().equals("pipez"), failures.toString());
-			assertTrue(failures.getFirst().status() == net.forbric.api.ModCatalog.Status.DEGRADED);
-			assertTrue(failures.getFirst().statusDetail().contains("forgeCapabilities=off"), failures.getFirst().statusDetail());
+			assertTrue(failures.size() == 1 && failures.get(0).modId().equals("pipez"), failures.toString());
+			assertTrue(failures.get(0).status() == net.forbric.api.ModCatalog.Status.DEGRADED);
+			assertTrue(failures.get(0).statusDetail().contains("forgeCapabilities=off"), failures.get(0).statusDetail());
 		} finally {
 			net.forbric.api.ModCatalog.publish(previous);
 		}
@@ -99,8 +99,8 @@ class CapabilityUseAuditTest {
 			CapabilityUseAudit.note("pipez.jar", classNaming("net/minecraftforge/common/capabilities/Capability"));
 			CapabilityUseAudit.report(true, java.util.Set.of("net/minecraft/world/level/block/entity/BlockEntity", "net/minecraft/world/level/Level"));
 			var failures = net.forbric.api.ModCatalog.failures();
-			assertTrue(failures.size() == 1 && failures.getFirst().statusDetail().contains("Entity"), failures.toString());
-			assertFalse(failures.getFirst().statusDetail().contains("BlockEntity]"), "only the missed root is named");
+			assertTrue(failures.size() == 1 && failures.get(0).statusDetail().contains("Entity"), failures.toString());
+			assertFalse(failures.get(0).statusDetail().contains("BlockEntity]"), "only the missed root is named");
 		} finally {
 			net.forbric.api.ModCatalog.publish(previous);
 		}

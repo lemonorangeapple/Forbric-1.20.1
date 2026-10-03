@@ -84,7 +84,7 @@ public class InitializationFailureProjectionTest {
 		ModCatalog.mark("optional", ModCatalog.Status.DEGRADED, "optional setup feature failed");
 		System.setProperty(CompatibilityDecision.PROPERTY, "strict");
 		assertDoesNotThrow(() -> KernelLoadReport.writeTo(directory.resolve("load-report.txt")), "the writer remains a safe report primitive");
-		var finding = CompatibilityFindings.confirmedRequired().getFirst();
+		var finding = CompatibilityFindings.confirmedRequired().get(0);
 		assertEquals("badctor", finding.modId()); assertEquals("initialization:constructor", finding.id());
 		assertEquals(1, CompatibilityFindings.confirmedRequired().size());
 		String json = Files.readString(directory.resolve("compatibility-report.json"));

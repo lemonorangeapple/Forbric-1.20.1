@@ -144,7 +144,7 @@ public final class KernelPacketContext {
 			Object pipeline = handlerContext.getMethod("pipeline").invoke(ctx);
 			for (Object item : (Iterable<?>) pipeline) {
 				if (!(item instanceof java.util.Map.Entry<?, ?> entry)) continue;
-				if (!(entry.getValue() instanceof PacketEncoder<?> encoder)) continue;
+				if (!(entry.getValue() instanceof net.minecraft.network.PacketEncoder encoder)) continue;
 				return encoderContext.get(encoder);
 			}
 		} catch (ReflectiveOperationException | RuntimeException e) {

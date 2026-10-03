@@ -23,7 +23,7 @@ public final class InsertedLambdaArgumentShim {
         if (mixin == null || targets == null || "off".equalsIgnoreCase(System.getProperty(PROPERTY, "on"))) return 0;
         List<String> owners = MixinOverloadPin.targetsOf(mixin);
         if (owners.size() != 1) return 0;
-        ClassNode target = targets.apply(owners.getFirst());
+        ClassNode target = targets.apply(owners.get(0));
         if (target == null) return 0;
         List<MethodNode> added = new ArrayList<>();
         for (MethodNode handler : List.copyOf(mixin.methods)) {
@@ -95,13 +95,13 @@ public final class InsertedLambdaArgumentShim {
         Object locals = MixinFit.value(inject, "locals");
         boolean capturing = locals != null && (!(locals instanceof String[] e) || !e[1].equals("NO_CAPTURE"));
         if (capturing && !(locals instanceof String[] mode && mode[1].startsWith("CAPTURE_"))) return null;
-        String selector = selectors.getFirst(); int split = selector.indexOf('(');
+        String selector = selectors.get(0); int split = selector.indexOf('(');
         if (!selector.startsWith("lambda$") || split < 0) return null;
         String name = selector.substring(0, split), oldDesc = selector.substring(split);
         if (!DuplicateLambdaPruneInjector.droppedDescriptors(target.name, name).contains(oldDesc)) return null;
         List<MethodNode> live = target.methods.stream().filter(m -> m.name.equals(name)).toList();
         if (live.size() != 1) return null;
-        MethodNode method = live.getFirst();
+        MethodNode method = live.get(0);
         if (oldDesc.equals(method.desc) || !Type.getReturnType(oldDesc).equals(Type.getReturnType(method.desc))
                 || ((method.access ^ handler.access) & Opcodes.ACC_STATIC) != 0 || !referenced(target, method)
                 || !anchorExists(inject, method)) return null;
@@ -163,7 +163,7 @@ public final class InsertedLambdaArgumentShim {
      */
     static boolean localsAtAnchor(AnnotationNode inject, MethodNode target, Type[] captured) {
         if (target.localVariables == null || target.localVariables.isEmpty()) return false;
-        Object member = MixinFit.value(MixinFit.atNodes(inject).getFirst(), "target");
+        Object member = MixinFit.value(MixinFit.atNodes(inject).get(0), "target");
         return member instanceof String s && localsAtCall(s, target, captured);
     }
 
@@ -195,7 +195,7 @@ public final class InsertedLambdaArgumentShim {
 
     private static boolean anchorExists(AnnotationNode inject, MethodNode target) {
         List<AnnotationNode> ats = MixinFit.atNodes(inject); if (ats.size() != 1) return false;
-        AnnotationNode at = ats.getFirst();
+        AnnotationNode at = ats.get(0);
         if (!"INVOKE".equals(MixinFit.value(at, "value")) || MixinFit.value(at, "args") != null
                 || MixinFit.value(at, "slice") != null) return false;
         Object shift = MixinFit.value(at, "shift");

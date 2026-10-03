@@ -95,7 +95,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 	/** The repairs {@link #transform} runs, in its order; a test pins the two lists against each other. */
 	static final List<String> REPAIRS = List.of("repairLambdaBootstrapHandles", "addBlockStateModelConflictResolvers", "addBlockStateAppearanceResolver", "addMissingForgeFluidTypeBridge", "addMissingForgeKeyMappingLookupInitializer", "routeKeyMappingClickToPopulatedLookup", "giveKeyMappingItsMinecraftForgeFace", "giveTheVanillaParticleMapAViewOfTheLiveOne", "giveFeaturesPerStepItsVanillaDescriptorBack", "letDungeonsGenerateWithoutTheDataMap", "restoreDoublePrecisionToTheRandomSources", "convertRadiansWithVanillasFoldedConstant", "saveTheHeightmapsVanillaSaves", "guardNeoForgesWorldModifierPass", "letForeignResourceConditionsThrough", "letForeignResourceConditionsThroughMinecraftForge", "letFabricResourceConditionsDecide", "translateAGuestsPrivateSkipMarker", "serveDefaultAttributesBothEcosystems", "restoreForgeClientInit", "restoreForgeGeometryReload", "nameTheReloadListenersNeoForgeRefusesToName", "dropInterfaceDefaultShadowingOverrides", "tolerateEmptyCreativeTabStacks", "routePlaceItemHookToNeoForge", "bridgeOrphanedPipRenderers", "keepForgeOutboundProtocolCurrent", "surviveTheMissingForgeModelDataManager", "dropTheWindowTitlesLoaderBrand", "keepTheSaveOffTheTeardownsFailurePath", "postNeoForgesItemTooltipEvent", "askNeoForgeWhatAnItemsAttributesAre", "readTheSpawnReasonThatIsActuallyWritten", "giveTheUnwrittenLoggerAValue", "addTheMissingCapabilityLifecycleStubs", "addTheMissingNbtBuilderFactory", "postMinecraftForgesReloadListenerEvent", "giveMinecraftForgesReloadEventItsConditionContext", "letMinecraftForgeIngredientTypesDecode", "letMinecraftForgeFluidsChooseTheirModel", "giveMinecraftForgesParticleLookupItsFirstVariant", "dropStubsThatBypassARealSuperclassMethod", "inlineTheSwitchMapTheMergeLost", "vetoUnjudgeableOverlayConditions", "hideTheLegacyLootModifierIndexFromTheDirectoryScan", "letModdedFeatureFlagsRegister", "dropTheKeyModifierSuffixBeforeParsingAKeyName", "letTheAtlasLowerItsMipLevelLikeVanilla", "wrapTheStreamsVanillaWraps", "returnFromANestedBootstrapBeforeItsTail", "letBothEcosystemsSetBurnTime", "letMinecraftForgeSeeSpawnerMobs", "letMinecraftForgeAddPackFinders");
 
-	private static final String NEO_EVENT_HOOKS_BINARY = "net.neoforged.neoforge.event.EventHooks";
+	private static final String NEO_EVENT_HOOKS_BINARY = "net.minecraftforge.event.EventHooks";
 
 	/**
 	 * One claim per repair, in {@link #REPAIRS} order. A repair with one fixed target declares it REQUIRED with
@@ -385,7 +385,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		boolean changed = false;
 		for (MethodNode method : node.methods) {
 			if (method.instructions == null) continue;
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (!(insn instanceof MethodInsnNode call)) continue;
 				String adopted = LEGACY_INTEROP_OWNERS.get(call.owner);
 				if (adopted == null) continue;
@@ -417,9 +417,9 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 
 	private static final String KEY_MAPPING = "net/minecraft/client/KeyMapping";
 	private static final String MF_CONTEXT = "Lnet/minecraftforge/client/settings/IKeyConflictContext;";
-	private static final String NEO_CONTEXT = "Lnet/neoforged/neoforge/client/settings/IKeyConflictContext;";
+	private static final String NEO_CONTEXT = "Lnet/minecraftforge/client/settings/IKeyConflictContext;";
 	private static final String MF_MODIFIER = "Lnet/minecraftforge/client/settings/KeyModifier;";
-	private static final String NEO_MODIFIER = "Lnet/neoforged/neoforge/client/settings/KeyModifier;";
+	private static final String NEO_MODIFIER = "Lnet/minecraftforge/client/settings/KeyModifier;";
 	private static final String INPUT_KEY = "Lcom/mojang/blaze3d/platform/InputConstants$Key;";
 	private static final String KERNEL_KEYS = "net/forbric/kernel/runtime/KernelForgeKeyBindings";
 
@@ -437,9 +437,9 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 	private static final String KERNEL_FUEL_VALUES = "net/forbric/kernel/runtime/KernelFuelValues";
 	private static final String KERNEL_SPAWNER_FINALIZE = "net/forbric/kernel/runtime/KernelSpawnerFinalize";
 	private static final String KERNEL_PACK_FINDERS = "net/forbric/kernel/runtime/KernelPackFinders";
-	private static final String NEO_RESOURCE_PACK_LOADER = "net/neoforged/neoforge/resource/ResourcePackLoader";
+	private static final String NEO_RESOURCE_PACK_LOADER = "net/minecraftforge/resource/ResourcePackLoader";
 	private static final String BASE_SPAWNER = "net/minecraft/world/level/BaseSpawner";
-	private static final String NEO_EVENT_HOOKS = "net/neoforged/neoforge/event/EventHooks";
+	private static final String NEO_EVENT_HOOKS = "net/minecraftforge/event/EventHooks";
 	private static final String FUEL_VALUES = "net/minecraft/world/level/block/entity/FuelValues";
 	private static final String FORGE_BURN_TIME_DESC =
 			"(Lnet/minecraft/world/item/ItemStack;ILnet/minecraft/world/item/crafting/RecipeType;)I";
@@ -447,10 +447,10 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 			"(Lnet/minecraft/world/item/ItemStack;ILnet/minecraft/world/item/crafting/RecipeType;"
 					+ "Lnet/minecraft/world/level/block/entity/FuelValues;)I";
 	private static final String MONSTER_ROOM_FEATURE = "net/minecraft/world/level/levelgen/feature/MonsterRoomFeature";
-	private static final String MONSTER_ROOM_HOOKS = "net/neoforged/neoforge/common/MonsterRoomHooks";
+	private static final String MONSTER_ROOM_HOOKS = "net/minecraftforge/common/MonsterRoomHooks";
 	private static final String RANDOM_MONSTER_ROOM_MOB =
 			"(Lnet/minecraft/util/RandomSource;)Lnet/minecraft/world/entity/EntityType;";
-	private static final String NEO_SERVER_LIFECYCLE_HOOKS = "net/neoforged/neoforge/server/ServerLifecycleHooks";
+	private static final String NEO_SERVER_LIFECYCLE_HOOKS = "net/minecraftforge/server/ServerLifecycleHooks";
 	private static final String RUN_MODIFIERS = "(Lnet/minecraft/server/MinecraftServer;)V";
 
 	private static final String ICONDITION = ForeignType.ICONDITION.internal(Ecosystem.NEOFORGE);
@@ -472,7 +472,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 	private static final String WEIGHTED_VARIANTS = "net/minecraft/client/renderer/block/dispatch/WeightedVariants";
 	private static final String BLOCK_STATE_MODEL = "net/minecraft/client/renderer/block/dispatch/BlockStateModel";
 	/** NeoForge-only: MinecraftForge composes its ingredient codec in ForgeHooks, so ForeignType has no pair. */
-	private static final String NEO_INGREDIENT_CODECS = "net/neoforged/neoforge/common/crafting/IngredientCodecs";
+	private static final String NEO_INGREDIENT_CODECS = "net/minecraftforge/common/crafting/IngredientCodecs";
 	static final String CODEC_TO_CODEC = "(Lcom/mojang/serialization/Codec;)Lcom/mojang/serialization/Codec;";
 	private static final String BOOTSTRAP = "net/minecraft/server/Bootstrap";
 	private static final String RELOADABLE_SERVER_RESOURCES = "net/minecraft/server/ReloadableServerResources";
@@ -484,20 +484,20 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 	private static final String JSON_RELOAD_LISTENER = "net/minecraft/server/packs/resources/SimpleJsonResourceReloadListener";
 	private static final String DATA_RESULT = "Lcom/mojang/serialization/DataResult;";
 
-	private static final String CONDITIONAL_OPS = "net/neoforged/neoforge/common/conditions/ConditionalOps";
+	private static final String CONDITIONAL_OPS = "net/minecraftforge/common/conditions/ConditionalOps";
 	private static final String CONDITIONAL_FACTORY =
 			"(Lcom/mojang/serialization/Codec;Ljava/lang/String;)Lcom/mojang/serialization/Codec;";
 	private static final String KERNEL_FABRIC_CONDITIONS = "net/forbric/kernel/runtime/KernelFabricConditions";
 
 	private static final String DEFAULT_ATTRIBUTES = "net/minecraft/world/entity/ai/attributes/DefaultAttributes";
-	private static final String NEO_COMMON_HOOKS = "net/neoforged/neoforge/common/CommonHooks";
+	private static final String NEO_COMMON_HOOKS = "net/minecraftforge/common/CommonHooks";
 	private static final String ATTRIBUTES_VIEW = "()Ljava/util/Map;";
 	private static final String KERNEL_FORGE_ATTRIBUTES = "net/forbric/kernel/runtime/KernelForgeAttributes";
 
 	private static final String ADD_CLIENT_RELOAD_LISTENERS =
-			"net/neoforged/neoforge/client/event/AddClientReloadListenersEvent";
+			"net/minecraftforge/client/event/AddClientReloadListenersEvent";
 	private static final String VANILLA_CLIENT_LISTENERS =
-			"net/neoforged/neoforge/client/resources/VanillaClientListeners";
+			"net/minecraftforge/client/resources/VanillaClientListeners";
 	private static final String NAME_FOR_CLASS =
 			"(Ljava/lang/Class;)Lnet/minecraft/resources/Identifier;";
 	private static final String KERNEL_RELOAD_NAMES = "net/forbric/kernel/runtime/KernelClientReloadNames";
@@ -545,7 +545,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 
 		boolean changed = false;
 		for (MethodNode caller : node.methods) {
-			for (AbstractInsnNode insn = caller.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = caller.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (!(insn instanceof InvokeDynamicInsnNode indy) || indy.bsmArgs == null) continue;
 				for (int i = 0; i < indy.bsmArgs.length; i++) {
 					if (!(indy.bsmArgs[i] instanceof Handle handle)) continue;
@@ -568,7 +568,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 	 * the class declares nothing — so the JVM refuses to choose and the FIRST caller dies:
 	 * <pre>
 	 * java.lang.IncompatibleClassChangeError: Conflicting default methods:
-	 *   net/neoforged/neoforge/common/extensions/IBlockStateExtension.getAppearance
+	 *   net/minecraftforge/common/extensions/IBlockStateExtension.getAppearance
 	 *   net/fabricmc/fabric/api/block/v1/FabricBlockState.getAppearance
 	 *   at BlockState.getAppearance
 	 *   at me.pepperbell.continuity.client.model.CtmBlockStateModel.emitQuads
@@ -595,7 +595,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 	 * does not override it inherits two defaults:
 	 * <pre>
 	 * java.lang.IncompatibleClassChangeError: Conflicting default methods:
-	 *   net/neoforged/neoforge/common/extensions/IBlockExtension.getAppearance
+	 *   net/minecraftforge/common/extensions/IBlockExtension.getAppearance
 	 *   net/fabricmc/fabric/api/block/v1/FabricBlock.getAppearance
 	 *   at MudBlock.getAppearance
 	 *   at BlockState.getAppearance   &lt;- the first repair, working
@@ -706,7 +706,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		if (bootStrap == null || bootStrap.instructions == null) return false;
 
 		// The guard: the first real instructions are GETSTATIC isBootstrapped; IFNE skip.
-		AbstractInsnNode first = realAfter(bootStrap.instructions.getFirst(), true);
+		AbstractInsnNode first = realAfter(bootStrap.instructions.get(0), true);
 		if (!(first instanceof FieldInsnNode read) || read.getOpcode() != Opcodes.GETSTATIC
 				|| !BOOTSTRAP.equals(read.owner) || !"isBootstrapped".equals(read.name) || !"Z".equals(read.desc)) {
 			return false;
@@ -921,7 +921,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		String neo = ForeignType.EVENT_HOOKS.internal(Ecosystem.NEOFORGE);
 		List<MethodInsnNode> calls = new java.util.ArrayList<>();
 		for (MethodNode method : node.methods) {
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn instanceof MethodInsnNode call && call.getOpcode() == Opcodes.INVOKESTATIC
 						&& neo.equals(call.owner) && "onResourceReload".equals(call.name)
 						&& RELOAD_HOOK_DESC.equals(call.desc)) {
@@ -936,7 +936,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 					+ "then be posted for some reloads and not others", calls.size());
 			return false;
 		}
-		calls.getFirst().owner = KERNEL_FORGE_RELOAD;
+		calls.get(0).owner = KERNEL_FORGE_RELOAD;
 		ForbricLog.info("[Forbric/MergedBaseCompat] ReloadableServerResources now posts both families' reload-listener "
 				+ "events (1 call site) — the merged base posted only NeoForge's, so a traditional-Forge mod's "
 				+ "AddReloadListenerEvent listeners never ran and its JSON data loaders were never registered");
@@ -958,7 +958,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		if (!FORGE_RELOAD_EVENT.equals(node.name)) return false;
 		List<MethodInsnNode> calls = new java.util.ArrayList<>();
 		for (MethodNode method : node.methods) {
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (!(insn instanceof MethodInsnNode call)) continue;
 				if (KERNEL_FORGE_CONDITIONS.equals(call.owner) && "contextOf".equals(call.name)) return false;
 				if (call.getOpcode() == Opcodes.INVOKEVIRTUAL && RELOADABLE_SERVER_RESOURCES.equals(call.owner)
@@ -974,7 +974,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 			}
 			return false;
 		}
-		MethodInsnNode call = calls.getFirst();
+		MethodInsnNode call = calls.get(0);
 		call.setOpcode(Opcodes.INVOKESTATIC);
 		call.owner = KERNEL_FORGE_CONDITIONS;
 		call.name = "contextOf";
@@ -1004,7 +1004,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		MethodNode clinit = findMethod(node, "<clinit>", "()V");
 		if (clinit == null) return false;
 		FieldInsnNode store = null;
-		for (AbstractInsnNode insn = clinit.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = clinit.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof FieldInsnNode field && field.getOpcode() == Opcodes.PUTSTATIC
 					&& node.name.equals(field.owner) && "CODEC".equals(field.name)
 					&& "Lcom/mojang/serialization/Codec;".equals(field.desc)) {
@@ -1065,7 +1065,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		VarInsnNode modelStore = null;
 		InsnNode minusOne = null;
 		int lookups = 0, tintArms = 0;
-		for (AbstractInsnNode insn = tesselate.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = tesselate.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof MethodInsnNode call && KERNEL_FORGE_FLUIDS.equals(call.owner)) return false;
 			if (insn instanceof MethodInsnNode call && call.getOpcode() == Opcodes.INVOKEVIRTUAL
 					&& "net/minecraft/client/renderer/block/FluidStateModelSet".equals(call.owner)
@@ -1129,7 +1129,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		String desc = "L" + BLOCK_STATE_MODEL + ";";
 		if (!hasField(node, "first", desc)) return false;
 		for (MethodNode method : node.methods) {
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn instanceof FieldInsnNode field && field.getOpcode() == Opcodes.PUTFIELD
 						&& WEIGHTED_VARIANTS.equals(field.owner) && "first".equals(field.name)) return false;
 			}
@@ -1137,7 +1137,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		MethodNode init = findMethod(node, "<init>", "(Lnet/minecraft/util/random/WeightedList;)V");
 		if (init == null) return false;
 		VarInsnNode store = null;
-		for (AbstractInsnNode insn = init.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = init.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (!(insn instanceof VarInsnNode var) || var.getOpcode() != Opcodes.ASTORE || var.var != 2) continue;
 			// previousReal answers the nearest real instruction AT or before its cursor, so step off each one first.
 			AbstractInsnNode a = previousReal(var.getPrevious()), b = a == null ? null : previousReal(a.getPrevious()),
@@ -1172,7 +1172,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 	private static boolean addMissingForgeFluidTypeBridge(ClassNode node) {
 		if ((node.access & (Opcodes.ACC_INTERFACE | Opcodes.ACC_ABSTRACT)) != 0) return false;
 		if (!node.name.startsWith("net/minecraft/world/level/material/")) return false;
-		if (!node.interfaces.contains("net/neoforged/neoforge/common/extensions/IFluidExtension")) return false;
+		if (!node.interfaces.contains("net/minecraftforge/common/extensions/IFluidExtension")) return false;
 		if (hasMethod(node, "getFluidType", "()Lnet/minecraftforge/fluids/FluidType;")) return false;
 
 		MethodNode bridge = new MethodNode(Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC,
@@ -1205,7 +1205,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		}
 
 		boolean inserted = false;
-		for (AbstractInsnNode insn = clinit.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = clinit.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn.getOpcode() != Opcodes.RETURN) continue;
 			clinit.instructions.insertBefore(insn, new TypeInsnNode(Opcodes.NEW,
 					ForeignType.KEY_MAPPING_LOOKUP.internal(Ecosystem.FORGE)));
@@ -1249,7 +1249,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		if (!"net/minecraft/client/KeyMapping".equals(node.name)) return false;
 
 		String forgeLookup = "Lnet/minecraftforge/client/settings/KeyMappingLookup;";
-		String neoLookup = "Lnet/neoforged/neoforge/client/settings/KeyMappingLookup;";
+		String neoLookup = "Lnet/minecraftforge/client/settings/KeyMappingLookup;";
 		// Only meaningful when the merge actually produced BOTH lookups; a single-ecosystem base is already coherent.
 		if (!hasField(node, "MAP", forgeLookup) || !hasField(node, "MAP", neoLookup)) return false;
 
@@ -1258,7 +1258,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		if (lookup == null) return false;
 
 		boolean changed = false;
-		for (AbstractInsnNode insn = lookup.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = lookup.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn.getOpcode() == Opcodes.GETSTATIC && insn instanceof FieldInsnNode field
 					&& "MAP".equals(field.name) && forgeLookup.equals(field.desc)) {
 				field.desc = neoLookup;
@@ -1319,7 +1319,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 
 		FieldInsnNode anchor = null;
 		for (MethodNode method : node.methods) {
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (!(insn instanceof FieldInsnNode field) || field.getOpcode() != Opcodes.PUTFIELD
 						|| !node.name.equals(field.owner) || !"providers".equals(field.name)) {
 					continue;
@@ -1435,7 +1435,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		List<MethodInsnNode> gets = new ArrayList<>();
 		List<MethodInsnNode> invalidations = new ArrayList<>();
 		for (MethodNode method : node.methods) {
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (!(insn instanceof FieldInsnNode access) || !node.name.equals(access.owner)
 						|| !FEATURES_PER_STEP.equals(access.name) || !CLEARABLE_LAZY_DESC.equals(access.desc)) {
 					continue;
@@ -1540,7 +1540,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		if (clinit == null) return false;
 
 		FieldInsnNode target = null;
-		for (AbstractInsnNode insn = clinit.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = clinit.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof FieldInsnNode field && field.getOpcode() == Opcodes.PUTSTATIC
 					&& ICONDITION.equals(field.owner) && "CODEC".equals(field.name)
 					&& CODEC_DESC.equals(field.desc)) {
@@ -1616,7 +1616,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 			if (method.instructions == null) continue;
 
 			AbstractInsnNode call = null;
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn instanceof MethodInsnNode m && "ifSuccess".equals(m.name)
 						&& "com/mojang/serialization/DataResult".equals(m.owner)) {
 					if (call != null) {
@@ -1652,7 +1652,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		if (clinit == null) return false;
 
 		FieldInsnNode target = null;
-		for (AbstractInsnNode insn = clinit.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = clinit.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof FieldInsnNode field && field.getOpcode() == Opcodes.PUTSTATIC
 					&& FORGE_ICONDITION.equals(field.owner) && "CODEC".equals(field.name)
 					&& CODEC_DESC.equals(field.desc)) {
@@ -1703,7 +1703,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		if (!DEFAULT_ATTRIBUTES.equals(node.name)) return false;
 		int redirected = 0;
 		for (MethodNode method : node.methods) {
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (!(insn instanceof MethodInsnNode call) || call.getOpcode() != Opcodes.INVOKESTATIC
 						|| !NEO_COMMON_HOOKS.equals(call.owner) || !"getAttributesView".equals(call.name)
 						|| !ATTRIBUTES_VIEW.equals(call.desc)) {
@@ -1771,7 +1771,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 						|| ("net/minecraftforge/client/model/geometry/GeometryLoaderManager".equals(call.owner)
 							&& "init".equals(call.name)))) return false;
 		}
-		AbstractInsnNode first = method.instructions.getFirst();
+		AbstractInsnNode first = method.instructions.get(0);
 		while (first != null && first.getOpcode() < 0) first = first.getNext();
 		if (!(first instanceof VarInsnNode load) || load.getOpcode() != Opcodes.ALOAD || load.var != 1) return false;
 		AbstractInsnNode next = first.getNext();
@@ -1808,7 +1808,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		if (!ADD_CLIENT_RELOAD_LISTENERS.equals(node.name)) return false;
 		int redirected = 0;
 		for (MethodNode method : node.methods) {
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (!(insn instanceof MethodInsnNode call) || call.getOpcode() != Opcodes.INVOKESTATIC
 						|| !VANILLA_CLIENT_LISTENERS.equals(call.owner)
 						|| !"getNameForClass".equals(call.name) || !NAME_FOR_CLASS.equals(call.desc)) {
@@ -1853,7 +1853,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		if (factory == null) return false;
 
 		AbstractInsnNode exit = null;
-		for (AbstractInsnNode insn = factory.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = factory.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn.getOpcode() != Opcodes.ARETURN) continue;
 			if (exit != null) {
 				ForbricLog.warn("[Forbric/MergedBaseCompat] ConditionalOps' codec factory has more than one exit — "
@@ -1875,7 +1875,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		int funnelled = 0;
 		for (MethodNode method : node.methods) {
 			if (method == factory) continue;
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn instanceof MethodInsnNode call && CONDITIONAL_OPS.equals(call.owner)
 						&& call.name.startsWith("createConditionalCodec")) {
 					funnelled++;
@@ -1918,7 +1918,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		if (!MONSTER_ROOM_FEATURE.equals(node.name)) return false;
 		int redirected = 0;
 		for (MethodNode method : node.methods) {
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (!(insn instanceof MethodInsnNode call) || call.getOpcode() != Opcodes.INVOKESTATIC
 						|| !MONSTER_ROOM_HOOKS.equals(call.owner)
 						|| !"getRandomMonsterRoomMob".equals(call.name)
@@ -1999,7 +1999,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		List<String> methods = new ArrayList<>();
 		for (MethodNode method : node.methods) {
 			boolean touched = false;
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn.getOpcode() != Opcodes.L2F) continue;
 				AbstractInsnNode constant = nextReal(insn);
 				if (!(constant instanceof LdcInsnNode ldc) || !(ldc.cst instanceof Float scale)
@@ -2071,7 +2071,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		if (!node.name.startsWith("net/minecraft/")) return false;
 		int folded = 0;
 		for (MethodNode method : node.methods) {
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (!(insn instanceof LdcInsnNode degrees) || !Double.valueOf(HALF_TURN_IN_DEGREES).equals(degrees.cst)) {
 					continue;
 				}
@@ -2139,7 +2139,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		int rebased = 0;
 		for (MethodNode method : node.methods) {
 			if (!"getChunkSaveHeightmaps".equals(method.name)) continue;
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (!(insn instanceof FieldInsnNode read) || read.getOpcode() != Opcodes.GETFIELD
 						|| !CHUNK_STATUS.equals(read.owner) || !CHUNK_SAVE_HEIGHTMAPS.equals(read.name)) {
 					continue;
@@ -2180,7 +2180,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		int guarded = 0;
 		for (MethodNode method : node.methods) {
 			if (!"handleServerAboutToStart".equals(method.name)) continue;
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (!(insn instanceof MethodInsnNode call) || call.getOpcode() != Opcodes.INVOKESTATIC
 						|| !NEO_SERVER_LIFECYCLE_HOOKS.equals(call.owner)
 						|| !"runModifiers".equals(call.name) || !RUN_MODIFIERS.equals(call.desc)) {
@@ -2269,7 +2269,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		if (method.instructions == null) return false;
 
 		List<AbstractInsnNode> body = new java.util.ArrayList<>();
-		for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn.getOpcode() >= 0) body.add(insn);
 		}
 
@@ -2423,7 +2423,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 	/** Whether anything in {@code node} assigns the static field {@code name}. */
 	private static boolean writesStatic(ClassNode node, String name) {
 		for (MethodNode method : node.methods) {
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn instanceof FieldInsnNode field && field.getOpcode() == Opcodes.PUTSTATIC
 						&& node.name.equals(field.owner) && name.equals(field.name)) {
 					return true;
@@ -2456,7 +2456,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		// If anything ever writes spawnReason, the field is live and must be left alone — the same guard the
 		// particle-map reroute uses, and for the same reason: a future base may keep the other family's producer.
 		for (MethodNode method : node.methods) {
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn instanceof FieldInsnNode field && field.getOpcode() == Opcodes.PUTFIELD
 						&& node.name.equals(field.owner) && "spawnReason".equals(field.name)) {
 					return false;
@@ -2466,7 +2466,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 
 		boolean changed = false;
 		for (MethodNode method : node.methods) {
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn instanceof FieldInsnNode field && field.getOpcode() == Opcodes.GETFIELD
 						&& node.name.equals(field.owner) && "spawnReason".equals(field.name)
 						&& SPAWN_REASON.equals(field.desc)) {
@@ -2494,7 +2494,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		if (!hasField(node, "providersByName", NAME_KEYED)) return;
 		for (MethodNode method : node.methods) {
 			if ("<init>".equals(method.name)) continue;
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn instanceof FieldInsnNode field && field.getOpcode() == Opcodes.PUTFIELD
 						&& node.name.equals(field.owner) && "providersByName".equals(field.name)) {
 					return; // a live producer survived; nothing to reroute
@@ -2504,7 +2504,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		MethodNode getProvider = findMethod(node, "getProvider",
 				"(Lnet/minecraft/core/particles/ParticleType;)Lnet/minecraft/client/particle/ParticleProvider;");
 		if (getProvider == null) return;
-		for (AbstractInsnNode insn = getProvider.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = getProvider.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof FieldInsnNode field && field.getOpcode() == Opcodes.GETFIELD
 					&& node.name.equals(field.owner) && "providersByName".equals(field.name)
 					&& NAME_KEYED.equals(field.desc)) {
@@ -2654,7 +2654,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 				m.instructions.insertBefore(anchor, mirrorFields(node));
 				any = true;
 			} else {
-				for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+				for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 					if (insn.getOpcode() != Opcodes.RETURN) continue;
 					m.instructions.insertBefore(insn, mirrorFields(node));
 					any = true;
@@ -2687,7 +2687,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 
 	/** The first read of either family's {@code MAP}, which is where the constructor starts registering. */
 	private static AbstractInsnNode firstLookupAccess(MethodNode m, String forgeLookup, String neoLookup) {
-		for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn.getOpcode() == Opcodes.GETSTATIC && insn instanceof FieldInsnNode field
 					&& "MAP".equals(field.name)
 					&& (forgeLookup.equals(field.desc) || neoLookup.equals(field.desc))) {
@@ -2700,7 +2700,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 	/** Points a constructor's own {@code MAP.put} at the lookup the game reads. True when anything moved. */
 	private static boolean retargetLookupRegistration(MethodNode m, String forgeLookup, String neoLookup) {
 		boolean changed = false;
-		for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn.getOpcode() == Opcodes.GETSTATIC && insn instanceof FieldInsnNode field
 					&& "MAP".equals(field.name) && forgeLookup.equals(field.desc)) {
 				field.desc = neoLookup;
@@ -2817,7 +2817,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		if (method.instructions == null) return false;
 
 		java.util.List<AbstractInsnNode> body = new java.util.ArrayList<>();
-		for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn.getOpcode() >= 0) body.add(insn);
 		}
 
@@ -2850,7 +2850,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 	 * Sends the block-placement hook to NeoForge, whose type the merged snapshot list actually has.
 	 *
 	 * <p>{@code Level.capturedBlockSnapshots} survived the merge as
-	 * {@code ArrayList<net.neoforged.neoforge.common.util.BlockSnapshot>} — NeoForge's element type won, and there is
+	 * {@code ArrayList<net.minecraftforge.common.util.BlockSnapshot>} — NeoForge's element type won, and there is
 	 * only ONE such field. But {@code ItemStack.useOn} kept calling MINECRAFTFORGE's
 	 * {@code ForgeHooks.onPlaceItemIntoWorld}, which drains that same list expecting
 	 * {@code net.minecraftforge.common.util.BlockSnapshot}. So placing ANY block threw
@@ -2870,13 +2870,13 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		for (MethodNode method : node.methods) {
 			if (method.instructions == null) continue;
 
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (!(insn instanceof MethodInsnNode call) || call.getOpcode() != Opcodes.INVOKESTATIC) continue;
 				if (!"net/minecraftforge/common/ForgeHooks".equals(call.owner)
 						|| !"onPlaceItemIntoWorld".equals(call.name)) {
 					continue;
 				}
-				call.owner = "net/neoforged/neoforge/common/CommonHooks";
+				call.owner = "net/minecraftforge/common/CommonHooks";
 				changed = true;
 			}
 		}
@@ -2910,7 +2910,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 	 * is untouched, so well-formed stacks still take the normal route.
 	 */
 	private static boolean tolerateEmptyCreativeTabStacks(ClassNode node) {
-		if (!"net/neoforged/neoforge/event/EventHooks".equals(node.name) || node.methods == null) return false;
+		if (!"net/minecraftforge/event/EventHooks".equals(node.name) || node.methods == null) return false;
 
 		boolean changed = false;
 		for (MethodNode method : node.methods) {
@@ -2927,7 +2927,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 
 	/** Replaces {@code throw new IllegalArgumentException("The stack count must be 1")} with a plain {@code return}. */
 	private static boolean replaceStackCountThrowWithReturn(MethodNode method) {
-		for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (!(insn instanceof LdcInsnNode ldc) || !STACK_COUNT_MESSAGE.equals(ldc.cst)) continue;
 
 			AbstractInsnNode start = insn;
@@ -2990,7 +2990,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		// Coherent already (a single-ecosystem base, or a merge that kept Forge's body): the method stores the field
 		// itself, or still chains the lambda that does.
 		if (writesField(setup, "outboundProtocol")) return false;
-		for (AbstractInsnNode insn = setup.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = setup.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (!(insn instanceof InvokeDynamicInsnNode indy)) continue;
 			for (Object arg : indy.bsmArgs) {
 				if (arg instanceof Handle handle && node.name.equals(handle.getOwner())) {
@@ -3013,7 +3013,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 	}
 
 	private static boolean writesField(MethodNode method, String fieldName) {
-		for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn.getOpcode() == Opcodes.PUTFIELD && insn instanceof FieldInsnNode field && fieldName.equals(field.name)) {
 				return true;
 			}
@@ -3044,7 +3044,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		boolean changed = false;
 		for (MethodNode m : node.methods) {
 			List<MethodInsnNode> lookups = new ArrayList<>();
-			for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn.getOpcode() == Opcodes.INVOKEVIRTUAL && insn instanceof MethodInsnNode call
 						&& FORGE_MODEL_DATA_MANAGER.equals(call.owner) && "getAtOrEmpty".equals(call.name)) {
 					lookups.add(call);
@@ -3213,14 +3213,14 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 	 *
 	 * <p>The merge-conflict report does not list this method. NeoForge's patch here is an unqualified call to a
 	 * method on {@code ItemStack} itself — an interface default from {@code IItemStackExtension}, which the merged
-	 * class still implements — so it names nothing under {@code net/neoforged/} for a detector to notice.
+	 * class still implements — so it names nothing under {@code net/minecraftforge/} for a detector to notice.
 	 */
 	private static boolean askNeoForgeWhatAnItemsAttributesAre(ClassNode node) {
 		if (!ITEM_STACK.equals(node.name)) return false;
 		boolean changed = false;
 		for (MethodNode method : node.methods) {
 			if (!"forEachModifier".equals(method.name) || method.instructions == null) continue;
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (!(insn instanceof FieldInsnNode type) || type.getOpcode() != Opcodes.GETSTATIC
 						|| !DATA_COMPONENTS.equals(type.owner) || !"ATTRIBUTE_MODIFIERS".equals(type.name)) {
 					continue;
@@ -3269,7 +3269,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 	static final String PREPARE_DESC = "(Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/util/profiling/ProfilerFiller;)Ljava/util/Map;";
 	static final String KERNEL_LOOT_MODIFIERS = "net/forbric/kernel/runtime/KernelLootModifiers";
 	static final String FEATURE_FLAGS = "net/minecraft/world/flag/FeatureFlags";
-	static final String NEO_FEATURE_FLAG_LOADER = "net/neoforged/neoforge/common/util/flag/FeatureFlagLoader";
+	static final String NEO_FEATURE_FLAG_LOADER = "net/minecraftforge/common/util/flag/FeatureFlagLoader";
 	static final String KERNEL_FEATURE_FLAGS = "net/forbric/kernel/runtime/KernelFeatureFlags";
 	static final String LOAD_MODDED_FLAGS = "loadModdedFlags";
 	static final String LOAD_MODDED_FLAGS_DESC = "(Lnet/minecraft/world/flag/FeatureFlagRegistry$Builder;)V";
@@ -3287,7 +3287,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		MethodNode clinit = findMethod(node, "<clinit>", "()V");
 		if (clinit == null) return false;
 		int swapped = 0;
-		for (AbstractInsnNode insn = clinit.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = clinit.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof MethodInsnNode call && call.getOpcode() == Opcodes.INVOKESTATIC
 					&& NEO_FEATURE_FLAG_LOADER.equals(call.owner) && LOAD_MODDED_FLAGS.equals(call.name)
 					&& LOAD_MODDED_FLAGS_DESC.equals(call.desc)) {
@@ -3336,7 +3336,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		if (!SPRITE_LOADER.equals(node.name) || !mipmapLoweringEnabled()) return false;
 		int forced = 0;
 		for (MethodNode method : node.methods) {
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; ) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; ) {
 				AbstractInsnNode next = insn.getNext();
 				if (insn instanceof MethodInsnNode call && call.getOpcode() == Opcodes.INVOKEVIRTUAL
 						&& FORGE_CLIENT_CONFIG.equals(call.owner) && MIPMAP_LOWERING.equals(call.name)
@@ -3394,7 +3394,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		if (getKey == null || getKey.instructions.size() == 0) return false;
 		// Idempotent: the first instruction of a repaired method is the ALOAD 0 of this prologue followed by the
 		// split. Re-running the pass over an already-written class must not stack a second copy.
-		for (AbstractInsnNode insn = getKey.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = getKey.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof MethodInsnNode call && "java/lang/String".equals(call.owner)
 					&& "split".equals(call.name)) {
 				return false;
@@ -3468,7 +3468,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		if (prepare == null) return false;
 		MethodInsnNode site = null;
 		int sites = 0;
-		for (AbstractInsnNode insn = prepare.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = prepare.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof MethodInsnNode call && call.getOpcode() == Opcodes.INVOKESPECIAL && SIMPLE_JSON_LISTENER.equals(call.owner)
 					&& PREPARE.equals(call.name) && PREPARE_DESC.equals(call.desc)) {
 				sites++;
@@ -3503,7 +3503,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 	static final String OVERLAY_ENTRY = "net/minecraft/server/packs/OverlayMetadataSection$OverlayEntry";
 	static final String LIST_CODEC_FOR_PACK_TYPE = "listCodecForPackType";
 	static final String LIST_CODEC_DESC = "(Lnet/minecraft/server/packs/PackType;)Lcom/mojang/serialization/Codec;";
-	static final String CONDITIONAL_OPS_NEO = "net/neoforged/neoforge/common/conditions/ConditionalOps";
+	static final String CONDITIONAL_OPS_NEO = "net/minecraftforge/common/conditions/ConditionalOps";
 	static final String DECODE_LIST_WITH_CONDITIONS = "decodeListWithElementConditions";
 	static final String KERNEL_NEO_CONDITIONS_CLASS = "net/forbric/kernel/runtime/KernelNeoConditions";
 
@@ -3526,7 +3526,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		if (method == null) return false;
 		MethodInsnNode site = null;
 		int sites = 0;
-		for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof MethodInsnNode call && call.getOpcode() == Opcodes.INVOKESTATIC
 					&& CONDITIONAL_OPS_NEO.equals(call.owner) && DECODE_LIST_WITH_CONDITIONS.equals(call.name)
 					&& CODEC_TO_CODEC.equals(call.desc)) {
@@ -3597,7 +3597,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		for (LostSwitchMap lost : LOST_SWITCH_MAPS) {
 			if (!lost.user().equals(node.name)) continue;
 			for (MethodNode method : node.methods) {
-				for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+				for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 					if (!(insn instanceof FieldInsnNode get) || get.getOpcode() != Opcodes.GETSTATIC
 							|| !lost.holder().equals(get.owner) || !lost.field().equals(get.name)) {
 						continue;
@@ -3776,7 +3776,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		MethodNode createTitle = findMethod(node, "createTitle", "()Ljava/lang/String;");
 		if (createTitle == null) return false;
 
-		for (AbstractInsnNode insn = createTitle.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = createTitle.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (!(insn instanceof LdcInsnNode brand) || !LOADER_BRANDS.contains(brand.cst)) continue;
 			AbstractInsnNode appendBrand = insn.getNext();
 			if (!isStringBuilderAppend(appendBrand, "(Ljava/lang/String;)Ljava/lang/StringBuilder;")) continue;
@@ -3831,7 +3831,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 	private static boolean initializesStaticField(ClassNode node, String name, String desc) {
 		for (MethodNode method : node.methods) {
 			if (!method.name.equals("<clinit>") || !method.desc.equals("()V")) continue;
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn instanceof FieldInsnNode field && field.getOpcode() == Opcodes.PUTSTATIC
 						&& field.owner.equals(node.name) && field.name.equals(name) && field.desc.equals(desc)) {
 					return true;
@@ -4023,7 +4023,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		// to NeoForge's registration list, so filter only the pool's input and retain the original list.
 		for (AbstractInsnNode insn : init.instructions.toArray()) {
 			if (insn instanceof MethodInsnNode call && "createPools".equals(call.name)
-					&& "net/neoforged/neoforge/client/gui/PictureInPictureRendererPool".equals(call.owner)
+					&& "net/minecraftforge/client/gui/PictureInPictureRendererPool".equals(call.owner)
 					&& "(Ljava/util/List;)Ljava/util/Map;".equals(call.desc)) {
 				init.instructions.insertBefore(call, new MethodInsnNode(Opcodes.INVOKESTATIC, PIP_BUILDER_OWNER,
 						"poolRegistrations", "(Ljava/util/List;)Ljava/util/List;", false));
@@ -4072,7 +4072,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		MethodInsnNode mapGet = null;
 		MethodInsnNode prepare = null;
 
-		for (AbstractInsnNode insn = orphaned.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = orphaned.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof FieldInsnNode field && field.getOpcode() == Opcodes.GETFIELD) {
 				if (PIP_RENDERERS.equals(field.name)) renderers = field;
 				else if (renderState == null) renderState = field;
@@ -4132,7 +4132,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 
 	/** Rewrites the live overload's "no pool for this state class" early return into a call to the bridge. */
 	private static boolean redirectMissingPoolToBridge(ClassNode node, MethodNode live, String stateDesc) {
-		for (AbstractInsnNode insn = live.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = live.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (!(insn instanceof FieldInsnNode field) || field.getOpcode() != Opcodes.GETFIELD
 					|| !PIP_POOLS.equals(field.name)) {
 				continue;
@@ -4201,7 +4201,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		for (MethodNode method : node.methods) {
 			if ((method.access & Opcodes.ACC_STATIC) != 0) continue;
 			if (method.instructions == null) continue;
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (!(insn instanceof MethodInsnNode call) || call.getOpcode() != Opcodes.INVOKESTATIC
 						|| !"net/minecraftforge/event/ForgeEventFactory".equals(call.owner)
 						|| !"getItemBurnTime".equals(call.name)
@@ -4242,7 +4242,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		int redirected = 0;
 		for (MethodNode method : node.methods) {
 			if (method.instructions == null || SpawnerFinalizeInjector.carriesForgeFinalize(method)) continue;
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (!(insn instanceof MethodInsnNode call) || call.getOpcode() != Opcodes.INVOKESTATIC
 						|| !NEO_EVENT_HOOKS.equals(call.owner)
 						|| !"finalizeMobSpawnSpawner".equals(call.name)
@@ -4275,7 +4275,7 @@ public final class ForbricMergedBaseCompatTransformer implements ClassTransforme
 		int redirected = 0;
 		for (MethodNode method : node.methods) {
 			if (method.instructions == null) continue;
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (!(insn instanceof MethodInsnNode call) || call.getOpcode() != Opcodes.INVOKESTATIC
 						|| !NEO_RESOURCE_PACK_LOADER.equals(call.owner)
 						|| !"populatePackRepository".equals(call.name)) {

@@ -25,21 +25,21 @@ import net.forbric.kernel.util.ForbricLog;
 import net.forbric.kernel.util.Reflect;
 import net.minecraft.client.gui.screens.Screen;
 
-import net.neoforged.bus.api.BusBuilder;
-import net.neoforged.bus.api.EventPriority;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.config.ConfigTracker;
-import net.neoforged.fml.config.IConfigSpec;
-import net.neoforged.fml.config.ModConfig;
-import net.neoforged.fml.event.IModBusEvent;
-import net.neoforged.fml.event.config.ModConfigEvent;
+import net.minecraftforge.eventbus.api.BusBuilder;
+import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.ModContainer;
+import net.minecraftforge.fml.config.ConfigTracker;
+import net.minecraftforge.fml.config.IConfigSpec;
+import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.IModBusEvent;
+import net.minecraftforge.fml.event.config.ModConfigEvent;
 
 /**
  * Registers a Fabric mod's config with the REAL {@code ConfigTracker}, from a caller that expects an older shape.
  *
  * <p>ForgeConfigAPIPort exists so Fabric mods can use NeoForge's config API, and it ships its own
- * {@code net.neoforged.fml.config.ConfigTracker} to provide it. Under Forbric that package is {@code ALWAYS_GAME},
+ * {@code net.minecraftforge.fml.config.ConfigTracker} to provide it. Under Forbric that package is {@code ALWAYS_GAME},
  * so the carrier's class wins and the port's never loads — and the port's compiled call sites then ask for
  * {@code registerConfig(ModConfig$Type, IConfigSpec, String, String)}, keyed by mod ID, which real NeoForge
  * 26.2.0.88 does not have. It takes a {@code ModContainer}. The result is a {@code NoSuchMethodError} raised not
@@ -83,7 +83,7 @@ public final class KernelConfigPortBridge {
 			// No start() call — BusBuilder only starts a bus shut down if asked with startShutdown().
 			IEventBus bus = BusBuilder.builder()
 					.markerType(IModBusEvent.class)
-					.allowPerPhasePost()
+					
 					.build();
 			ModContainer container = (ModContainer) KernelContainers.container(id, bus, null);
 			forwardConfigEvents(bus);
@@ -154,7 +154,9 @@ public final class KernelConfigPortBridge {
 	 */
 	public static ModConfig registerConfig(ConfigTracker tracker, ModConfig.Type type, IConfigSpec spec,
 			String modId) {
-		ModConfig config = tracker.registerConfig(type, spec, containerFor(modId));
+		ModContainer container = containerFor(modId);
+		ModConfig config = new ModConfig(type, spec, container);
+		container.addConfig(config);
 		KernelConfigLoad.openAtRegistration(config);
 		return config;
 	}
@@ -162,7 +164,9 @@ public final class KernelConfigPortBridge {
 	/** The 4-arg form, with the mod's own file name. */
 	public static ModConfig registerConfig(ConfigTracker tracker, ModConfig.Type type, IConfigSpec spec,
 			String modId, String fileName) {
-		ModConfig config = tracker.registerConfig(type, spec, containerFor(modId), fileName);
+		ModContainer container = containerFor(modId);
+		ModConfig config = new ModConfig(type, spec, container, fileName);
+		container.addConfig(config);
 		KernelConfigLoad.openAtRegistration(config);
 		return config;
 	}
@@ -181,6 +185,7 @@ public final class KernelConfigPortBridge {
 	 * that lambda exactly; the factory's functional interface produces a {@code Screen}.
 	 */
 	public static Screen configurationScreen(String modId, Screen parent) {
-		return new net.neoforged.neoforge.client.gui.ConfigurationScreen(containerFor(modId), parent);
+		// 1.20.1's MinecraftForge ships no ConfigurationScreen; the port's config screen is unavailable there.
+		return null;
 	}
 }

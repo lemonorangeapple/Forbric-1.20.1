@@ -1,8 +1,8 @@
 diff --git a/src/main/java/net/fabricmc/loader/impl/launch/knot/KnotClassDelegate.java b/src/main/java/net/fabricmc/loader/impl/launch/knot/KnotClassDelegate.java
-index 2446ae6..ffcc691 100644
+index 56b3f7a..a239faa 100644
 --- a/src/main/java/net/fabricmc/loader/impl/launch/knot/KnotClassDelegate.java
 +++ b/src/main/java/net/fabricmc/loader/impl/launch/knot/KnotClassDelegate.java
-@@ -353,12 +353,27 @@ final class KnotClassDelegate<T extends ClassLoader & ClassLoaderAccess> impleme
+@@ -340,12 +340,27 @@ final class KnotClassDelegate<T extends ClassLoader & ClassLoaderAccess> impleme
  		int pkgDelimiterPos = name.lastIndexOf('.');
  
  		if (pkgDelimiterPos > 0) {
@@ -32,7 +32,7 @@ index 2446ae6..ffcc691 100644
  				} catch (IllegalArgumentException e) { // presumably concurrent package definition
  					if (classLoader.getPackageFwd(pkgString) == null) throw e; // still not defined?
  				}
-@@ -368,6 +383,13 @@ final class KnotClassDelegate<T extends ClassLoader & ClassLoaderAccess> impleme
+@@ -355,6 +370,13 @@ final class KnotClassDelegate<T extends ClassLoader & ClassLoaderAccess> impleme
  		return classLoader.defineClassFwd(name, input, 0, input.length, metadata.codeSource);
  	}
  
@@ -46,7 +46,7 @@ index 2446ae6..ffcc691 100644
  	private Metadata getMetadata(String name) {
  		String fileName = LoaderUtil.getClassFileName(name);
  		URL url = classLoader.getResource(fileName);
-@@ -434,6 +456,14 @@ final class KnotClassDelegate<T extends ClassLoader & ClassLoaderAccess> impleme
+@@ -421,6 +443,14 @@ final class KnotClassDelegate<T extends ClassLoader & ClassLoaderAccess> impleme
  		try {
  			return getMixinTransformer().transformClassBytes(name, name, transformedClassArray);
  		} catch (Throwable t) {

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Produce the traditional-MinecraftForge-patched, Mojmap-named Minecraft 26.2 game jar that Forbric loads under
+# Produce the traditional-MinecraftForge-patched, SRG-named target-Minecraft game jar that Forbric loads under
 # Knot (the NFRT analog for traditional Forge — Forge uses BinaryPatcher + MCPConfig, NOT NeoFormRuntime).
 # The result (Forge-injected vanilla, e.g. Level implements net.minecraftforge.common.extensions.IForgeLevel) is
 # runtime-supplied like the user's MC jar + the Forge runtime — never committed into the Apache-2.0 loader source.
@@ -16,12 +16,17 @@
 #      exposing a PUBLIC self() (IForgeLivingEntity/LivingEntity) — the interface default does not resolve on
 #      subclasses under Forbric's flat Knot classloader (ServerPlayer AbstractMethodError on a world tick).
 #
-# Usage: [FORGE_VERSION=26.2-65.0.1] [MC_VER=26.2] ./build-patched-forge.sh
+# Usage: [FORGE_VERSION=<mc>-<fml>] [MC_VER=<mc>] ./build-patched-forge.sh   (defaults from VERSIONS.properties)
+#
+# TODO(forbric-port item 10): the installer-tool and library versions below are still the 26.2 set. For Forge
+# 1.20.1 they must be read from the 1.20.1 -userdev config.json (installertools/binarypatcher/mergetool/
+# accesstransformers and their transitive versions all differ).
 set -euo pipefail
 
-FORGE_VERSION="${FORGE_VERSION:-26.2-65.0.1}"
-MC_VER="${MC_VER:-26.2}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
+. "$HERE/lib-versions.sh"
+FORGE_VERSION="${FORGE_VERSION:-$FORBRIC_FORGE_VERSION}"
+MC_VER="${MC_VER:-$FORBRIC_MC_VERSION}"
 MC="${MC_DIR:-$HOME/Library/Application Support/minecraft}"
 WORK="$HERE/forge-patched/work"
 OUT="$HERE/forge-patched/patched-mc-forge-$MC_VER.jar"

@@ -7,10 +7,29 @@ import net.forbric.kernel.util.ForbricLog;
 import net.forbric.api.Ecosystem;
 import net.forbric.api.ForeignType;
 
-/** Replays NewRegistryEvent only to listeners added by client-window Forge constructors. */
+/**
+ * Replays NewRegistryEvent only to listeners added by client-window Forge constructors.
+ *
+ * <p>1.20.1 runs EventBus 6: there is no {@code NewRegistryEvent.BUS} static and no {@code BusGroup}, so this
+ * 26.2 (EventBus 7) replay has no shape to drive. It degrades to a no-op; the client's Forge mods are constructed
+ * in the kernel's own registration window, which already fires NewRegistryEvent on every mod's bus.
+ */
 final class LateForgeRegistryDeclarations {
 	private LateForgeRegistryDeclarations() { }
+
+	/** True when the EventBus 7 carrier this replay was written for is present. */
+	private static boolean available(ClassLoader loader) {
+		try {
+			Class.forName("net.minecraftforge.eventbus.api.bus.BusGroup", false, loader);
+			Class.forName("net.minecraftforge.registries.NewRegistryEvent", false, loader).getField("BUS");
+			return true;
+		} catch (ReflectiveOperationException | LinkageError absent) {
+			return false;
+		}
+	}
+
 	static List<Object> snapshot(ClassLoader loader) throws ReflectiveOperationException {
+		if (!available(loader)) return List.of();
 		Object bus=Class.forName("net.minecraftforge.registries.NewRegistryEvent",false,loader).getField("BUS").get(null);
 		List<Object> result=new ArrayList<>();collect(bus,result,Collections.newSetFromMap(new IdentityHashMap<>()));return result;
 	}
@@ -24,6 +43,7 @@ final class LateForgeRegistryDeclarations {
 		return after.stream().filter(seen::add).toList();
 	}
 	static void fire(ClassLoader loader,List<Object> before)throws ReflectiveOperationException{
+		if (!available(loader)) return;
 		List<Object> listeners=added(before,snapshot(loader));if(listeners.isEmpty())return;
 		Class<?> eventClass=Class.forName("net.minecraftforge.registries.NewRegistryEvent",false,loader);
 		Class<?> groupClass=Class.forName("net.minecraftforge.eventbus.api.bus.BusGroup",false,loader);

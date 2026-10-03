@@ -40,7 +40,8 @@ cd forbric-loader && ./gradlew build    # compile + run the unit tests
 `bootstrap.sh` needs `git` and network access the first time — it clones
 `https://github.com/FabricMC/fabric-loader` — and after that only re-checks, so re-running it is safe.
 Set `FABRIC_LOADER_REMOTE` to clone from a mirror instead. Which upstream release is used is stated
-exactly once, as `fabric_loader_ref` in [gradle.properties](gradle.properties) (currently **0.19.3**):
+exactly once, as `forbric.fabric.loader` in the repository-root [VERSIONS.properties](../VERSIONS.properties)
+(currently **0.16.10**):
 `bootstrap.sh` clones that tag, and `run/verify-substrate-patches.sh` — which `bootstrap.sh` runs at the
 end — diffs the live substrate against that same tag, so the patches cannot silently rot.
 `./bootstrap.sh --check` verifies and changes nothing.

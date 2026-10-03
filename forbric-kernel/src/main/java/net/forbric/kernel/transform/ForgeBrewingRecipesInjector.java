@@ -25,7 +25,7 @@ public final class ForgeBrewingRecipesInjector implements ClassTransformer {
 	public static final String PROPERTY = "forbric.forgeBrewingRecipes";
 	static final String BUILDER = "net.minecraft.world.item.alchemy.PotionBrewing$Builder";
 	static final String FORGE_RECIPE = "Lnet/minecraftforge/common/brewing/IBrewingRecipe;";
-	static final String NEO_RECIPE = "Lnet/neoforged/neoforge/common/brewing/IBrewingRecipe;";
+	static final String NEO_RECIPE = "Lnet/minecraftforge/common/brewing/IBrewingRecipe;";
 
 	static boolean enabled() {
 		return !"off".equalsIgnoreCase(System.getProperty(PROPERTY, "on"));

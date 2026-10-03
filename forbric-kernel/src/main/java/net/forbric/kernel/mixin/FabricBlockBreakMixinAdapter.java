@@ -138,9 +138,9 @@ public final class FabricBlockBreakMixinAdapter {
 		if (inject == null || !INJECT.equals(inject.desc) || !only(inject, "destroyBlock")
 				|| MixinFit.value(inject, "locals") == null) return 0;
 		List<AnnotationNode> points = MixinFit.atNodes(inject);
-		if (points.size() != 1 || !"INVOKE".equals(MixinFit.value(points.getFirst(), "value"))
-				|| !GET_BLOCK.equals(MixinFit.value(points.getFirst(), "target"))
-				|| !Integer.valueOf(0).equals(MixinFit.value(points.getFirst(), "ordinal"))) return 0;
+		if (points.size() != 1 || !"INVOKE".equals(MixinFit.value(points.get(0), "value"))
+				|| !GET_BLOCK.equals(MixinFit.value(points.get(0), "target"))
+				|| !Integer.valueOf(0).equals(MixinFit.value(points.get(0), "ordinal"))) return 0;
 
 		AbstractInsnNode point = null;
 		for (AbstractInsnNode insn : destroy.instructions) {
@@ -206,8 +206,8 @@ public final class FabricBlockBreakMixinAdapter {
 		AnnotationNode inject = MixinFit.injectorOf(handler);
 		if (inject == null || !INJECT.equals(inject.desc) || !only(inject, "destroyBlock")) return 0;
 		List<AnnotationNode> points = MixinFit.atNodes(inject);
-		if (points.size() != 1 || !"INVOKE".equals(MixinFit.value(points.getFirst(), "value"))
-				|| !BLOCK_DESTROY.equals(MixinFit.value(points.getFirst(), "target"))) return 0;
+		if (points.size() != 1 || !"INVOKE".equals(MixinFit.value(points.get(0), "value"))
+				|| !BLOCK_DESTROY.equals(MixinFit.value(points.get(0), "target"))) return 0;
 		for (AbstractInsnNode insn : handler.instructions) {
 			if (insn instanceof VarInsnNode load && load.var == 2) return 0;   // the wrapper has no callback to hand over
 		}
@@ -228,7 +228,7 @@ public final class FabricBlockBreakMixinAdapter {
 			List<LocalVariableNode> frame = inScope(destroy, removal);
 			if (frame == null || named(frame, "blockEntity", BLOCK_ENTITY) == null || named(frame, "adjustedState", STATE) == null) return 0;
 		}
-		LocalVariableNode entity = named(inScope(destroy, removals.getFirst()), "blockEntity", BLOCK_ENTITY);
+		LocalVariableNode entity = named(inScope(destroy, removals.get(0)), "blockEntity", BLOCK_ENTITY);
 		if (!readFromLevel(destroy, entity.index, "getBlockEntity")) return 0;
 		MethodNode helper = method(target, "removeBlock", REMOVE_BLOCK_DESC);
 		if (helper == null || destroyCalls(helper) != 1) return 0;
@@ -310,9 +310,9 @@ public final class FabricBlockBreakMixinAdapter {
 				|| MixinFit.value(modify, "index") != null || MixinFit.value(modify, "name") != null
 				|| MixinFit.value(modify, "argsOnly") != null) return 0;
 		List<AnnotationNode> points = MixinFit.atNodes(modify);
-		if (points.size() != 1 || !"INVOKE".equals(MixinFit.value(points.getFirst(), "value"))
-				|| !MINE_BLOCK.equals(MixinFit.value(points.getFirst(), "target"))
-				|| MixinFit.value(points.getFirst(), "ordinal") != null) return 0;
+		if (points.size() != 1 || !"INVOKE".equals(MixinFit.value(points.get(0), "value"))
+				|| !MINE_BLOCK.equals(MixinFit.value(points.get(0), "target"))
+				|| MixinFit.value(points.get(0), "ordinal") != null) return 0;
 
 		AbstractInsnNode point = null;
 		for (AbstractInsnNode insn : destroy.instructions) {
@@ -327,7 +327,7 @@ public final class FabricBlockBreakMixinAdapter {
 		List<LocalVariableNode> frame = inScope(destroy, point);
 		if (frame == null) return 0;
 		List<LocalVariableNode> booleans = frame.stream().filter(local -> local.desc.equals("Z")).toList();
-		if (booleans.size() != 1 || !storedFrom(destroy, booleans.getFirst().index, Opcodes.ISTORE, STATE, "canHarvestBlock",
+		if (booleans.size() != 1 || !storedFrom(destroy, booleans.get(0).index, Opcodes.ISTORE, STATE, "canHarvestBlock",
 				"(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/player/Player;)Z")) return 0;
 
 		for (int i = 0; i + 1 < modify.values.size(); i += 2) {

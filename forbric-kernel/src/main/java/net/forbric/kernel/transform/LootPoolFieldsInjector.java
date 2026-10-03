@@ -93,7 +93,7 @@ public final class LootPoolFieldsInjector implements ClassTransformer {
 
 	private static MethodNode method(ClassNode node, String desc) {
 		List<MethodNode> found = node.methods.stream().filter(m -> m.name.equals("<init>") && m.desc.equals(desc)).toList();
-		return found.size() == 1 ? found.getFirst() : null;
+		return found.size() == 1 ? found.get(0) : null;
 	}
 
 	private static boolean writes(MethodNode method, String name, String desc) {

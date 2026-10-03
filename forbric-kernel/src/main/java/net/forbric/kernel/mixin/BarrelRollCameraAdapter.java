@@ -44,7 +44,7 @@ public final class BarrelRollCameraAdapter {
 	static final String CAMERA = "net/minecraft/client/Camera";
 	static final String SHORT = "L" + CAMERA + ";setRotation(FF)V";
 	static final String LONG = "L" + CAMERA + ";setRotation(FFF)V";
-	private static final String EVENT = "net/neoforged/neoforge/client/event/ViewportEvent$ComputeCameraAngles";
+	private static final String EVENT = "net/minecraftforge/client/event/ViewportEvent$ComputeCameraAngles";
 	private static final String SHARE = "Lcom/llamalad7/mixinextras/sugar/ref/LocalFloatRef;";
 
 	private BarrelRollCameraAdapter() { }
@@ -97,12 +97,12 @@ public final class BarrelRollCameraAdapter {
 		if (wrap == null || !wrap.desc.endsWith("/WrapWithCondition;")
 				|| !MixinFit.stringList(MixinFit.value(wrap, "method")).equals(List.of("alignWithEntity"))) return false;
 		List<AnnotationNode> at = MixinFit.atNodes(wrap);
-		return at.size() == 1 && SHORT.equals(MixinFit.value(at.getFirst(), "target"))
-				&& Integer.valueOf(ordinal).equals(MixinFit.value(at.getFirst(), "ordinal"));
+		return at.size() == 1 && SHORT.equals(MixinFit.value(at.get(0), "target"))
+				&& Integer.valueOf(ordinal).equals(MixinFit.value(at.get(0), "ordinal"));
 	}
 
 	private static void retarget(MethodNode method, String target, int ordinal) {
-		AnnotationNode at = MixinFit.atNodes(MixinFit.injectorOf(method)).getFirst();
+		AnnotationNode at = MixinFit.atNodes(MixinFit.injectorOf(method)).get(0);
 		set(at, "target", target);
 		set(at, "ordinal", ordinal);
 	}

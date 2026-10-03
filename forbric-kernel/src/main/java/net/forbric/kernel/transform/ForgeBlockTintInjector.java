@@ -18,7 +18,7 @@ import org.objectweb.asm.tree.MethodInsnNode;
 public final class ForgeBlockTintInjector implements ClassTransformer {
 	static final String TARGET = "net.minecraft.client.color.block.BlockColors";
 	static final String HOOK = "net/forbric/kernel/runtime/KernelForgeBlockColors";
-	static final String POST = "(Lnet/neoforged/bus/api/Event;)V";
+	static final String POST = "(Lnet/minecraftforge/eventbus/api/Event;)V";
 
 	@Override public String name() { return "forbric-forge-block-tints"; }
 	@Override public AnchorSet anchors() {
@@ -50,7 +50,7 @@ public final class ForgeBlockTintInjector implements ClassTransformer {
 			}
 		}
 		if (repaired != 0 || candidates.size() != 1) return bytes;
-		MethodInsnNode target = candidates.getFirst();
+		MethodInsnNode target = candidates.get(0);
 		target.owner = HOOK;
 		target.name = "postBlockTintSources";
 		EventBridges.installed(GameEventBridge.BLOCK_TINT_SOURCES);

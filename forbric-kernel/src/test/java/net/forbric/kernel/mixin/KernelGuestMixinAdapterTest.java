@@ -793,7 +793,7 @@ class KernelGuestMixinAdapterTest {
 
 		assertTrue(KernelGuestMixinAdapter.unfitMixins("example.mixins.json", cfg, resolver(classes)).isEmpty(),
 				"PARTIAL is kept by default so the change stays monotonic against the old rule");
-		var finding = net.forbric.api.CompatibilityFindings.all().getFirst();
+		var finding = net.forbric.api.CompatibilityFindings.all().get(0);
 		assertEquals(net.forbric.api.CompatibilityFinding.Confidence.SUSPECTED, finding.confidence());
 		assertTrue(net.forbric.api.CompatibilityFindings.confirmedRequired().isEmpty());
 
@@ -809,7 +809,7 @@ class KernelGuestMixinAdapterTest {
 
 	// --- a pinned mixin's interface, relied on from another mod's config -----------------------------------------
 
-	private static final MergedBaseMixinCompat.PinnedContract PINNED = MergedBaseMixinCompat.PINNED_CONTRACTS.getFirst();
+	private static final MergedBaseMixinCompat.PinnedContract PINNED = MergedBaseMixinCompat.PINNED_CONTRACTS.get(0);
 
 	/**
 	 * The pinned contract in miniature, shaped as fabric-api writes it: one method only its implementer supplies

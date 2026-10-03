@@ -84,8 +84,8 @@ public final class UniversalJarServices {
 	static List<String> foreign(LoaderProbePolicy.Family owner) {
 		return switch (owner) {
 			case NEOFORGE -> List.of("net/fabricmc/", "net/minecraftforge/");
-			case FORGE -> List.of("net/fabricmc/", "net/neoforged/");
-			case FABRIC -> List.of("net/neoforged/fml/loading/", "net/minecraftforge/fml/loading/",
+			case FORGE -> List.of("net/fabricmc/", "net/minecraftforge/");
+			case FABRIC -> List.of("net/minecraftforge/fml/loading/", "net/minecraftforge/fml/loading/",
 					ForeignType.MOD_LIST.internal(Ecosystem.NEOFORGE), ForeignType.MOD_LIST.internal(Ecosystem.FORGE),
 					ForeignType.MOD_CONTAINER.internal(Ecosystem.NEOFORGE), ForeignType.MOD_CONTAINER.internal(Ecosystem.FORGE));
 		};

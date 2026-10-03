@@ -101,7 +101,7 @@ public final class MergedBaseCalleeSwaps {
 					"lambda$loadBlockModels$2(Ljava/util/Map$Entry;)Lcom/mojang/datafixers/util/Pair;",
 					"Lnet/minecraft/client/resources/model/cuboid/CuboidModel;fromStream(Ljava/io/Reader;)"
 							+ "Lnet/minecraft/client/resources/model/cuboid/CuboidModel;",
-					"Lnet/neoforged/neoforge/client/model/UnbakedModelParser;parse(Ljava/io/Reader;)"
+					"Lnet/minecraftforge/client/model/UnbakedModelParser;parse(Ljava/io/Reader;)"
 							+ "Lnet/minecraft/client/resources/model/UnbakedModel;",
 					Set.of(Ecosystem.FABRIC, Ecosystem.FORGE),
 					"both calls turn the model file's Reader into the model, on the thread that loads it, and that is the "

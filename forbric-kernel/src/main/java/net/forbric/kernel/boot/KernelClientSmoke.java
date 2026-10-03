@@ -253,7 +253,7 @@ public final class KernelClientSmoke {
 			forgeListen(cl, forgeNet + "LoggingOut", e -> forgeLogins[1]++);
 			forgeListen(cl, net.forbric.api.ForeignType.CLIENT_COMMANDS_EVENT.binary(net.forbric.api.Ecosystem.FORGE),
 					e -> register.accept(invoke(e, "getDispatcher"), "forbricsmokeforge"));
-			Object neoBus = Class.forName("net.neoforged.neoforge.common.NeoForge", true, cl).getField("EVENT_BUS").get(null);
+			Object neoBus = Class.forName("net.minecraftforge.common.NeoForge", true, cl).getField("EVENT_BUS").get(null);
 			Class<?> neoEvent = Class.forName(net.forbric.api.ForeignType.CLIENT_COMMANDS_EVENT.binary(net.forbric.api.Ecosystem.NEOFORGE), true, cl);
 			neoBus.getClass().getMethod("addListener", Class.class, java.util.function.Consumer.class).invoke(neoBus, neoEvent,
 					(java.util.function.Consumer) e -> register.accept(invoke(e, "getDispatcher"), "forbricsmokeneo"));
@@ -941,7 +941,7 @@ public final class KernelClientSmoke {
 			out.append("elytraModifiers=<").append(t).append('>');
 		}
 		try {
-			Class<?> neoMod = Class.forName("net.neoforged.neoforge.common.NeoForgeMod", true, cl);
+			Class<?> neoMod = Class.forName("net.minecraftforge.common.NeoForgeMod", true, cl);
 			Object holder = neoMod.getField("GLIDING_FLIGHT").get(null);
 			Class<?> holderCls = Class.forName("net.minecraft.core.Holder", true, cl);
 			Object map = accessible(player.getClass(), "getAttributes").invoke(player);
@@ -970,7 +970,7 @@ public final class KernelClientSmoke {
 	/** The NeoForge attribute the merged base's canGlide reads, or -1 if it cannot be asked. */
 	private static double glidingAttribute(Object player, ClassLoader cl) {
 		try {
-			Class<?> neoMod = Class.forName("net.neoforged.neoforge.common.NeoForgeMod", true, cl);
+			Class<?> neoMod = Class.forName("net.minecraftforge.common.NeoForgeMod", true, cl);
 			Object holder = neoMod.getField("GLIDING_FLIGHT").get(null);
 			Class<?> holderCls = Class.forName("net.minecraft.core.Holder", true, cl);
 			return (Double) player.getClass().getMethod("getAttributeValue", holderCls).invoke(player, holder);

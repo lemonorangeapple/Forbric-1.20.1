@@ -77,7 +77,7 @@ class MergedBaseLostSwitchMapTest {
 				if (indexOf(bytes, "$SwitchMap$".getBytes()) < 0) continue;
 				ClassNode node = parse(bytes);
 				for (MethodNode m : node.methods) {
-					for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+					for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 						if (!(insn instanceof FieldInsnNode f) || f.getOpcode() != Opcodes.GETSTATIC || !f.name.startsWith("$SwitchMap$")) continue;
 						ZipEntry holder = zip.getEntry(f.owner + ".class");
 						boolean declared = false;
@@ -104,7 +104,7 @@ class MergedBaseLostSwitchMapTest {
 		MethodNode clinit = holder.methods.stream().filter(m -> "<clinit>".equals(m.name)).findFirst().orElseThrow();
 		Map<Integer, String> mapping = new TreeMap<>();
 		// getstatic $SwitchMap; getstatic Enum.CONST; invokevirtual ordinal; iconst_k; iastore
-		for (AbstractInsnNode insn = clinit.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = clinit.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (!(insn instanceof FieldInsnNode constant) || constant.getOpcode() != Opcodes.GETSTATIC
 					|| !FURNACE.enumType().equals(constant.owner)) continue;
 			AbstractInsnNode ordinal = nextReal(constant), k = nextReal(ordinal), store = nextReal(k);
@@ -130,7 +130,7 @@ class MergedBaseLostSwitchMapTest {
 		// aload 2; getstatic Direction.UP; if_acmpeq; aload 2; getstatic Direction.DOWN; if_acmpeq; goto
 		List<String> constants = new ArrayList<>();
 		int compares = 0, gotos = 0;
-		for (AbstractInsnNode insn = get.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = get.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof FieldInsnNode f && f.getOpcode() == Opcodes.GETSTATIC && FURNACE.enumType().equals(f.owner)) {
 				constants.add(f.name);
 				AbstractInsnNode prev = previousReal(f), next = nextReal(f);
@@ -190,7 +190,7 @@ class MergedBaseLostSwitchMapTest {
 	private static int reads(ClassNode node) {
 		int n = 0;
 		for (MethodNode m : node.methods) {
-			for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn instanceof FieldInsnNode f && f.getOpcode() == Opcodes.GETSTATIC && FURNACE.field().equals(f.name)) n++;
 			}
 		}

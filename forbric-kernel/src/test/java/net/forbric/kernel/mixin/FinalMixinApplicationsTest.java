@@ -33,13 +33,13 @@ class FinalMixinApplicationsTest {
  @Test void silentlyRelaxedNecessaryInjectorIsConfirmedOnlyAfterFinalDefinition() {
   setup(1, -1, false, List.of(TARGET));suspect();
   assertEquals(0,CompatibilityFindings.confirmedRequired().size());observe(target(false,true,"handler$000$probe","()V"));
-  assertEquals(1,CompatibilityFindings.confirmedRequired().size());assertTrue(CompatibilityFindings.confirmedRequired().getFirst().id().startsWith("mixin-injector:"));
+  assertEquals(1,CompatibilityFindings.confirmedRequired().size());assertTrue(CompatibilityFindings.confirmedRequired().get(0).id().startsWith("mixin-injector:"));
  }
  /** Native Mixin throws InjectionError below require/defaultRequire whatever the config's `required` says. */
  @Test void aDefaultRequireMissInAnOptionalConfigIsStillANecessaryLoss() {
   config(1,false);remember(-1,false,List.of(TARGET));observe(target(false,true,"handler$000$probe","()V"));
   assertEquals(1,CompatibilityFindings.confirmedRequired().size());
-  assertTrue(CompatibilityFindings.confirmedRequired().getFirst().evidence().contains("config required=false"));
+  assertTrue(CompatibilityFindings.confirmedRequired().get(0).evidence().contains("config required=false"));
  }
  @Test void anOptionalConfigsExplicitZeroStaysOptional() {
   config(1,false);remember(0,false,List.of(TARGET));observe(target(false,true,"handler$000$probe","()V"));
@@ -105,7 +105,7 @@ class FinalMixinApplicationsTest {
  }
  /** An expression annotation changes where an @Inject lands, not that it calls its handler directly. */
  @Test void anExpressionPlacedInjectIsStillProvedMissing() {
-  config(1);ClassNode n=mixin(-1,false,List.of(TARGET));n.methods.getFirst().visibleAnnotations.add(new AnnotationNode("Lcom/llamalad7/mixinextras/expression/Expression;"));
+  config(1);ClassNode n=mixin(-1,false,List.of(TARGET));n.methods.get(0).visibleAnnotations.add(new AnnotationNode("Lcom/llamalad7/mixinextras/expression/Expression;"));
   remember(n);observe(target(false,true,"handler$000$probe","()V"));
   assertEquals(1,CompatibilityFindings.confirmedRequired().size());
  }
@@ -174,7 +174,7 @@ class FinalMixinApplicationsTest {
  }
  @Test void selfRecursionIsNotAnAttachmentAndMethodHandleIs() {
   setup(1,-1,false,List.of(TARGET));ClassNode target=target(false,true,"handler$000$probe","()V");
-  target.methods.getFirst().instructions.insert(new MethodInsnNode(Opcodes.INVOKESTATIC,"game/Target","handler$000$probe","()V",false));
+  target.methods.get(0).instructions.insert(new MethodInsnNode(Opcodes.INVOKESTATIC,"game/Target","handler$000$probe","()V",false));
   observe(target);assertEquals(1,CompatibilityFindings.confirmedRequired().size());
   MethodNode use=new MethodNode(Opcodes.ACC_PUBLIC|Opcodes.ACC_STATIC,"use","()V",null,null);
   use.instructions.add(new LdcInsnNode(new Handle(Opcodes.H_INVOKESTATIC,"game/Target","handler$000$probe","()V",false)));use.instructions.add(new InsnNode(Opcodes.POP));use.instructions.add(new InsnNode(Opcodes.RETURN));target.methods.add(use);
@@ -222,9 +222,9 @@ class FinalMixinApplicationsTest {
  private void config(Integer minimum,boolean required){String json="{\"required\":"+required+",\"package\":\"example\",\"mixins\":[\"ProbeMixin\"]"+(minimum==null?"":",\"injectors\":{\"defaultRequire\":"+minimum+"}")+"}";MixinCompatibility.rememberOriginalConfig(CONFIG,json.getBytes(java.nio.charset.StandardCharsets.UTF_8));}
  private void remember(int require,boolean group,List<String> targets){FinalMixinApplications.remember(mixin(require,group,targets));}
  private static final String INJECT="Lorg/spongepowered/asm/mixin/injection/Inject;",WRAP_OPERATION="Lcom/llamalad7/mixinextras/injector/wrapoperation/WrapOperation;",MODIFY_EXPRESSION_VALUE="Lcom/llamalad7/mixinextras/injector/ModifyExpressionValue;";
- private ClassNode extras(String desc){ClassNode n=mixin(-1,false,List.of(TARGET));n.methods.getFirst().visibleAnnotations=new ArrayList<>(List.of(new AnnotationNode(desc)));return n;}
+ private ClassNode extras(String desc){ClassNode n=mixin(-1,false,List.of(TARGET));n.methods.get(0).visibleAnnotations=new ArrayList<>(List.of(new AnnotationNode(desc)));return n;}
  private void remember(ClassNode mixin){FinalMixinApplications.remember(mixin);}
- private ClassNode sugared(String desc){ClassNode n=mixin(-1,false,List.of(TARGET));MethodNode m=n.methods.getFirst();m.visibleAnnotations=new ArrayList<>(List.of(new AnnotationNode(desc)));
+ private ClassNode sugared(String desc){ClassNode n=mixin(-1,false,List.of(TARGET));MethodNode m=n.methods.get(0);m.visibleAnnotations=new ArrayList<>(List.of(new AnnotationNode(desc)));
   m.invisibleParameterAnnotations=new List[]{new ArrayList<>(List.of(new AnnotationNode("Lcom/llamalad7/mixinextras/sugar/Local;")))};return n;}
  private ClassNode mixin(int require,boolean group,List<String> targets){ClassNode n=new ClassNode();n.name=MIXIN.replace('.','/');n.visibleAnnotations=List.of(annotation("Lorg/spongepowered/asm/mixin/Mixin;","targets",targets));n.methods.add(injector("probe",require,group));return n;}
  private MethodNode injector(String name,int require,boolean group){MethodNode m=new MethodNode(Opcodes.ACC_PRIVATE|Opcodes.ACC_STATIC,name,"()V",null,null);m.visibleAnnotations=new ArrayList<>(List.of(annotation("Lorg/spongepowered/asm/mixin/injection/Inject;","require",require)));if(group)m.visibleAnnotations.add(annotation("Lorg/spongepowered/asm/mixin/injection/Group;","name","alternatives"));return m;}

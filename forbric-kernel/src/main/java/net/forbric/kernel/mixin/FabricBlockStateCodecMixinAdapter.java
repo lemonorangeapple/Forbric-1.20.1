@@ -32,7 +32,7 @@ public final class FabricBlockStateCodecMixinAdapter {
 	static final String TARGET = "net/minecraft/client/renderer/block/dispatch/BlockStateModel$Unbaked";
 	static final String REGISTRY = "net/fabricmc/fabric/impl/client/model/loading/CustomUnbakedBlockStateModelRegistry";
 	static final String RUNTIME = "net/forbric/kernel/runtime/KernelBlockStateModelFormats";
-	static final String NEOFORGE_HOOKS = "net/neoforged/neoforge/client/model/block/BlockStateModelHooks";
+	static final String NEOFORGE_HOOKS = "net/minecraftforge/client/model/block/BlockStateModelHooks";
 	static final String CODEC = "com/mojang/serialization/Codec";
 	static final String FLAT_COMAP = "(Ljava/util/function/Function;Ljava/util/function/Function;)Lcom/mojang/serialization/Codec;";
 	static final String HANDLER = "(Lcom/mojang/serialization/Codec;Ljava/util/function/Function;Ljava/util/function/Function;)"
@@ -95,9 +95,9 @@ public final class FabricBlockStateCodecMixinAdapter {
 					|| MixinFit.value(redirect, "slice") != null
 					|| !MixinFit.stringList(MixinFit.value(redirect, "method")).equals(List.of("<clinit>()V"))) continue;
 			List<AnnotationNode> at = MixinFit.atNodes(redirect);
-			if (at.size() != 1 || !"INVOKE".equals(MixinFit.value(at.getFirst(), "value"))
-					|| !TARGET_ANCHOR.equals(MixinFit.value(at.getFirst(), "target"))
-					|| !Integer.valueOf(ordinal).equals(MixinFit.value(at.getFirst(), "ordinal"))) continue;
+			if (at.size() != 1 || !"INVOKE".equals(MixinFit.value(at.get(0), "value"))
+					|| !TARGET_ANCHOR.equals(MixinFit.value(at.get(0), "target"))
+					|| !Integer.valueOf(ordinal).equals(MixinFit.value(at.get(0), "ordinal"))) continue;
 			if (soleReturnedField(method) == null) return null;
 			return method;
 		}

@@ -45,10 +45,10 @@ import net.forbric.kernel.util.ForbricLog;
  */
 public final class ForbricBrandingInjector implements ClassTransformer {
 	public static final String PROPERTY = "forbric.branding";
-	static final String BRANDING_CONTROL = "net.neoforged.neoforge.internal.BrandingControl";
+	static final String BRANDING_CONTROL = "net.minecraftforge.internal.BrandingControl";
 	static final String DEBUG_VERSION = "net.minecraft.client.gui.components.debug.DebugEntryVersion";
 	static final String BRANDING = "net/forbric/kernel/util/ForbricBranding";
-	private static final String NEO_VERSION = "net/neoforged/neoforge/common/NeoForgeVersion";
+	private static final String NEO_VERSION = "net/minecraftforge/common/NeoForgeVersion";
 
 	public static boolean enabled() {
 		return !"off".equalsIgnoreCase(System.getProperty(PROPERTY, "on"));

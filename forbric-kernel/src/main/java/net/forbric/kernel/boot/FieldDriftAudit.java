@@ -106,7 +106,7 @@ public final class FieldDriftAudit {
 		if (node.methods == null) return;
 		for (MethodNode m : node.methods) {
 			if (m.instructions == null) continue;
-			for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (!(insn instanceof FieldInsnNode f)) continue;
 				MergedBaseFieldDrift.Drift drift = MergedBaseFieldDrift.find(f.owner, f.name, f.desc);
 				if (drift == null) continue;

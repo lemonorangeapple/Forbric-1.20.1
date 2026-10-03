@@ -21,7 +21,7 @@ Forbric 是唯一的进程启动器。它复用 Apache-2.0 许可的 **fabric-lo
 cd forbric-loader && ./gradlew build    # compile + run the unit tests
 ```
 
-`bootstrap.sh` 第一次运行时需要 `git` 和网络（它要克隆 `https://github.com/FabricMC/fabric-loader`），之后只做复查，所以重复运行是安全的。想从镜像克隆，设置 `FABRIC_LOADER_REMOTE` 即可。用哪个上游发布版只在一处声明：[gradle.properties](gradle.properties) 里的 `fabric_loader_ref`（目前是 **0.19.3**）。`bootstrap.sh` 克隆的就是这个标签，而 `bootstrap.sh` 最后会运行的 `run/verify-substrate-patches.sh` 也拿当前实际的底座和同一个标签做 diff，所以补丁不会悄无声息地失效。`./bootstrap.sh --check` 只做校验，不改动任何东西。
+`bootstrap.sh` 第一次运行时需要 `git` 和网络（它要克隆 `https://github.com/FabricMC/fabric-loader`），之后只做复查，所以重复运行是安全的。想从镜像克隆，设置 `FABRIC_LOADER_REMOTE` 即可。用哪个上游发布版只在一处声明：仓库根目录 [VERSIONS.properties](../VERSIONS.properties) 里的 `forbric.fabric.loader`（目前是 **0.16.10**）。`bootstrap.sh` 克隆的就是这个标签，而 `bootstrap.sh` 最后会运行的 `run/verify-substrate-patches.sh` 也拿当前实际的底座和同一个标签做 diff，所以补丁不会悄无声息地失效。`./bootstrap.sh --check` 只做校验，不改动任何东西。
 
 `./gradlew build` 会在 `build/libs/` 里生成两个 jar：
 

@@ -159,15 +159,15 @@ class DialogLangTest {
 		// The one language here where the region changes which table is right: Traditional text handed to a
 		// Simplified reader is a different language, not a dialect. Everywhere else the region is noise.
 		assertSame(DialogLang.ZH_CN, DialogLang.of(Locale.SIMPLIFIED_CHINESE));
-		assertSame(DialogLang.ZH_CN, DialogLang.of(Locale.of("zh", "SG")));
+		assertSame(DialogLang.ZH_CN, DialogLang.of(new Locale("zh", "SG")));
 		assertSame(DialogLang.ZH_TW, DialogLang.of(Locale.TRADITIONAL_CHINESE));
-		assertSame(DialogLang.ZH_TW, DialogLang.of(Locale.of("zh", "HK")));
+		assertSame(DialogLang.ZH_TW, DialogLang.of(new Locale("zh", "HK")));
 		assertSame(DialogLang.ZH_TW, DialogLang.of(Locale.forLanguageTag("zh-Hant")));
 
-		assertSame(DialogLang.DE, DialogLang.of(Locale.of("de", "AT")));
-		assertSame(DialogLang.PT_BR, DialogLang.of(Locale.of("pt", "PT")),
+		assertSame(DialogLang.DE, DialogLang.of(new Locale("de", "AT")));
+		assertSame(DialogLang.PT_BR, DialogLang.of(new Locale("pt", "PT")),
 				"one Portuguese beats English for a Portuguese reader");
-		assertSame(DialogLang.EN, DialogLang.of(Locale.of("is", "IS")));
+		assertSame(DialogLang.EN, DialogLang.of(new Locale("is", "IS")));
 		assertSame(DialogLang.EN, DialogLang.of(null));
 	}
 

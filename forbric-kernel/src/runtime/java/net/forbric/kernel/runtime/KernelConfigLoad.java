@@ -25,10 +25,9 @@ import java.util.Set;
 import net.forbric.api.ModCatalog;
 import net.forbric.kernel.util.ForbricLog;
 import net.forbric.kernel.util.Reflect;
-import net.neoforged.fml.config.ConfigTracker;
-import net.neoforged.fml.config.ModConfig;
-import net.neoforged.fml.config.ModConfigs;
-import net.neoforged.fml.loading.FMLPaths;
+import net.minecraftforge.fml.config.ConfigTracker;
+import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.loading.FMLPaths;
 
 /**
  * The game side of loading NeoForge's configs: the early pass, and the late pass that catches what the early one
@@ -68,13 +67,13 @@ public final class KernelConfigLoad {
 			for (String t : types) {
 				// The carrier's loadConfigs(type, dir) is exactly this forEach over configSets.get(type) — spelled
 				// out so ONE config that will not open costs only its own mod a row, not every config after it.
-				Set<ModConfig> configs = ModConfigs.getConfigSet(ModConfig.Type.valueOf(t));
+				Set<ModConfig> configs = ConfigTracker.INSTANCE.configSets().get(ModConfig.Type.valueOf(t));
 				if (configs == null) continue;
 				for (ModConfig config : List.copyOf(configs)) {
 					all++;
 					// A config-port registration opened itself where the port opens it (openAtRegistration); a
 					// second open warns and installs a second file watcher, so every later edit reloads twice.
-					if (config.getLoadedConfig() != null) { alreadyLoaded++; continue; }
+					if (config.getConfigData() != null) { alreadyLoaded++; continue; }
 					if (open(openConfig, config, configDir, t, "early")) opened++;
 				}
 			}
@@ -101,7 +100,7 @@ public final class KernelConfigLoad {
 	 */
 	public static void openAtRegistration(ModConfig config) {
 		if (config == null || "off".equalsIgnoreCase(System.getProperty(OPEN_ON_REGISTER_PROPERTY, "on"))) return;
-		if (config.getType() == ModConfig.Type.SERVER || config.getLoadedConfig() != null) return;
+		if (config.getType() == ModConfig.Type.SERVER || config.getConfigData() != null) return;
 		try {
 			open(openConfig(), config, FMLPaths.CONFIGDIR.get(), config.getType().name(), "registration");
 		} catch (Throwable t) {
@@ -151,10 +150,10 @@ public final class KernelConfigLoad {
 			Method openConfig = openConfig();
 
 			for (String t : types) {
-				Set<ModConfig> configs = ModConfigs.getConfigSet(ModConfig.Type.valueOf(t));
+				Set<ModConfig> configs = ConfigTracker.INSTANCE.configSets().get(ModConfig.Type.valueOf(t));
 				if (configs == null) continue;
 				for (ModConfig config : List.copyOf(configs)) {
-					if (config.getLoadedConfig() != null) continue;
+					if (config.getConfigData() != null) continue;
 					if (open(openConfig, config, configDir, t, "late")) opened.add(config.getModId() + ":" + t);
 				}
 			}

@@ -55,11 +55,11 @@ public final class PayloadInterop {
 	private static final String FABRIC_COMMON_REGISTER_PAYLOAD = "net.fabricmc.fabric.impl.networking.CommonRegisterPayload";
 	private static final String FABRIC_SERVER_ADDON_PACKAGE = "net.fabricmc.fabric.impl.networking.server.";
 	private static final String NEO_NETWORK_REGISTRY = ForeignType.NETWORK_REGISTRY.binary(Ecosystem.NEOFORGE);
-	private static final String NEO_REGISTER_PAYLOAD = "net.neoforged.neoforge.network.payload.MinecraftRegisterPayload";
-	private static final String NEO_UNREGISTER_PAYLOAD = "net.neoforged.neoforge.network.payload.MinecraftUnregisterPayload";
-	private static final String NEO_COMMON_VERSION_PAYLOAD = "net.neoforged.neoforge.network.payload.CommonVersionPayload";
-	private static final String NEO_COMMON_REGISTER_PAYLOAD = "net.neoforged.neoforge.network.payload.CommonRegisterPayload";
-	private static final String NEO_PAYLOAD_REGISTRATION = "net.neoforged.neoforge.network.registration.PayloadRegistration";
+	private static final String NEO_REGISTER_PAYLOAD = "net.minecraftforge.network.payload.MinecraftRegisterPayload";
+	private static final String NEO_UNREGISTER_PAYLOAD = "net.minecraftforge.network.payload.MinecraftUnregisterPayload";
+	private static final String NEO_COMMON_VERSION_PAYLOAD = "net.minecraftforge.network.payload.CommonVersionPayload";
+	private static final String NEO_COMMON_REGISTER_PAYLOAD = "net.minecraftforge.network.payload.CommonRegisterPayload";
+	private static final String NEO_PAYLOAD_REGISTRATION = "net.minecraftforge.network.registration.PayloadRegistration";
 	// Traditional MinecraftForge. Its custom-payload plumbing lost the byte-merge to NeoForge's on both the codec and
 	// the dispatch side, so the kernel routes to its public entry points from here: ForgeHooks.getCustomPayloadCodec
 	// for a channel it owns, ForgeHooks.onCustomPayload for a ForgePayload it should handle, and NetworkContext for
@@ -492,7 +492,7 @@ public final class PayloadInterop {
 
 	private static void mirrorNoopHandler(ClassLoader loader, Field clientboundHandlersField, Field serverboundHandlersField,
 			MirrorRegistration registration) throws ReflectiveOperationException {
-		Class<?> handlerClass = load(loader, "net.neoforged.neoforge.network.handling.IPayloadHandler");
+		Class<?> handlerClass = load(loader, "net.minecraftforge.network.handling.IPayloadHandler");
 		if (handlerClass == null) return;
 		Object handler = Proxy.newProxyInstance(loader, new Class<?>[] { handlerClass }, (proxy, method, args) -> null);
 
@@ -620,14 +620,14 @@ public final class PayloadInterop {
 		private Object selectEncode(Object payload) {
 			if (payload != null) {
 				String payloadClass = payload.getClass().getName();
-				if (payloadClass.startsWith("net.neoforged.")) return firstNonNull(neo, local, fabric, fallback);
+				if (payloadClass.startsWith("net.minecraftforge.")) return firstNonNull(neo, local, fabric, fallback);
 				if (payloadClass.startsWith("net.fabricmc.")) return firstNonNull(fabric, local, neo, fallback);
 				// A ForgePayload is Forge's own envelope for every channel it owns, minecraft:register included
 				// (ChannelListManager speaks it) — only Forge's codec knows how to write one.
 				if (payloadClass.startsWith("net.minecraftforge.")) return firstNonNull(forge, fallback);
 				Object payloadType = invokeNoArg(payload, "type");
 				if (fabric != null && fabricType != null && fabricType.equals(payloadType)) return fabric;
-				if (fabric != null && !payloadClass.startsWith("net.neoforged.")) return fabric;
+				if (fabric != null && !payloadClass.startsWith("net.minecraftforge.")) return fabric;
 			}
 			return firstNonNull(local, neo, fabric, forge, fallback);
 		}
@@ -805,7 +805,7 @@ public final class PayloadInterop {
 	 */
 	private static boolean notNeoForgesToPolice(Object payload) {
 		String payloadClass = payload.getClass().getName();
-		if (payloadClass.startsWith("net.minecraft.") || payloadClass.startsWith("net.neoforged.")) return false;
+		if (payloadClass.startsWith("net.minecraft.") || payloadClass.startsWith("net.minecraftforge.")) return false;
 
 		Class<?> registryClass = load(payload.getClass().getClassLoader(), NEO_NETWORK_REGISTRY);
 		if (registryClass == null) return false;

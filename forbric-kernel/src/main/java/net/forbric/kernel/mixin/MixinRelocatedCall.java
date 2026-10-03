@@ -122,8 +122,8 @@ public final class MixinRelocatedCall {
 		AnnotationNode injector = MixinFit.injectorOf(handler);
 		if (injector == null || !KINDS.containsKey(injector.desc)) return false;
 		List<String> selectors = MixinFit.stringList(MixinFit.value(injector, "method"));
-		if (selectors.size() != 1 || !(selectors.getFirst().equals(relocation.method())
-				|| selectors.getFirst().equals(relocation.method() + relocation.methodDesc()))) return false;
+		if (selectors.size() != 1 || !(selectors.get(0).equals(relocation.method())
+				|| selectors.get(0).equals(relocation.method() + relocation.methodDesc()))) return false;
 		if (MixinFit.value(injector, "slice") != null || MixinFit.value(injector, "target") != null) return false;
 		List<AnnotationNode> points = MixinFit.atNodes(injector);
 		if (points.isEmpty()) return false;

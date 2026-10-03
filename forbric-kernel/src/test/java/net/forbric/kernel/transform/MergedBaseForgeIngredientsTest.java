@@ -44,7 +44,7 @@ class MergedBaseForgeIngredientsTest {
 		MethodNode clinit = clinit(parse(bytes));
 		List<FieldInsnNode> stores = stores(clinit, "CODEC");
 		assertEquals(1, stores.size(), "one PUTSTATIC CODEC expected");
-		AbstractInsnNode previous = realPrevious(stores.getFirst());
+		AbstractInsnNode previous = realPrevious(stores.get(0));
 		assertTrue(previous instanceof MethodInsnNode call && NEO_FACTORY.equals(call.owner) && "codec".equals(call.name),
 				"CODEC must come straight from IngredientCodecs.codec; a different shape must be re-derived, not re-blessed");
 		assertFalse(new String(bytes, StandardCharsets.ISO_8859_1).contains("net/minecraftforge/common/ForgeHooks"),
@@ -56,7 +56,7 @@ class MergedBaseForgeIngredientsTest {
 		MethodNode clinit = clinit(parse(transform(bytesOf(INGREDIENT))));
 		List<FieldInsnNode> stores = stores(clinit, "CODEC");
 		assertEquals(1, stores.size());
-		AbstractInsnNode previous = realPrevious(stores.getFirst());
+		AbstractInsnNode previous = realPrevious(stores.get(0));
 		assertTrue(previous instanceof MethodInsnNode, "expected the kernel call right before PUTSTATIC CODEC");
 		MethodInsnNode call = (MethodInsnNode) previous;
 		assertEquals(KERNEL, call.owner);

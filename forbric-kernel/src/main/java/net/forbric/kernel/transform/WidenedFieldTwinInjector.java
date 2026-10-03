@@ -128,7 +128,7 @@ public final class WidenedFieldTwinInjector implements ClassTransformer {
 		int drains = 0;
 		List<Runnable> edits = new ArrayList<>();
 		for (MethodNode method : node.methods) {
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (!(insn instanceof FieldInsnNode put) || put.getOpcode() != Opcodes.PUTFIELD || !internal.equals(put.owner)
 						|| !row.name().equals(put.name) || !row.mergedDesc().equals(put.desc)) {
 					continue;
@@ -195,7 +195,7 @@ public final class WidenedFieldTwinInjector implements ClassTransformer {
 	}
 
 	private static boolean reads(MethodNode method, String owner, Row row) {
-		for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof FieldInsnNode f && f.getOpcode() == Opcodes.GETFIELD && owner.equals(f.owner)
 					&& row.name().equals(f.name) && row.mergedDesc().equals(f.desc)) {
 				return true;

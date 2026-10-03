@@ -47,8 +47,8 @@ import net.forbric.kernel.util.ForbricLog;
  */
 public final class RecipeSyncFailSoftInjector implements ClassTransformer {
 	public static final String PROPERTY = "forbric.recipeSyncFailSoft";
-	static final String COMMON_HOOKS = "net.neoforged.neoforge.common.CommonHooks";
-	static final String PAYLOAD = "net/neoforged/neoforge/network/payload/RecipeContentPayload";
+	static final String COMMON_HOOKS = "net.minecraftforge.common.CommonHooks";
+	static final String PAYLOAD = "net/minecraftforge/network/payload/RecipeContentPayload";
 	static final String PLAYER = "net/minecraft/server/level/ServerPlayer";
 	static final String SEND_DESC = "(L" + PLAYER + ";Ljava/util/Set;Lnet/minecraft/world/item/crafting/RecipeMap;)V";
 	static final String HELPER = "net/forbric/kernel/runtime/KernelRecipeSync";

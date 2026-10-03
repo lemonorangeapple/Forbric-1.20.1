@@ -35,8 +35,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.common.CreativeModeTabRegistry;
-import net.neoforged.neoforge.registries.GameData;
+import net.minecraftforge.common.CreativeModeTabRegistry;
+import net.minecraftforge.registries.GameData;
 
 /**
  * The game side of everything the kernel repairs in the vanilla registries once its registration window closes.
@@ -74,11 +74,6 @@ public final class KernelRegistryContent {
 	 *
 	 * @return how many states the map holds, or -1 when it already agreed with the registry
 	 */
-	/** NeoForge's flower pot table, which its bake callback would fill and never does here. See KernelFlowerPots. */
-	public static int rebuildFlowerPotTable() {
-		return KernelFlowerPots.rebuildTable();
-	}
-
 	/** The switch that puts back the old rule: a non-empty map is left exactly as the first pass built it. */
 	static final String STATE_ID_SWITCH = "forbric.blockStateIdRefill";
 

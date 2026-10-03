@@ -114,9 +114,9 @@ class SpawnerFinalizeInjectorTest {
 		assertEquals(1, calls(after).stream().filter(c -> c.owner.equals(SpawnerFinalizeInjector.FORGE)).count());
 		assertTrue(calls(after).stream().noneMatch(c -> c.owner.equals(SpawnerFinalizeInjector.RUNTIME)));
 		var findings = CompatibilityFindings.all(); assertEquals(1, findings.size());
-		assertEquals("spawner-finalize-direct-composition", findings.getFirst().id());
-		assertEquals(net.forbric.api.CompatibilityFinding.Confidence.SUSPECTED, findings.getFirst().confidence());
-		assertFalse(findings.getFirst().required());
+		assertEquals("spawner-finalize-direct-composition", findings.get(0).id());
+		assertEquals(net.forbric.api.CompatibilityFinding.Confidence.SUSPECTED, findings.get(0).confidence());
+		assertFalse(findings.get(0).required());
 
 		// Negative control: the same caller without the restored call is still routed through the kernel.
 		CompatibilityFindings.reset();

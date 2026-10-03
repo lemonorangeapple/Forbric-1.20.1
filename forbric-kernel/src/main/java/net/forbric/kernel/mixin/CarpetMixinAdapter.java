@@ -29,18 +29,18 @@ public final class CarpetMixinAdapter {
 	/** markAndNotifyBlock(pos, chunk, oldState, newState, flags, updateLimit): the slot of {@code flags}. */
 	static final int FLAGS = 5;
 	static final String SHAPES = STATE + "updateNeighbourShapes(Lnet/minecraft/world/level/LevelAccessor;" + POS + "II)V";
-	static final String HANDS = "Lnet/neoforged/neoforge/event/entity/living/LivingSwapItemsEvent$Hands;";
+	static final String HANDS = "Lnet/minecraftforge/event/entity/living/LivingSwapItemsEvent$Hands;";
 	static final String HAND_READ = "L" + PLAYER + ";getItemInHand(Lnet/minecraft/world/InteractionHand;)" + STACK;
 	static final String HAND_WRITE = "L" + PLAYER + ";setItemInHand(Lnet/minecraft/world/InteractionHand;" + STACK + ")V";
-	static final String SWAP_EVENT = "Lnet/neoforged/neoforge/common/CommonHooks;onLivingSwapHandItems(Lnet/minecraft/world/entity/LivingEntity;)" + HANDS;
+	static final String SWAP_EVENT = "Lnet/minecraftforge/common/CommonHooks;onLivingSwapHandItems(Lnet/minecraft/world/entity/LivingEntity;)" + HANDS;
 	static final String SWAP_VETO = HANDS + "isCanceled()Z";
 	static final String TO_OFF_HAND = HANDS + "getItemSwappedToOffHand()" + STACK;
 	static final String TO_MAIN_HAND = HANDS + "getItemSwappedToMainHand()" + STACK;
 	static final String OLD_REMOVE = "L" + SERVER_LEVEL + ";removeBlock(" + POS + "Z)Z";
 	static final String REMOVE = "L" + GAME_MODE + ";removeBlock(" + POS + STATE + "Z" + STACK + ")Z";
-	static final String BREAK_EVENT = "Lnet/neoforged/neoforge/common/CommonHooks;fireBlockBreak(L" + LEVEL
+	static final String BREAK_EVENT = "Lnet/minecraftforge/common/CommonHooks;fireBlockBreak(L" + LEVEL
 			+ ";Lnet/minecraft/world/level/GameType;Lnet/minecraft/world/entity/player/Player;" + POS + STATE
-			+ ")Lnet/neoforged/neoforge/event/level/block/BreakBlockEvent;";
+			+ ")Lnet/minecraftforge/event/level/block/BreakBlockEvent;";
 	static final String WILL_DESTROY = "L" + BLOCK + ";playerWillDestroy(L" + LEVEL + ";" + POS + STATE + "Lnet/minecraft/world/entity/player/Player;)" + STATE;
 	static final String DROPS = "L" + PLAYER + ";preventsBlockDrops()Z";
 	static final String MINE = STACK + "mineBlock(L" + LEVEL + ";" + STATE + POS + "Lnet/minecraft/world/entity/player/Player;)V";
@@ -110,7 +110,7 @@ public final class CarpetMixinAdapter {
 				|| !"Lorg/spongepowered/asm/mixin/injection/ModifyConstant;".equals(a.desc)
 				|| !"Lorg/spongepowered/asm/mixin/injection/Redirect;".equals(b.desc)) return 0;
 		List<AnnotationNode> points = MixinFit.atNodes(b);
-		if (points.size() != 1 || !update.equals(MixinFit.value(points.getFirst(), "target"))) return 0;
+		if (points.size() != 1 || !update.equals(MixinFit.value(points.get(0), "target"))) return 0;
 		set(a, "method", List.of(LIVE_FILL)); set(b, "method", List.of(LIVE_FILL));
 		return 2;
 	}
@@ -122,8 +122,8 @@ public final class CarpetMixinAdapter {
 		AnnotationNode inject = MixinFit.injectorOf(handler);
 		if (!selects(inject, "handlePlayerAction")) return 0;
 		List<AnnotationNode> ats = MixinFit.atNodes(inject);
-		if (ats.size() != 1 || !HAND_READ.equals(MixinFit.value(ats.getFirst(), "target"))
-				|| !Integer.valueOf(1).equals(MixinFit.value(ats.getFirst(), "ordinal")) || count(host, HAND_READ) != 1
+		if (ats.size() != 1 || !HAND_READ.equals(MixinFit.value(ats.get(0), "target"))
+				|| !Integer.valueOf(1).equals(MixinFit.value(ats.get(0), "ordinal")) || count(host, HAND_READ) != 1
 				|| count(host, SWAP_EVENT) != 1 || count(host, SWAP_VETO) != 1 || count(host, TO_OFF_HAND) != 1
 				|| count(host, TO_MAIN_HAND) != 1 || count(host, HAND_WRITE) != 2) return 0;
 		// Vanilla's anchor is the swap branch's first read of a hand, right after its spectator gate. Here NeoForge's
@@ -139,7 +139,7 @@ public final class CarpetMixinAdapter {
 		int at = index(host, fire), veto = index(host, first(host, SWAP_VETO));
 		if (veto < at || index(host, first(host, TO_OFF_HAND)) < veto || index(host, first(host, TO_MAIN_HAND)) < veto
 				|| index(host, first(host, HAND_WRITE)) < veto) return 0;
-		set(ats.getFirst(), "target", SWAP_EVENT); set(ats.getFirst(), "ordinal", 0);
+		set(ats.get(0), "target", SWAP_EVENT); set(ats.get(0), "ordinal", 0);
 		return 1;
 	}
 
@@ -153,7 +153,7 @@ public final class CarpetMixinAdapter {
 				|| count(host, OLD_REMOVE) != 0 || count(host, BREAK_EVENT) != 1 || count(host, WILL_DESTROY) != 1
 				|| count(host, DROPS) != 1 || count(host, MINE) != 1 || count(host, REMOVE) != 2) return 0;
 		List<AnnotationNode> ats = MixinFit.atNodes(inject);
-		if (ats.size() != 1 || !OLD_REMOVE.equals(MixinFit.value(ats.getFirst(), "target")) || !Boolean.TRUE.equals(MixinFit.value(inject, "cancellable"))) return 0;
+		if (ats.size() != 1 || !OLD_REMOVE.equals(MixinFit.value(ats.get(0), "target")) || !Boolean.TRUE.equals(MixinFit.value(inject, "cancellable"))) return 0;
 		// Vanilla's anchor is right before removeBlock, after playerWillDestroy, and the handler captures (blockEntity,
 		// block, adjustedState). Here NeoForge removes the block in two branches (creative, and survival after
 		// mineBlock), so the callback goes where they split: right after playerWillDestroy stored adjustedState, before
@@ -167,7 +167,7 @@ public final class CarpetMixinAdapter {
 		int at = index(host, anchor);
 		if (index(host, first(host, BREAK_EVENT)) > at || index(host, entity) > at || index(host, block) > at) return 0;
 		for (var i : host.instructions) if (i instanceof MethodInsnNode c && (MINE.equals(member(c)) || REMOVE.equals(member(c))) && index(host, c) < at) return 0;
-		remove(inject, "locals"); set(ats.getFirst(), "target", DROPS);
+		remove(inject, "locals"); set(ats.get(0), "target", DROPS);
 		handler.invisibleParameterAnnotations = local(5, 2, 4, 5, 6); handler.invisibleAnnotableParameterCount = 5;
 		return 1;
 	}

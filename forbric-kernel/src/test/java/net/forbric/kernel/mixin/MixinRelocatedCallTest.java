@@ -54,7 +54,7 @@ class MixinRelocatedCallTest {
 	}
 
 	@Test void onlyHandlersThatDescribeTheCallMove() {
-		MixinRelocatedCall.Relocation relocation = MixinRelocatedCall.RELOCATIONS.getFirst();
+		MixinRelocatedCall.Relocation relocation = MixinRelocatedCall.RELOCATIONS.get(0);
 		String item = "Lnet/minecraft/world/item/Item;", context = "Lnet/minecraft/world/item/context/UseOnContext;",
 				result = "Lnet/minecraft/world/InteractionResult;", op = "Lcom/llamalad7/mixinextras/injector/wrapoperation/Operation;";
 		String wrap = "Lcom/llamalad7/mixinextras/injector/wrapoperation/WrapOperation;";

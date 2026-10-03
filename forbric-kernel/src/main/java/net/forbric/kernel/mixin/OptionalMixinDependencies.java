@@ -12,7 +12,7 @@ final class OptionalMixinDependencies {
 				||!mixin.fields.isEmpty()||!mixin.interfaces.isEmpty())return null;
 		List<MethodNode> injectors=mixin.methods.stream().filter(m->MixinFit.injectorOf(m)!=null).toList();
 		if(injectors.size()!=1)return null;
-		if(!List.of("immediatelyFast$shouldCache").equals(MixinFit.value(MixinFit.injectorOf(injectors.getFirst()),"method")))return null;
+		if(!List.of("immediatelyFast$shouldCache").equals(MixinFit.value(MixinFit.injectorOf(injectors.get(0)),"method")))return null;
 		return "immediatelyfast";
 	}
 }

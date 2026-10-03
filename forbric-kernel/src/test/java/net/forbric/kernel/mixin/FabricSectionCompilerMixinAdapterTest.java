@@ -36,9 +36,9 @@ class FabricSectionCompilerMixinAdapterTest {
 		MethodNode draw = StagedFabricMixinFixture.method(mixin, "tesselateBlockProxy");
 		for (MethodNode handler : List.of(setup, draw))
 			assertEquals(List.of("compile" + FabricSectionCompilerMixinAdapter.LIVE), MixinFit.value(MixinFit.injectorOf(handler), "method"));
-		assertEquals(List.of("startedLayers"), MixinFit.value(setup.invisibleParameterAnnotations[6].getFirst(), "name"));
-		assertEquals("altBlockRenderer", MixinFit.value(setup.invisibleParameterAnnotations[7].getFirst(), "value"));
-		assertEquals("altQuadOutput", MixinFit.value(setup.invisibleParameterAnnotations[8].getFirst(), "value"));
+		assertEquals(List.of("startedLayers"), MixinFit.value(setup.invisibleParameterAnnotations[6].get(0), "name"));
+		assertEquals("altBlockRenderer", MixinFit.value(setup.invisibleParameterAnnotations[7].get(0), "value"));
+		assertEquals("altQuadOutput", MixinFit.value(setup.invisibleParameterAnnotations[8].get(0), "value"));
 		assertEquals(List.of(0, 1, 2, 3, 4, 6, 7, 8, 9), java.util.stream.StreamSupport.stream(setup.instructions.spliterator(), false)
 				.filter(i -> i instanceof VarInsnNode).map(i -> ((VarInsnNode)i).var).toList());
 		assertNull(MixinFit.injectorOf(StagedFabricMixinFixture.method(mixin, "beforeLoopCompile$forbricOriginal")));
@@ -60,7 +60,7 @@ class FabricSectionCompilerMixinAdapterTest {
 	@Test void changedShareContractIsNotPartiallyRebound() throws Exception {
 		ClassNode mixin = mixin();
 		MethodNode draw = StagedFabricMixinFixture.method(mixin, "tesselateBlockProxy");
-		draw.invisibleParameterAnnotations[10].getFirst().values.set(1, "anotherRenderer");
+		draw.invisibleParameterAnnotations[10].get(0).values.set(1, "anotherRenderer");
 		byte[] before = StagedFabricMixinFixture.bytes(mixin);
 		ClassNode target = target(false);
 		assertEquals(0, FabricSectionCompilerMixinAdapter.adapt(mixin, n -> target));

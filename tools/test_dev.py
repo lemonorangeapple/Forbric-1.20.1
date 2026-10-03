@@ -109,7 +109,7 @@ class DevelopmentWorkflowTest(unittest.TestCase):
 
     def launch_fixture(self, with_runtime=True):
         mc, stage = self.root / 'Minecraft With Spaces', self.root / 'stage/run'
-        version = mc / 'versions/26.2/26.2.json'
+        version = mc / f'versions/{dev.MC_VERSION}/{dev.MC_VERSION}.json'
         version.parent.mkdir(parents=True)
         version.write_text(json.dumps({'assetIndex': {'id': '32'}, 'libraries': []}))
         boot = self.root / 'kernel.jar'
@@ -130,7 +130,9 @@ class DevelopmentWorkflowTest(unittest.TestCase):
             mac = dev.launch_arguments('client', info, mc, stage, self.root, self.root, system='osx', pathsep=':')
             linux = dev.launch_arguments('client', info, mc, stage, self.root, self.root, system='linux', pathsep=':')
         self.assertIn(';dependency.jar;', win[win.index('-cp')+1])
-        self.assertIn(';', win[win.index('--runtimeJar')+1])
+        # One Forge runtime carrier in the dual-loader model, not a path-separated pair.
+        self.assertIn('forge-runtime', win[win.index('--runtimeJar')+1])
+        self.assertNotIn('neoforge', win[win.index('--runtimeJar')+1])
         self.assertNotIn('-XstartOnFirstThread', win)
         self.assertNotIn('-XstartOnFirstThread', linux)
         self.assertIn('-XstartOnFirstThread', mac)
@@ -146,7 +148,7 @@ class DevelopmentWorkflowTest(unittest.TestCase):
 
     def test_missing_library_is_named_before_launch(self):
         info, mc, stage = self.launch_fixture()
-        version = mc / 'versions/26.2/26.2.json'
+        version = mc / f'versions/{dev.MC_VERSION}/{dev.MC_VERSION}.json'
         metadata = json.loads(version.read_text())
         metadata['libraries'] = [{'downloads': {'artifact': {'path': 'missing/library.jar'}}}]
         version.write_text(json.dumps(metadata))

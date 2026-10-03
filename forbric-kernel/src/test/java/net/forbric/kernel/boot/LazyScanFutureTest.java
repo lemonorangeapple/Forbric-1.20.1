@@ -59,9 +59,9 @@ class LazyScanFutureTest {
 		assertSame(value, future.get());
 		assertSame(value, future.get(1, TimeUnit.SECONDS));
 		assertSame(value, future.join());
-		assertSame(value, future.resultNow());
 		assertTrue(future.isDone());
-		assertEquals(Future.State.SUCCESS, future.state());
+		// Java 17: Future has no resultNow()/State. A successful completion is observed as "not exceptional".
+		assertTrue(!future.isCompletedExceptionally());
 		assertEquals(1, runs.get(), "one scan, however many readers");
 	}
 

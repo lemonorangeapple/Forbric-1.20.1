@@ -49,7 +49,7 @@ public final class KernelForgeConfigLoad {
         Path directory = FMLPaths.CONFIGDIR.get();
         List<String> opened = new ArrayList<>();
         for (ModConfig.Type type : types) {
-            Set<ModConfig> configs = ConfigTracker.configSets().get(type);
+            Set<ModConfig> configs = ConfigTracker.INSTANCE.configSets().get(type);
             List<ModConfig> snapshot;
             if (configs == null) snapshot = List.of();
             else synchronized (configs) { snapshot = List.copyOf(configs); }

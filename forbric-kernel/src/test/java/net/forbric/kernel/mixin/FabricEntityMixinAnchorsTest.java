@@ -39,7 +39,7 @@ class FabricEntityMixinAnchorsTest {
   ClassNode target=StagedFabricMixinFixture.game("net/minecraft/server/level/ServerPlayer",false);
   assertEquals(1,FabricEntityMixinAnchors.adapt(mixin,n->target));
   List<String> methods=MixinFit.stringList(MixinFit.value(MixinFit.injectorOf(StagedFabricMixinFixture.method(mixin,"hasNoMonstersNearby")),"method"));
-  assertEquals(1,methods.size());assertTrue(methods.getFirst().startsWith("lambda$startSleepInBed$"));assertTrue(methods.getFirst().endsWith("(Lnet/minecraft/core/BlockPos;)Lcom/mojang/datafixers/util/Either;"));
+  assertEquals(1,methods.size());assertTrue(methods.get(0).startsWith("lambda$startSleepInBed$"));assertTrue(methods.get(0).endsWith("(Lnet/minecraft/core/BlockPos;)Lcom/mojang/datafixers/util/Either;"));
  }
  @Test void actualEffectHandlersMoveToNativeValidationAndPreRemovalSnapshotStages()throws Exception{
   ClassNode mixin=effects(),target=StagedFabricMixinFixture.living(false);

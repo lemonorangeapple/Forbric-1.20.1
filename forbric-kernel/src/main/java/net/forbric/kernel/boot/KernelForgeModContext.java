@@ -117,6 +117,16 @@ public final class KernelForgeModContext {
 	}
 
 	/**
+	 * Seeds the {@code FMLLoader} statics ModLauncher would have set ({@code VersionInfo}, {@code Dist}) the game
+	 * side reads through {@code ForgeVersion}/{@code MCPVersion}; must run before any Forge class initialises.
+	 */
+	public static void seedLoaderStatics(ClassLoader cl, String forgeVersion, String mcVersion, String mcpVersion,
+			boolean client) throws Exception {
+		call(cl, "seedLoaderStatics", String.class, String.class, String.class, boolean.class)
+				.invoke(null, forgeVersion, mcVersion, mcpVersion, client);
+	}
+
+	/**
 	 * Resolves a method on the game-side factory, memoised per name.
 	 *
 	 * <p>The class is looked up through {@code cl} and never as a literal: this whole file is boot-side, and a

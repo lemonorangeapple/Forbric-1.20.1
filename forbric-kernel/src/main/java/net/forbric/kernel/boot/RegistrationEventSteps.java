@@ -64,9 +64,9 @@ final class RegistrationEventSteps {
 	 * both CONFIRMED and required, where before this class a failure was a WARN alone.
 	 */
 	static final String SWITCH = "forbric.isolatedRegistrationEvents";
-	static final String EVENTS = "net.neoforged.neoforge.internal.RegistrationEvents";
-	static final Step CAPABILITIES = new Step("net/neoforged/neoforge/capabilities/CapabilityHooks", "init");
-	static final Step DATA_MAPS = new Step("net/neoforged/neoforge/registries/RegistryManager", "initDataMaps");
+	static final String EVENTS = "net.minecraftforge.internal.RegistrationEvents";
+	static final Step CAPABILITIES = new Step("net/minecraftforge/capabilities/CapabilityHooks", "init");
+	static final Step DATA_MAPS = new Step("net/minecraftforge/registries/RegistryManager", "initDataMaps");
 
 	private RegistrationEventSteps() {
 	}

@@ -23,7 +23,7 @@ import org.objectweb.asm.tree.MethodNode;
  */
 public final class FabricFluidModelsInjector implements ClassTransformer {
 	public static final String PROPERTY = "forbric.fabricFluidModels";
-	static final String HOOKS = "net.neoforged.neoforge.client.ClientHooks";
+	static final String HOOKS = "net.minecraftforge.client.ClientHooks";
 	static final String HOOK_OWNER = "net/forbric/kernel/runtime/KernelFabricFluidModels";
 	static final String HOOK_DESC = "(Ljava/util/Map;Ljava/lang/Object;)Z";
 	/** NeoForge's warning, which marks the check this repair may touch. */

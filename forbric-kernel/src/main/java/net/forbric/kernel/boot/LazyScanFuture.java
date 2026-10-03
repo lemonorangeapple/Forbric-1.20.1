@@ -32,9 +32,11 @@ import java.util.function.Supplier;
  * the field left null answers {@code getScanResult()} with "Scanning of this mod file has not started yet." So the
  * field holds this instead: "started", and done the moment it is read.
  *
- * <p>Every read path computes first — {@code get}, {@code join}, {@code getNow}, {@code resultNow} and the state
- * queries alike — so it never shows the half-state a real in-flight future has: a caller that checks
- * {@code isDone()} before {@code getNow(null)} gets the value, not its default. The composition methods
+ * <p>Every read path computes first — {@code get}, {@code join}, {@code getNow}, {@code isDone} and
+ * {@code isCompletedExceptionally} — so it never shows the half-state a real in-flight future has: a caller that
+ * checks {@code isDone()} before {@code getNow(null)} gets the value, not its default. The Java 19+
+ * {@code Future} additions ({@code resultNow}, {@code exceptionNow}, {@code state}) are deliberately not
+ * overridden: the kernel targets Java 17, where they do not exist and cannot be called. The composition methods
  * ({@code thenApply} and the rest) are left as they are; they are unreachable here, because the field is private
  * and {@code ModFile}'s only read of it is {@code get()} (verified on the carrier's bytecode: {@code startScan}
  * only null-checks it).
@@ -107,18 +109,6 @@ final class LazyScanFuture extends CompletableFuture<Object> {
 	}
 
 	@Override
-	public Object resultNow() {
-		ensure();
-		return super.resultNow();
-	}
-
-	@Override
-	public Throwable exceptionNow() {
-		ensure();
-		return super.exceptionNow();
-	}
-
-	@Override
 	public boolean isDone() {
 		ensure();
 		return super.isDone();
@@ -128,11 +118,5 @@ final class LazyScanFuture extends CompletableFuture<Object> {
 	public boolean isCompletedExceptionally() {
 		ensure();
 		return super.isCompletedExceptionally();
-	}
-
-	@Override
-	public State state() {
-		ensure();
-		return super.state();
 	}
 }

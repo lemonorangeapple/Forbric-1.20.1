@@ -37,7 +37,7 @@ public final class MergedBaseAbsorbedCalls {
 			new Absorbed("net/minecraft/client/renderer/fog/FogRenderer",
 					"computeFogColor(Lnet/minecraft/client/Camera;FLnet/minecraft/client/multiplayer/ClientLevel;IFLorg/joml/Vector4f;)V",
 					"Lorg/joml/Vector4f;set(FFFF)Lorg/joml/Vector4f;",
-					"Lnet/neoforged/neoforge/client/ClientHooks;getFogColor(Lnet/minecraft/client/Camera;FLnet/minecraft/client/multiplayer/"
+					"Lnet/minecraftforge/client/ClientHooks;getFogColor(Lnet/minecraft/client/Camera;FLnet/minecraft/client/multiplayer/"
 							+ "ClientLevel;IFFFFLorg/joml/Vector4f;)V",
 					Set.of(Ecosystem.FABRIC, Ecosystem.FORGE),
 					"the hook first does dest.set(r, g, b, 1) exactly as vanilla's last act did, then applies a fluid type's "

@@ -127,7 +127,7 @@ class WrapperEntryAddedInjectorTest {
 			repaired.register("farmersdelight", "cooking_pot", pot);
 			assertSame(repaired.streamCodec(pot), repaired.codecs().get(repaired.id("farmersdelight", "cooking_pot")));
 			assertEquals(1, heard.size());
-			assertArrayEquals(new Object[] {1, repaired.id("farmersdelight", "cooking_pot"), pot}, heard.getFirst(),
+			assertArrayEquals(new Object[] {1, repaired.id("farmersdelight", "cooking_pot"), pot}, heard.get(0),
 					"with the raw id the wrapper's ForgeRegistry assigned, as Fabric passes MappedRegistry's");
 		}
 	}

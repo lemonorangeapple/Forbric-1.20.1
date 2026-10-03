@@ -38,7 +38,7 @@ public final class SpawnPositionCallsInjector implements ClassTransformer {
 	static final String NATURAL = "net.minecraft.world.level.NaturalSpawner", SUMMON = "net.minecraft.util.SpawnUtil";
 	static final List<String> TARGETS = List.of(TARGET, NATURAL, SUMMON);
 	static final String HOST_DESC = "(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;)V";
-	static final String NEO = "net/neoforged/neoforge/event/EventHooks", NEO_NAME = "checkSpawnPositionSpawner";
+	static final String NEO = "net/minecraftforge/event/EventHooks", NEO_NAME = "checkSpawnPositionSpawner";
 	static final String NEO_DESC = "(Lnet/minecraft/world/entity/Mob;Lnet/minecraft/world/level/ServerLevelAccessor;"
 			+ "Lnet/minecraft/world/entity/EntitySpawnReason;Lnet/minecraft/world/level/SpawnData;Lnet/minecraft/world/level/BaseSpawner;)Z";
 	static final String NEO_POSITION = "checkSpawnPosition", NEO_POSITION_DESC = "(Lnet/minecraft/world/entity/Mob;"
@@ -83,11 +83,11 @@ public final class SpawnPositionCallsInjector implements ClassTransformer {
 		if (TARGET.equals(className)) {
 			List<MethodNode> hosts = node.methods.stream().filter(m -> m.name.equals("serverTick") && m.desc.equals(HOST_DESC)).toList();
 			if (hosts.size() != 1) return declined(className, bytes, "serverTick is missing or ambiguous");
-			MethodNode host = hosts.getFirst();
+			MethodNode host = hosts.get(0);
 			if (callsCheckRules(host)) return bytes;   // vanilla's shape already
 			List<MethodInsnNode> hooks = hooks(host, NEO_NAME, NEO_DESC);
 			if (hooks.size() != 1) return declined(className, bytes, "expected exactly one NeoForge spawner position hook, found " + hooks.size());
-			inline(host, hooks.getFirst(), true);
+			inline(host, hooks.get(0), true);
 			restored++;
 		}
 		for (MethodNode method : node.methods) {

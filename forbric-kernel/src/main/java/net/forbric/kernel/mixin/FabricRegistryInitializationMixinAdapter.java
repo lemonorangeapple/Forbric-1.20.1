@@ -22,13 +22,26 @@ public final class FabricRegistryInitializationMixinAdapter {
 					+ "at the end of native bootstrap; the kernel retains the registry freeze");
 			return 1;
 		}
-		if(!Set.of(BASE+"MainMixin",BASE+"client/MinecraftMixin").contains(mixin.name))return 0;
-		MethodNode after=find(mixin,"afterModInit");if(after==null||MixinFit.injectorOf(after)==null)return 0;
-		List<MethodInsnNode> calls=new ArrayList<>();
-		for(var i:after.instructions)if(i instanceof MethodInsnNode c&&c.owner.equals("net/minecraft/core/registries/BuiltInRegistries")&&c.name.equals("bootStrap")&&c.desc.equals("()V"))calls.add(c);
-		if(calls.size()!=1)return 0;
-		after.instructions.remove(calls.getFirst());
-		if(mixin.name.equals(BASE+"client/MinecraftMixin"))set(MixinFit.injectorOf(after),"at",List.of(at("RETURN")));
+		if(!mixin.name.startsWith(BASE))return 0;
+		// The method is named afterModInit in newer fabric-api and onStart in 1.20.1's; find it by the one call it
+		// makes rather than by name, or the adapter silently declines and the mixin re-runs BuiltInRegistries.bootStrap
+		// against Forge's already-locked registries.
+		MethodNode after=null;
+		MethodInsnNode bootStrap=null;
+		for(MethodNode m:mixin.methods){
+			for(var i:m.instructions){
+				if(i instanceof MethodInsnNode c&&c.owner.equals("net/minecraft/core/registries/BuiltInRegistries")&&c.name.equals("bootStrap")&&c.desc.equals("()V")){
+					if(bootStrap!=null){bootStrap=null;after=null;break;}
+					after=m;bootStrap=c;
+				}
+			}
+			if(after!=null){ // exactly one across the class
+				break;
+			}
+		}
+		if(after==null||bootStrap==null||MixinFit.injectorOf(after)==null)return 0;
+		after.instructions.remove(bootStrap);
+		if(MixinFit.injectorOf(after)!=null&&!mixin.name.equals(BASE+"BootstrapMixin"))set(MixinFit.injectorOf(after),"at",List.of(at("RETURN")));
 		ForbricLog.info("[Forbric/RegistrySync] restored %s post-freeze trackers without repeating BuiltInRegistries.bootStrap",mixin.name);
 		return 1;
 	}

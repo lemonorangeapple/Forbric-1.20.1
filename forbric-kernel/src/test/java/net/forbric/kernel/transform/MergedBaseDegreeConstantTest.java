@@ -127,7 +127,7 @@ class MergedBaseDegreeConstantTest {
 	private static int sites(ClassNode node) {
 		int found = 0;
 		for (MethodNode method : node.methods) {
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (!(insn instanceof LdcInsnNode a) || !Double.valueOf(HALF_TURN).equals(a.cst)) continue;
 				AbstractInsnNode multiply = real(insn);
 				if (multiply == null || multiply.getOpcode() != Opcodes.DMUL) continue;
@@ -142,7 +142,7 @@ class MergedBaseDegreeConstantTest {
 
 	private static boolean carries(ClassNode node, double constant) {
 		for (MethodNode method : node.methods) {
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn instanceof LdcInsnNode ldc && Double.valueOf(constant).equals(ldc.cst)) return true;
 			}
 		}

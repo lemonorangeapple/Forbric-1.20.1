@@ -86,7 +86,7 @@ public final class WorldDataShape {
 	}
 
 	private static boolean isEmptyContainer(JsonElement element) {
-		return (element instanceof JsonArray array && array.isEmpty())
-				|| (element instanceof JsonObject object && object.isEmpty());
+		return (element instanceof JsonArray array && array.size() == 0)
+				|| (element instanceof JsonObject object && object.size() == 0);
 	}
 }

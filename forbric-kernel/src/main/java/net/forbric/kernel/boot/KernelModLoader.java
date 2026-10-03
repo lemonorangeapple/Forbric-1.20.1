@@ -1073,7 +1073,7 @@ public final class KernelModLoader {
 	private static Object constructNeoMod(ClassLoader cl, String className, Object bus, Object container,
 			Side side) throws Exception {
 		Class<?> modCls = Class.forName(className, true, cl);
-		Class<?> iEventBus = Class.forName("net.neoforged.bus.api.IEventBus", false, cl);
+		Class<?> iEventBus = Class.forName("net.minecraftforge.eventbus.api.IEventBus", false, cl);
 		Class<?> distClass = Class.forName(ForeignType.DIST.binary(Ecosystem.NEOFORGE), false, cl);
 		Class<?> modContainer = Class.forName(ForeignType.MOD_CONTAINER.binary(Ecosystem.NEOFORGE), false, cl);
 		Object dist = Enum.valueOf(distClass.asSubclass(Enum.class), side.distName());

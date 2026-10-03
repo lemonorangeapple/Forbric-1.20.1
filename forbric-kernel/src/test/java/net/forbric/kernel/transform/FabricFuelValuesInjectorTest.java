@@ -85,7 +85,7 @@ class FabricFuelValuesInjectorTest {
 		ClassNode before = node(original), after = node(out);
 		assertEquals(opcodes(method(before, STUB_DESC)), opcodes(method(after, STUB_DESC)), "the forwarding overload is untouched");
 		MethodNode body = method(after, FabricFuelValuesInjector.BODY_DESC);
-		AbstractInsnNode first = body.instructions.getFirst();
+		AbstractInsnNode first = body.instructions.get(0);
 		while (first.getOpcode() < 0) first = first.getNext();
 		assertTrue(first instanceof MethodInsnNode call && call.name.equals("takePending"), "the body opens with the pending check");
 		long returns = java.util.Arrays.stream(body.instructions.toArray()).filter(i -> i.getOpcode() == Opcodes.ARETURN).count();
@@ -119,7 +119,7 @@ class FabricFuelValuesInjectorTest {
 			net.forbric.kernel.mixin.MixinStubRebindAccess.forget();
 		}
 		for (ClassNode mixin : List.of(wrap, modify)) {
-			AnnotationNode injector = mixin.methods.getFirst().visibleAnnotations.getFirst();
+			AnnotationNode injector = mixin.methods.get(0).visibleAnnotations.get(0);
 			assertEquals(List.of(body), injector.values.get(injector.values.indexOf("method") + 1), mixin.name);
 		}
 	}

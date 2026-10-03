@@ -24,7 +24,7 @@ import net.forbric.kernel.boot.DeferredWorkFailures;
 import net.forbric.kernel.util.ForbricLog;
 import net.forbric.kernel.util.Reflect;
 import net.forbric.api.ModCatalog;
-import net.minecraftforge.eventbus.api.bus.BusGroup;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.DeferredWorkQueue;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModLoadingStage;
@@ -95,7 +95,7 @@ public final class KernelForgeSetup {
 					// The mod that is registering must be the active container while its listener runs, exactly as
 					// in fireRegisterEvents — otherwise whatever it registers is namespaced under the last one.
 					KernelForgeContainers.setActiveContainer(handle.container());
-					post(event, (ModContainer) handle.container(), (BusGroup) handle.busGroup(), stage);
+					post(event, (ModContainer) handle.container(), (IEventBus) handle.busGroup(), stage);
 					fired++;
 				} catch (Throwable t) {
 					ForbricLog.warn("[Forbric/Lifecycle] " + handle.modId() + " threw during traditional-Forge "
@@ -151,23 +151,22 @@ public final class KernelForgeSetup {
 	}
 
 	/** Builds and posts the one event {@code kind} names on {@code group}'s bus for it. */
-	private static void post(ForeignType kind, ModContainer container, BusGroup group, ModLoadingStage stage) {
+	private static void post(ForeignType kind, ModContainer container, IEventBus group, ModLoadingStage stage) {
 		switch (kind) {
 			case FML_CONSTRUCT_MOD_EVENT ->
-					FMLConstructModEvent.getBus(group).post(new FMLConstructModEvent(container, stage));
+					group.post(new FMLConstructModEvent(container, stage));
 			case FML_COMMON_SETUP_EVENT ->
-					FMLCommonSetupEvent.getBus(group).post(new FMLCommonSetupEvent(container, stage));
+					group.post(new FMLCommonSetupEvent(container, stage));
 			case FML_CLIENT_SETUP_EVENT ->
-					FMLClientSetupEvent.getBus(group).post(new FMLClientSetupEvent(container, stage));
+					group.post(new FMLClientSetupEvent(container, stage));
 			case FML_DEDICATED_SERVER_SETUP_EVENT ->
-					FMLDedicatedServerSetupEvent.getBus(group)
-							.post(new FMLDedicatedServerSetupEvent(container, stage));
+					group.post(new FMLDedicatedServerSetupEvent(container, stage));
 			case INTER_MOD_ENQUEUE_EVENT ->
-					InterModEnqueueEvent.getBus(group).post(new InterModEnqueueEvent(container, stage));
+					group.post(new InterModEnqueueEvent(container, stage));
 			case INTER_MOD_PROCESS_EVENT ->
-					InterModProcessEvent.getBus(group).post(new InterModProcessEvent(container, stage));
+					group.post(new InterModProcessEvent(container, stage));
 			case FML_LOAD_COMPLETE_EVENT ->
-					FMLLoadCompleteEvent.getBus(group).post(new FMLLoadCompleteEvent(container, stage));
+					group.post(new FMLLoadCompleteEvent(container, stage));
 			default -> throw new IllegalArgumentException(kind + " is not a MinecraftForge setup phase");
 		}
 	}

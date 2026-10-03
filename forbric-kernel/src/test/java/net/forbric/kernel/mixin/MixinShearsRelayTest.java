@@ -137,7 +137,7 @@ class MixinShearsRelayTest {
 	}
 
 	private static MixinShearsRelay.Row rowFor(ClassNode mixin) {
-		String target = MixinOverloadPin.targetsOf(mixin).getFirst();
+		String target = MixinOverloadPin.targetsOf(mixin).get(0);
 		return MixinShearsRelay.ROWS.stream().filter(r -> r.target().equals(target)).findFirst().orElseThrow();
 	}
 
@@ -162,6 +162,6 @@ class MixinShearsRelayTest {
 	private static MethodNode only(ClassNode node, String name) {
 		List<MethodNode> found = node.methods.stream().filter(m -> m.name.equals(name)).toList();
 		assertEquals(1, found.size(), name + " in " + node.name);
-		return found.getFirst();
+		return found.get(0);
 	}
 }

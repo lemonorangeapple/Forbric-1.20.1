@@ -108,7 +108,7 @@ public final class TooltipOrderScrapeInjector implements ClassTransformer {
 
 		Set<String> order = new LinkedHashSet<>();
 		boolean marker = false;
-		for (AbstractInsnNode insn = body.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = body.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof FieldInsnNode f && f.getOpcode() == Opcodes.GETSTATIC && DATA_COMPONENTS.equals(f.owner)
 					&& DATA_COMPONENT_TYPE.equals(f.desc)) {
 				order.add(f.name);
@@ -149,7 +149,7 @@ public final class TooltipOrderScrapeInjector implements ClassTransformer {
 	}
 
 	private static boolean readsAnyComponent(MethodNode method) {
-		for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof FieldInsnNode f && f.getOpcode() == Opcodes.GETSTATIC && DATA_COMPONENTS.equals(f.owner)) return true;
 		}
 		return false;

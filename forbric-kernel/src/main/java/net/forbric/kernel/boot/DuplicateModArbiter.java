@@ -679,7 +679,7 @@ public final class DuplicateModArbiter {
 			Set<String> involved = new LinkedHashSet<>();
 			for (var rule : confirmed ? result.unsatisfied() : result.uncertain()) {
 				Claim owner = byPath.get(rule.consumer());
-				if (owner != null && !owner.modIds().isEmpty()) involved.add(owner.modIds().getFirst());
+				if (owner != null && !owner.modIds().isEmpty()) involved.add(owner.modIds().get(0));
 			}
 			for (String pinned : result.refusedOverrides().keySet()) {
 				involved.add(overrides.keySet().stream().filter(raw -> JointCandidateSelector.key(raw).equals(pinned)).findFirst().orElse(pinned));
@@ -718,7 +718,7 @@ public final class DuplicateModArbiter {
 	}
 
 	private static void recordRule(Claim owner, JointCandidateSelector.Rule rule, boolean confirmed) {
-		String mod = owner == null || owner.modIds().isEmpty() ? "forbric" : owner.modIds().getFirst();
+		String mod = owner == null || owner.modIds().isEmpty() ? "forbric" : owner.modIds().get(0);
 		net.forbric.api.CompatibilityFindings.record(new net.forbric.api.CompatibilityFinding(
 				"arbitration:" + rule.id(), mod, "Mod dependency integration", "arbitration:" + rule.consumer().getFileName(),
 				confirmed ? net.forbric.api.CompatibilityFinding.Confidence.CONFIRMED : net.forbric.api.CompatibilityFinding.Confidence.SUSPECTED,

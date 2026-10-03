@@ -115,7 +115,7 @@ class MergedBaseLeftNullFieldsTest {
 		}
 		assertTrue(writes >= 1, "ForgeHooksClient no longer writes ServerData.forgeData — the field would stay null for good");
 		assertNotNull(draw, "drawForgePingInfo is gone — find the new reader and re-check its guard");
-		AbstractInsnNode first = draw.instructions.getFirst();
+		AbstractInsnNode first = draw.instructions.get(0);
 		while (first != null && first.getOpcode() < 0) first = first.getNext();
 		AbstractInsnNode load = first, get = nextReal(load), guard = nextReal(get);
 		assertTrue(get instanceof FieldInsnNode f && "forgeData".equals(f.name) && f.getOpcode() == Opcodes.GETFIELD,

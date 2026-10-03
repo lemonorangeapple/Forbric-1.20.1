@@ -17,6 +17,7 @@
 package net.forbric.kernel.mapping;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -39,6 +40,13 @@ class ForbricMappingsTest {
 			+ "    int counter -> x\n"
 			+ "    void tick(int) -> m\n";
 
+	// MCPConfig TSRG2: obf -> srg (+ id). The class column is synthetic and is ignored by the join.
+	private static final String FORGE_TSRG =
+			"tsrg2 obf srg id\n"
+			+ "a net/minecraft/src/C_100 100\n"
+			+ "\tx f_200 200\n"
+			+ "\tm (I)V m_300 300\n";
+
 	private ForbricMappings load(Path dir) throws Exception {
 		Path inter = dir.resolve("intermediary.tiny");
 		Path moj = dir.resolve("client.txt");
@@ -55,6 +63,24 @@ class ForbricMappingsTest {
 		assertEquals("net/minecraft/class_100", m.mapClass("com/example/Foo"));
 		assertEquals("field_200", m.mapField("com/example/Foo", "counter", "I"));
 		assertEquals("method_300", m.mapMethod("com/example/Foo", "tick", "(I)V"));
+	}
+
+	@Test
+	void joinsSrgMembersOntoNamedClasses(@TempDir Path dir) throws Exception {
+		Path inter = dir.resolve("intermediary.tiny");
+		Path moj = dir.resolve("client.txt");
+		Path tsrg = dir.resolve("joined.tsrg");
+		Files.write(inter, INTERMEDIARY_TINY.getBytes(StandardCharsets.UTF_8));
+		Files.write(moj, MOJMAP_PROGUARD.getBytes(StandardCharsets.UTF_8));
+		Files.write(tsrg, FORGE_TSRG.getBytes(StandardCharsets.UTF_8));
+
+		ForbricMappings m = ForbricMappings.load(inter, moj, tsrg);
+		assertTrue(m.hasSrg());
+		var cls = m.tree().getClass("com/example/Foo");
+		// Forge production speaks Mojmap class names + SRG members, so srg class name == named class name.
+		assertEquals("com/example/Foo", cls.getName(m.srgNamespace()), "srg class name is the Mojmap name");
+		assertEquals("f_200", cls.getField("counter", "I").getName(m.srgNamespace()));
+		assertEquals("m_300", cls.getMethod("tick", "(I)V").getName(m.srgNamespace()));
 	}
 
 	@Test

@@ -86,7 +86,7 @@ public final class NeoEnumExtensions {
 		try {
 			Class<?> extender = Class.forName(EXTENDER, false, gameLoader);
 			Class<?> iModInfo = Class.forName(ForeignType.MOD_INFO_SPI.binary(Ecosystem.NEOFORGE), false, gameLoader);
-			Class<?> jarResource = Class.forName("net.neoforged.fml.jarcontents.JarResource", false, gameLoader);
+			Class<?> jarResource = Class.forName("net.minecraftforge.fml.jarcontents.JarResource", false, gameLoader);
 
 			ForbricModDiscoverer discoverer = new ForbricModDiscoverer();
 			Map<Object, Object> declarations = new LinkedHashMap<>();

@@ -56,7 +56,7 @@ import net.forbric.kernel.util.ForbricLog;
  * <p>Switched with the view: {@code -Dforbric.fmlTransformerView=off} leaves this class as shipped.
  */
 public final class ModuleClassLoaderInitInjector implements ClassTransformer {
-	static final String TARGET = "net.neoforged.fml.classloading.ModuleClassLoader";
+	static final String TARGET = "net.minecraftforge.fml.classloading.ModuleClassLoader";
 	private static final String INACCESSIBLE = "java/lang/reflect/InaccessibleObjectException";
 	/** The first of the three exceptions the carrier already catches around the IMPL_LOOKUP lookup. */
 	private static final String GUARDED = "java/lang/NoSuchFieldException";

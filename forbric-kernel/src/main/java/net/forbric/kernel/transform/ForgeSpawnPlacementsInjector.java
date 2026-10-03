@@ -28,7 +28,7 @@ import net.forbric.kernel.util.ForbricLog;
 public final class ForgeSpawnPlacementsInjector implements ClassTransformer {
 	public static final String PROPERTY = "forbric.forgeSpawnPlacements";
 	private static final String TARGET = "net.minecraft.world.entity.SpawnPlacements";
-	private static final String POST_DESC = "(Lnet/neoforged/bus/api/Event;)V";
+	private static final String POST_DESC = "(Lnet/minecraftforge/eventbus/api/Event;)V";
 	private static final String RUNTIME = "net/forbric/kernel/runtime/KernelForgeSpawnPlacements";
 	private static final String LOADER = ForeignType.FML_MOD_LOADER.internal(Ecosystem.NEOFORGE);
 	private static final String EVENT = ForeignType.SPAWN_PLACEMENT_EVENT.internal(Ecosystem.NEOFORGE);

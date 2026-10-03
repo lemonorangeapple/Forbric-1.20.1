@@ -48,7 +48,7 @@ import net.forbric.kernel.util.ForbricLog;
  *
  * <p>Each entry is a call site read out of the merged jar with {@code javap -p -c}, counting which family's hook
  * survived at it. For example {@code ServerPlayerGameMode} contains
- * {@code net/neoforged/neoforge/common/CommonHooks.fireBlockBreak}, {@code .onRightClickBlock},
+ * {@code net/minecraftforge/common/CommonHooks.fireBlockBreak}, {@code .onRightClickBlock},
  * {@code .onLeftClickBlock} and {@code .onItemRightClick} — and ZERO references to any
  * {@code net/minecraftforge/} hook. {@code ServerGamePacketListenerImpl} has NeoForge's
  * {@code getServerChatSubmittedDecorator} and no MinecraftForge chat hook; {@code Level} has NeoForge's
@@ -131,7 +131,7 @@ public final class DeadEventAudit {
 		// ForgeEventFactory.onItemTooltip (javap: one invokestatic, none into net/neoforged), so NeoForge's event is
 		// the dead one here. ItemStack#onDestroyed is NOT a row: it is an extension hook on both sides
 		// (IForgeItemStack.onDestroyed survived) and cannot be a subscriber finding.
-		dead.put("net/neoforged/neoforge/event/entity/player/ItemTooltipEvent",
+		dead.put("net/minecraftforge/event/entity/player/ItemTooltipEvent",
 				"item tooltips cannot be extended by NeoForge mods — the merged getTooltipLines calls only "
 						+ "MinecraftForge's onItemTooltip");
 		// EntityPlaceEvent was a row here too, for the reason routePlaceItemHookToNeoForge states: ItemStack.useOn
@@ -214,7 +214,7 @@ public final class DeadEventAudit {
 	 * with it is spend a day on one.
 	 */
 	static final java.util.Set<String> REPAIRED = java.util.Set.of(
-			"net/neoforged/neoforge/event/furnace/FurnaceFuelBurnTimeEvent",
+			"net/minecraftforge/event/furnace/FurnaceFuelBurnTimeEvent",
 			"net/minecraftforge/event/entity/living/MobSpawnEvent$FinalizeSpawn",
 			"net/minecraftforge/event/AddPackFindersEvent",
 			// ForgeDamageSeamsInjector: no NeoForge event sits where these were, so the pipeline posts them.
@@ -272,7 +272,7 @@ public final class DeadEventAudit {
 		map.put("net/minecraftforge/event/entity/player/PlayerInteractEvent$RightClickItem",
 				GameEventBridge.RIGHT_CLICK_ITEM);
 		map.put("net/minecraftforge/event/LootTableLoadEvent", GameEventBridge.LOOT_TABLE_LOAD);
-		map.put("net/neoforged/neoforge/event/entity/player/ItemTooltipEvent", GameEventBridge.ITEM_TOOLTIP);
+		map.put("net/minecraftforge/event/entity/player/ItemTooltipEvent", GameEventBridge.ITEM_TOOLTIP);
 		map.put("net/minecraftforge/client/event/AddGuiOverlayLayersEvent", GameEventBridge.GUI_OVERLAY_LAYERS);
 		map.put("net/minecraftforge/event/level/BlockEvent$EntityPlaceEvent",
 				GameEventBridge.ENTITY_PLACE_BLOCK);

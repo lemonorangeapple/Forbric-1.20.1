@@ -66,7 +66,7 @@ public final class CreativePagerBridgeInjector implements ClassTransformer {
 	public static final String API = "net/fabricmc/fabric/api/client/creativetab/v1/FabricCreativeModeInventoryScreen";
 	static final String PAGER = "net/forbric/kernel/runtime/KernelCreativePager";
 	static final String PAGER_SCREEN = "net/forbric/kernel/runtime/KernelCreativePagerScreen";
-	static final String PAGE = "Lnet/neoforged/neoforge/client/gui/CreativeTabsScreenPage;";
+	static final String PAGE = "Lnet/minecraftforge/client/gui/CreativeTabsScreenPage;";
 	static final String TAB = "Lnet/minecraft/world/item/CreativeModeTab;";
 	static final String LIST = "Ljava/util/List;";
 	static final String BUTTON_HANDLER = "(Lnet/minecraft/client/gui/components/Button;)V";

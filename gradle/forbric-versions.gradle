@@ -1,0 +1,38 @@
+// gradle/forbric-versions.gradle
+//
+// Loads the repository's VERSIONS.properties -- the single source of truth for target
+// Minecraft / loader versions -- and exposes it to the applying build.
+//
+// Usage (near the top of a module's build.gradle):
+//     apply from: file('../gradle/forbric-versions.gradle')
+//     def mcVersion = forbricVersion('minecraft.version')
+//
+// Deliberately no defaults: a missing file or key fails the build rather than silently
+// falling back to a stale version. The `forbric.` prefix in the file keeps these keys
+// clear of Gradle's own project properties.
+
+def forbricVersionsFile = new File(project.projectDir, '../VERSIONS.properties').canonicalFile
+if (!forbricVersionsFile.isFile()) {
+	throw new GradleException("VERSIONS.properties (Forbric's version source of truth) not found at ${forbricVersionsFile}")
+}
+
+def forbricVersionsProps = new Properties()
+forbricVersionsFile.withInputStream { forbricVersionsProps.load(it) }
+
+ext.forbricVersionsFile = forbricVersionsFile
+ext.forbricVersionsProps = forbricVersionsProps
+
+// Returns the trimmed value of forbric.<key>, or fails the build naming the missing key.
+ext.forbricVersion = { String key ->
+	def value = forbricVersionsProps.getProperty("forbric.${key}")
+	if (value == null || value.trim().isEmpty()) {
+		throw new GradleException("VERSIONS.properties is missing a value for forbric.${key}")
+	}
+	return value.trim()
+}
+
+// Convenience: forbricVersion('minecraft.version') with a {version} placeholder substituted,
+// for URL/path templates such as forbric.intermediary.url.
+ext.forbricVersionUrl = { String key ->
+	forbricVersion(key).replace('{version}', forbricVersion('minecraft.version'))
+}

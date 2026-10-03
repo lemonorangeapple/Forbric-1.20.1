@@ -157,7 +157,7 @@ public final class KernelRegistryAliases {
 
 	/** {@code off} lets fabric-registry-sync warn about NeoForge's alias-first order as it does about any other. */
 	static final String DEFERRED_REGISTER_ORDER = "forbric.aliasPresenceParity.deferredRegister";
-	private static final String NEO_DEFERRED_REGISTER = "net.neoforged.neoforge.registries.DeferredRegister";
+	private static final String NEO_DEFERRED_REGISTER = "net.minecraftforge.registries.DeferredRegister";
 
 	/**
 	 * Whether fabric-registry-sync's {@code addAlias} should consider its alias target present.

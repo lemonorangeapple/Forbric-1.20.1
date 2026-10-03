@@ -620,7 +620,7 @@ class MixinStubRebindTest {
 		ClassNode mixin = synthetic("sircow/torrential/mixin/FuelValuesMixin", FUEL, "torrential$modifyFuelValues",
 				"(" + FUEL_VALUES + PROVIDER + FLAGS + "I)" + FUEL_VALUES, true, injector(MODIFY_RETURN, STUB_BURN, List.of(at("RETURN"))));
 		MixinStubRebind.noteEcosystem(mixin.name, Ecosystem.FABRIC, "torrential.mixins.json");
-		MethodNode handler = mixin.methods.getFirst();
+		MethodNode handler = mixin.methods.get(0);
 		assertNull(MixinStubRebind.destination(mixin, handler, fuel));
 		assertTrue(CompatibilityFindings.all().isEmpty(), "asking where it would go reports nothing");
 		assertEquals(0, MixinStubRebind.adapt(mixin, name -> fuel));
@@ -629,11 +629,11 @@ class MixinStubRebindTest {
 		// kernel's fuel bridge, KernelFabricFuel.throughVanillaReturnHooks).
 		List<CompatibilityFinding> stays = CompatibilityFindings.all();
 		assertEquals(1, stays.size(), stays.toString());
-		assertEquals(CompatibilityFinding.Confidence.SUSPECTED, stays.getFirst().confidence());
-		assertFalse(stays.getFirst().required());
-		assertTrue(stays.getFirst().id().startsWith("mixin-stub-bound:torrential.mixins.json:"), stays.getFirst().id());
-		assertTrue(stays.getFirst().detail().contains("torrential$modifyFuelValues stays on "
-				+ "net.minecraft.world.level.block.entity.FuelValues." + STUB_BURN), stays.getFirst().detail());
+		assertEquals(CompatibilityFinding.Confidence.SUSPECTED, stays.get(0).confidence());
+		assertFalse(stays.get(0).required());
+		assertTrue(stays.get(0).id().startsWith("mixin-stub-bound:torrential.mixins.json:"), stays.get(0).id());
+		assertTrue(stays.get(0).detail().contains("torrential$modifyFuelValues stays on "
+				+ "net.minecraft.world.level.block.entity.FuelValues." + STUB_BURN), stays.get(0).detail());
 		CompatibilityFindings.reset();
 		System.setProperty(MixinStubRebind.STUB_FINDING_PROPERTY, "off");
 		assertEquals(0, MixinStubRebind.adapt(mixin, name -> fuel));
@@ -734,7 +734,7 @@ class MixinStubRebindTest {
 	/** Marks the only handler's receiver {@code @Coerce} (visible), or every parameter {@code @NotNull} (invisible). */
 	@SuppressWarnings("unchecked")
 	private static MethodNode annotate(ClassNode mixin, String annotation) {
-		MethodNode handler = mixin.methods.getFirst();
+		MethodNode handler = mixin.methods.get(0);
 		int count = Type.getArgumentTypes(handler.desc).length;
 		List<AnnotationNode>[] parameters = new List[count];
 		for (int i = 0; i < count; i++) {
@@ -783,7 +783,7 @@ class MixinStubRebindTest {
 		ClassNode player = merged("net/minecraft/world/entity/player/Player");
 		ClassNode mixin = conduit("(F" + STATE + ")F", "speed", 0);
 		MixinStubRebind.noteEcosystem(mixin.name, Ecosystem.FABRIC);
-		assertEquals("getDestroySpeed", MixinStubRebind.destination(mixin, mixin.methods.getFirst(), player).name);
+		assertEquals("getDestroySpeed", MixinStubRebind.destination(mixin, mixin.methods.get(0), player).name);
 		assertEquals(1, MixinStubRebind.adapt(mixin, name -> player));
 		assertEquals(List.of("getDestroySpeed(" + STATE + POS + ")F"), selectors(mixin, "torrential$applyConduitModifier"));
 		assertEquals(0, MixinStubRebind.adapt(mixin, name -> player), "a second pass changes nothing");
@@ -794,7 +794,7 @@ class MixinStubRebindTest {
 					.accept(noTable, ClassReader.SKIP_DEBUG);
 		}
 		ClassNode again = conduit("(F" + STATE + ")F", "speed", 0);
-		assertNull(MixinStubRebind.destination(again, again.methods.getFirst(), noTable),
+		assertNull(MixinStubRebind.destination(again, again.methods.get(0), noTable),
 				"no local variable table, no proof (MixinFit re-reads with it)");
 	}
 
@@ -811,7 +811,7 @@ class MixinStubRebindTest {
 				case 5 -> conduit("(F" + STATE + ")F", "speed", 40);
 				default -> conduit("(F" + STATE + ")F", "speed", 0);
 			};
-			AnnotationNode injector = MixinFit.injectorOf(mixin.methods.getFirst());
+			AnnotationNode injector = MixinFit.injectorOf(mixin.methods.get(0));
 			if (mode == 0) {
 				injector.values.set(injector.values.indexOf("name"), "ordinal");
 				injector.values.set(injector.values.indexOf("ordinal") + 1, 0);
@@ -837,12 +837,12 @@ class MixinStubRebindTest {
 	@Test void anAllowIsCountedForLocalAndStringPointsToo() throws Exception {
 		ClassNode player = merged("net/minecraft/world/entity/player/Player");
 		ClassNode first = conduit("(F" + STATE + ")F", "speed", 0);
-		MixinFit.injectorOf(first.methods.getFirst()).values.addAll(List.of("allow", 1));
+		MixinFit.injectorOf(first.methods.get(0)).values.addAll(List.of("allow", 1));
 		MixinStubRebind.noteEcosystem(first.name, Ecosystem.FABRIC);
 		assertEquals(1, MixinStubRebind.adapt(first, name -> player), "the first store of speed");
 
 		ClassNode every = conduit("(F" + STATE + ")F", "speed", 0);
-		AnnotationNode variable = MixinFit.injectorOf(every.methods.getFirst());
+		AnnotationNode variable = MixinFit.injectorOf(every.methods.get(0));
 		variable.values.set(variable.values.indexOf("at") + 1, at("STORE"));
 		variable.values.addAll(List.of("allow", 1));
 		assertEquals(0, MixinStubRebind.adapt(every, name -> player), "every store of speed: eight");
@@ -852,7 +852,7 @@ class MixinStubRebindTest {
 		ClassNode string = synthetic("com/example/PlayerStringMixin", "net/minecraft/world/entity/player/Player", "onAttribute",
 				"(" + CALLBACK_INFO_RETURNABLE + ")V", false, injector(INJECT, "getDestroySpeed", List.of(at("INVOKE_STRING", "target",
 						"Lnet/minecraft/world/entity/player/Player;getAttributeValue(Lnet/minecraft/core/Holder;)D"))));
-		AnnotationNode inject = MixinFit.injectorOf(string.methods.getFirst());
+		AnnotationNode inject = MixinFit.injectorOf(string.methods.get(0));
 		inject.values.addAll(List.of("allow", 1));
 		MixinStubRebind.noteEcosystem(string.name, Ecosystem.FABRIC);
 		assertEquals(0, MixinStubRebind.adapt(string, name -> player), "two calls of it in the body");

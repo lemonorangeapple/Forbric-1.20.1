@@ -129,20 +129,23 @@ public final class AccessTransformerParser {
 
 	private static AtDirective remap(AtDirective d, ForbricMappings mappings) {
 		String owner = d.className;
-		String mappedOwner = mappings.mapClass(owner);
-
+		// The runtime namespace is named (Mojmap), so class names and descriptors are already in it. Only the
+		// SRG member names a Forge accesstransformer.cfg uses (f_/m_) need translating.
 		if (d.isClass() || d.isAllFields() || d.isAllMethods()) {
-			return new AtDirective(mappedOwner, d.memberName, d.memberDesc, d.method, d.access, d.finalOp);
+			return new AtDirective(owner, d.memberName, d.memberDesc, d.method, d.access, d.finalOp);
 		}
 
 		if (d.method) {
-			String mappedName = mappings.mapMethod(owner, d.memberName, d.memberDesc);
-			String mappedDesc = remapMethodDescriptor(d.memberDesc, mappings);
-			return new AtDirective(mappedOwner, mappedName, mappedDesc, true, d.access, d.finalOp);
+			String mappedName = mappings.hasSrg()
+					? mappings.mapSrgMethod(owner, d.memberName, d.memberDesc)
+					: d.memberName;
+			return new AtDirective(owner, mappedName, d.memberDesc, true, d.access, d.finalOp);
 		}
 
-		String mappedName = mappings.mapField(owner, d.memberName, d.memberDesc);
-		return new AtDirective(mappedOwner, mappedName, null, false, d.access, d.finalOp);
+		String mappedName = mappings.hasSrg()
+				? mappings.mapSrgField(owner, d.memberName, d.memberDesc)
+				: d.memberName;
+		return new AtDirective(owner, mappedName, null, false, d.access, d.finalOp);
 	}
 
 	/** Remaps the object-type references inside a method descriptor from named to intermediary internal names. */

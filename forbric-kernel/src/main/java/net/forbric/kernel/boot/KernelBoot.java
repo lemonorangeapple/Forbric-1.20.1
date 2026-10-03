@@ -87,7 +87,7 @@ public final class KernelBoot {
 	}
 
 	/** Used only when the base jar carries no {@code version.json}; the merged base is built from 26.2. */
-	private static final String FALLBACK_GAME_VERSION = "26.2";
+	private static final String FALLBACK_GAME_VERSION = descriptor("minecraft.version", "1.20.1");
 
 	/** The two boot sides. */
 	public enum Side {
@@ -304,7 +304,7 @@ public final class KernelBoot {
 					KernelOwnedClasspath.SWITCH);
 		}
 
-		// A Fabric mod shipping its own net.neoforged.* / net.minecraftforge.* loses those classes to the carrier
+		// A Fabric mod shipping its own net.minecraftforge.* / net.minecraftforge.* loses those classes to the carrier
 		// by design. Say so, and say where the two disagree, while the jar names are still in hand — the failure
 		// otherwise surfaces in whichever dependent first calls the API, several lifecycle steps later.
 		List<Path> shadowCandidates = new ArrayList<>(fabricJars);
@@ -349,7 +349,60 @@ public final class KernelBoot {
 		net.forbric.kernel.fabric.KernelFabricLauncher.install(loader, side.envType);
 
 		TransformChain chain = new TransformChain();
-		boolean transferInterop = KernelTransferInterop.configure(loader);
+		// A transformer that injects a call into a runtime class this build no longer ships must be dropped before it
+		// plants a landmine the game trips over during worldgen. Tell the chain what actually shipped.
+		{
+			java.util.Set<String> shipped = new java.util.HashSet<>();
+			// The kernel's own runtime classes live in the nested META-INF/jars/forbric-kernel-runtime.jar inside the
+			// boot jar -- not in any --runtimeJar (that is the ecosystem carrier). Scan both.
+			try {
+				Path bootJar = Path.of(KernelBoot.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+				try (java.util.jar.JarFile jf = new java.util.jar.JarFile(bootJar.toFile())) {
+					java.util.Enumeration<java.util.jar.JarEntry> entries = jf.entries();
+					while (entries.hasMoreElements()) {
+						java.util.jar.JarEntry entry = entries.nextElement();
+						String name = entry.getName();
+						if (name.startsWith("META-INF/jars/") && name.endsWith(".jar")) {
+							try (java.util.zip.ZipInputStream zin = new java.util.zip.ZipInputStream(jf.getInputStream(entry))) {
+								java.util.zip.ZipEntry ze;
+								while ((ze = zin.getNextEntry()) != null) {
+									String cn = ze.getName();
+									if (cn.startsWith("net/forbric/kernel/runtime/") && cn.endsWith(".class"))
+										shipped.add(cn.substring(0, cn.length() - ".class".length()));
+								}
+							}
+						} else if (name.startsWith("net/forbric/kernel/runtime/") && name.endsWith(".class")) {
+							shipped.add(name.substring(0, name.length() - ".class".length()));
+						}
+					}
+				}
+			} catch (Exception unreadable) {
+				ForbricLog.debug("[Forbric/Transform] could not enumerate the boot jar's runtime classes: %s", unreadable);
+			}
+			for (Path jar : runtimeJars) {
+				try (java.util.jar.JarFile jf = new java.util.jar.JarFile(jar.toFile())) {
+					jf.stream().map(java.util.jar.JarEntry::getName)
+							.filter(n -> n.startsWith("net/forbric/kernel/runtime/") && n.endsWith(".class"))
+							.forEach(n -> shipped.add(n.substring(0, n.length() - ".class".length())));
+				} catch (java.io.IOException unreadable) {
+					ForbricLog.debug("[Forbric/Transform] could not read runtime jar %s: %s", jar, unreadable);
+				}
+			}
+			if (!shipped.isEmpty()) chain.acceptRuntimeClasses(shipped);
+		}
+		// 1.20.1 runs Fabric + MinecraftForge; the cross-ecosystem transfer bridge (a NeoForge-transfer shape) is not
+		// ported, so configure() finds its runtime classes absent and reports the bridge inactive.
+		KernelTransferInterop.configure(loader);
+
+		// DEOBF_REMAP first: a Forge-family class (the carrier, or a guest Forge mod) is still in Forge's
+		// production namespace -- Mojmap class names + SRG member names -- and must be moved onto intermediary
+		// before any later phase names its members. Inert unless the three mapping files are configured, so a
+		// kernel with no mappings still boots.
+		chain.register(TransformPhase.DEOBF_REMAP,
+				net.forbric.kernel.transform.DeobfRemapTransformer.fromSystemProperties());
+		// Fabric mods for 1.20.1 are Intermediary, not named; move them onto the named base too.
+		chain.register(TransformPhase.DEOBF_REMAP,
+				net.forbric.kernel.transform.IntermediaryRemapTransformer.fromSystemProperties());
 
 		// Fabric Loader's @Environment stripping, in the phase TransformPhase always reserved for it: before ACCESS, as
 		// on Fabric, so an access widener naming a stripped member matches nothing there too. Only classes from jars
@@ -421,14 +474,16 @@ public final class KernelBoot {
 			try (var in = loader.getGameResourceAsStream(name + ".class")) { return in != null; }
 			catch (java.io.IOException unavailable) { return false; }
 		}));
-		if (transferInterop) {
-			chain.register(TransformPhase.COREMOD, new net.forbric.kernel.transform.TransferTransactionHooks());
-			chain.register(TransformPhase.COREMOD, new net.forbric.kernel.transform.TransferCapabilityFallback());
-		}
-		// Hoppers ask Fabric's item storage lookup where NeoForge's hopper found nothing, with or without the bridge.
-		if (KernelTransferInterop.hopperActive()) {
-			chain.register(TransformPhase.COREMOD, new net.forbric.kernel.transform.HopperFabricStorageInjector());
-		}
+		// Forge's configurePackRepository asks ForgeHooks.getModPacks(), which throws unless Forge's ModLoader ran.
+		// The kernel owns the lifecycle and supplies packs itself, so answer with an empty list.
+		chain.register(TransformPhase.COREMOD, new net.forbric.kernel.transform.ForgeModPacksInjector());
+		chain.register(TransformPhase.COREMOD, new net.forbric.kernel.transform.EventListenerHelperTransformer());
+		chain.register(TransformPhase.COREMOD, new net.forbric.kernel.transform.ForgeEarlyWindowWaiterTransformer());
+		chain.register(TransformPhase.COREMOD, new net.forbric.kernel.transform.ImmediateWindowHandlerTransformer());
+		chain.register(TransformPhase.COREMOD, new net.forbric.kernel.transform.ClientModLoaderTransformer());
+		chain.register(TransformPhase.COREMOD, new net.forbric.kernel.transform.ForgeVersionStatusTransformer());
+		chain.register(TransformPhase.COREMOD, new net.forbric.kernel.transform.LootTableFabricSupplierTransformer());
+		chain.register(TransformPhase.COREMOD, new net.forbric.kernel.transform.IngredientRequiresTestingTransformer());
 
 		LifecycleHookInjector lifecycleHook = side.injector();
 		chain.register(TransformPhase.COREMOD, lifecycleHook);
@@ -449,8 +504,6 @@ public final class KernelBoot {
 		boolean forgeCapabilities = net.forbric.kernel.transform.ForgeCapabilityCompositionTransformer.enabled();
 		if (forgeCapabilities) {
 			chain.register(TransformPhase.COREMOD, new net.forbric.kernel.transform.ForgeCapabilityCompositionTransformer());
-			if (transferInterop) chain.register(TransformPhase.COREMOD,
-					new net.forbric.kernel.transform.ForgeTransferCapabilityFallback());
 		} else {
 			ForbricLog.warn("[Forbric/Capabilities] -D%s=off — MinecraftForge capabilities are not composed into the merged "
 					+ "root types and ForgeCapabilities cannot initialise; storage, pipe and machine mods stay inert",
@@ -460,13 +513,9 @@ public final class KernelBoot {
 			try (var in = loader.getGameResourceAsStream(path)) { return in == null ? null : in.readAllBytes(); }
 			catch (java.io.IOException unavailable) { return null; }
 		}));
-		chain.register(TransformPhase.COREMOD, new ForbricMergedBaseCompatTransformer(path -> {
-			try (java.io.InputStream in = loader.getGameResourceAsStream(path)) {
-				return in == null ? null : in.readAllBytes();
-			} catch (java.io.IOException unreadable) {
-				return null;
-			}
-		}));
+		// 1.20.1 has no byte-merged base, so the 26.2 merge-repair transformer (which rewrote lambdas, bridges and
+		// capability stubs on the merged base) is not registered: on a plain Forge-patched base it corrupts classes.
+		// ForbricMergedBaseCompatTransformer is retained for the legacy path only.
 		// Both sides: the early returns the carriers' decompile-recompile folded into each method's last return, so a
 		// Fabric mod's TAIL handler runs only where vanilla's does (TaCZ's Camera.update hook ran on the title screen,
 		// issue #31). LAST in the coremod phase (the sort index): every kernel injector still matches the folded
@@ -529,10 +578,8 @@ public final class KernelBoot {
 		chain.register(TransformPhase.COREMOD, new net.forbric.kernel.transform.ForgeSpawnPlacementsInjector());
 		// A client freezes once before its MinecraftForge mods exist; that freeze's attribute validation waits for
 		// their (held) attribute events, or it runs first and Better Nether's lazy entity registration fails.
-		if (net.forbric.kernel.transform.ForgeAttributeValidationInjector.enabled()) {
-			chain.register(TransformPhase.COREMOD, new net.forbric.kernel.transform.ForgeAttributeValidationInjector());
-		}
-		chain.register(TransformPhase.COREMOD, new net.forbric.kernel.transform.ForgeWorldModifierInjector());
+		// 1.20.1 removed the attribute-validation and world-modifier repairs (KernelForgeAttributes / KernelForgeWorldgen
+		// are gone with the merge-repair family); their injectors are not registered.
 
 		// Client only: hand the kernel the live PackRepository at the vanilla-woven
 		// ClientModLoader.setupModResourcePacks call inside Minecraft.<init>, so it can serve the ecosystem jars'
@@ -555,12 +602,8 @@ public final class KernelBoot {
 		if (net.forbric.kernel.transform.MergedRecordOptionalDefaults.enabled()) {
 			chain.register(TransformPhase.COREMOD, new net.forbric.kernel.transform.MergedRecordOptionalDefaults());
 		}
-		// Every merged caller builds custom-payload codecs with NeoForge's overload, so a mod hooking vanilla's
-		// CustomPacketPayload.codec was never called: Carpet's carpet:hello could not be encoded and a dedicated
-		// server running it disconnected every player at login. Builds go through vanilla's overload again.
-		if (net.forbric.kernel.transform.PayloadCodecFunnelInjector.enabled()) {
-			chain.register(TransformPhase.COREMOD, new net.forbric.kernel.transform.PayloadCodecFunnelInjector());
-		}
+		// 1.20.1 has no CustomPacketPayload/StreamCodec (those are 1.20.5+); the payload-codec funnel is a 26.2
+		// repair and is not registered here.
 		// …and a payload on a channel only another ecosystem negotiated is RECEIVED down vanilla's path, where its mod
 		// listens, not by NeoForge's dispatcher, which disconnected Carpet's client on carpet:hello.
 		if (net.forbric.kernel.transform.ForeignPayloadReceiveInjector.enabled()) {
@@ -664,7 +707,7 @@ public final class KernelBoot {
 		chain.register(TransformPhase.COREMOD, new net.forbric.kernel.transform.ForgeLootPoolConditionsInjector());
 		// MinecraftForge's ItemStack.useOn posts NeoForge's ITEM_AFTER_BLOCK phase again, and its Item.useOn calls go
 		// through one ItemStack relay that Fabric's ItemEvents.USE_ON wraps (MixinRelocatedCall moves the injector).
-		chain.register(TransformPhase.COREMOD, new net.forbric.kernel.transform.ItemUseOnInjector());
+		// 1.20.1 Forge has no UseItemOnBlockEvent; this 26.2 injector is not registered (see item 30).
 		// NeoForge's furnace tick calls MinecraftForge's instance canBurn/consumeFuel/burn as static; the ticked furnace
 		// is the receiver MinecraftForge's own tick uses.
 		chain.register(TransformPhase.COREMOD, new net.forbric.kernel.transform.FurnaceTickCallsInjector());
@@ -806,7 +849,7 @@ public final class KernelBoot {
 		// Each family's ModList.isLoaded can only see its own family's mods, and that answer is a compatibility
 		// branch far more often than a display string — a wrong "no" disables an integration in silence.
 		chain.register(TransformPhase.COREMOD, new ForeignModPresenceInjector());
-		// A Fabric "porting layer" ships its own net.neoforged.* so Fabric mods can use that API; under Forbric the
+		// A Fabric "porting layer" ships its own net.minecraftforge.* so Fabric mods can use that API; under Forbric the
 		// carrier's copy wins, and the port's own compiled call sites then meet an API it was not built against.
 		// PortingLayerAudit reports every such skew; this adapts the one that is fatal.
 		chain.register(TransformPhase.COREMOD, new PortingLayerAbiInjector());
@@ -962,7 +1005,7 @@ public final class KernelBoot {
 			}
 		}));
 
-		TransformContext ctx = new TransformContext(side.envType, false, "named");
+		TransformContext ctx = new TransformContext(side.envType, false, runtimeNamespace());
 		// One summary, at the point where "never loaded" starts meaning something. The per-repair failures are
 		// already loud where they happen and do not wait for this.
 		chain.reportWhenLoaded(side.censusLandmark);
@@ -994,7 +1037,7 @@ public final class KernelBoot {
 		//
 		// Seeding here is safe precisely because the loader has no mixin transformer yet, so these loads cannot
 		// recurse into select(). The cost is that these few classes are never weavable — measured and acceptable:
-		// across every mod jar in the gates and the client, the only net/neoforged/fml class any guest mixin so much
+		// across every mod jar in the gates and the client, the only net/minecraftforge/fml class any guest mixin so much
 		// as names is ImmediateWindowHandler, which is not on this path. seedAll repeats three of the four calls
 		// below — seedNeoForgePaths, seedNeoForgeLoader and seedForgeFmlLoader, all idempotent — and does NOT
 		// repeat publishForgeLoadingList.
@@ -1092,6 +1135,20 @@ public final class KernelBoot {
 		ForbricLog.info("[Forbric/Boot] merged base %s entry loaded through kernel loader; lifecycle redirected to "
 				+ "the kernel — handing to vanilla boot", side.name().toLowerCase());
 
+		// Re-seed just before the game runs: Forge's patched vanilla code calls ModLoader.get() during Main.main and
+		// needs FMLLoader.moduleLayerManager non-null. A late init can have reset it after PassiveSeeder ran.
+		PassiveSeeder.seedModuleLayerManager(loader);
+		// The client's Bootstrap.bootStrap runs inside Main.main, BEFORE the kernel's client registration window
+		// (which fires from Minecraft.<init>). Forge's patched Block.initClient asks FMLLoader.getLaunchHandler()
+		// there, so the FMLLoader statics ModLauncher would have set must be in place before Main.main.
+		try {
+			net.forbric.kernel.boot.KernelForgeModContext.seedLoaderStatics(loader,
+					descriptor("forge.version", "47.4.0"),
+					descriptor("minecraft.version", "1.20.1"),
+					"20230612.114412", side.api().isClient());
+		} catch (Throwable seedFailure) {
+			ForbricLog.debug("[Forbric/Forge] early FMLLoader seed skipped: %s", seedFailure);
+		}
 		Method main = mainClass.getMethod("main", String[].class);
 		main.invoke(null, (Object) gameArgs.toArray(new String[0]));
 	}
@@ -1112,6 +1169,21 @@ public final class KernelBoot {
 					+ "neoforged FluidType) → AbstractMethodError on WaterFluid.getFluidType during worldgen fluid "
 					+ "ticking. Return false so vanilla fluid behavior proceeds (Forge/Neo FluidType ABI split)"));
 		}
+		// Forge's Bootstrap calls NetworkHooks.init(), whose NetworkConstants.<clinit> asks EventBus 6 to build a
+		// listener list for NetworkEvent — a class with no no-arg constructor, which EventBus's computeListenerList
+		// requires. The kernel does not run Forge's networking, so skip the init rather than crash the boot.
+		neuter.add(new MethodBodyNeuter.Target("net.minecraftforge.network.NetworkHooks", "init", "()V",
+				"kernel does not run Forge network initialization"));
+		// The kernel owns the lifecycle; Forge's ModLoader singleton is never driven, so its postEvent cannot run
+		// (AddPackFindersEvent from ServerPacksSource throws "mod packs before they were loaded in").
+		neuter.add(new MethodBodyNeuter.Target("net.minecraftforge.fml.ModLoader", "postEvent",
+				"(Lnet/minecraftforge/eventbus/api/Event;)V",
+				"kernel owns the lifecycle; Forge's ModLoader is not driven"));
+		// Forge's ServerLifecycleHooks.runModifiers reads the forge:biome_modifier / structure_modifier datapack
+		// registries, which the kernel has not registered on 1.20.1 yet; skip the pass so the server reaches Done.
+		neuter.add(new MethodBodyNeuter.Target("net.minecraftforge.server.ServerLifecycleHooks", "runModifiers",
+				"(Lnet/minecraft/server/MinecraftServer;)V",
+				"kernel has not registered Forge's biome/structure modifier registries on 1.20.1"));
 		addSideNeuters(side, neuter);
 		return neuter;
 	}
@@ -1152,6 +1224,31 @@ public final class KernelBoot {
 	}
 
 	/** The game version, read from the base jar's {@code version.json} (vanilla ships it at the jar root). */
+	/**
+	 * The canonical runtime namespace, from {@code -Dforbric.runtimeNamespace} or the descriptor resource
+	 * ({@code forbric.runtime.namespace}; intermediary on 1.20.1). Used for the transform context's namespace.
+	 */
+	static String runtimeNamespace() {
+		String override = System.getProperty("forbric.runtimeNamespace");
+		if (override != null && !override.isBlank()) return override;
+		return descriptor("runtime.namespace", "named");
+	}
+
+	/** A value from the bundled {@code forbric-versions.properties}, or {@code fallback} when it is absent. */
+	static String descriptor(String key, String fallback) {
+		try (java.io.InputStream in = KernelBoot.class.getResourceAsStream("/forbric-versions.properties")) {
+			if (in != null) {
+				java.util.Properties versions = new java.util.Properties();
+				versions.load(in);
+				String value = versions.getProperty("forbric." + key);
+				if (value != null && !value.isBlank()) return value.trim();
+			}
+		} catch (java.io.IOException ignored) {
+			// fall through to the default
+		}
+		return fallback;
+	}
+
 	private static String detectGameVersion(Path gameJar) {
 		if (gameJar == null || !Files.isRegularFile(gameJar)) return FALLBACK_GAME_VERSION;
 

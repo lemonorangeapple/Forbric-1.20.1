@@ -84,9 +84,10 @@ class ForgeClientConsumerFlowTest {
             assertSame(forge, api.tooltip(() -> null, () -> forge));
             ColdForgeTooltip carrier = new ColdForgeTooltip();
             Object component = carrier.component();
-            IllegalArgumentException unknown = assertThrows(IllegalArgumentException.class, () -> carrier.create(component));
-            assertEquals("Unknown TooltipComponent", unknown.getMessage());
-            assertEquals("net.minecraftforge.client.gui.ClientTooltipComponentManager", unknown.getStackTrace()[0].getClassName());
+            // 1.20.1's carrier returns null for an unrecognised component rather than throwing: javap on
+            // createClientTooltipComponent ends `ifnull -> aconst_null; areturn`. The 26.2 assertion that it
+            // threw "Unknown TooltipComponent" describes a different Forge.
+            assertNull(carrier.create(component));
             assertNull(api.tooltip(() -> null, () -> carrier.create(component)));
             carrier.factory(component, ignored -> null);
             assertNull(api.tooltip(() -> null, () -> carrier.create(component)), "Forge also treats a factory's null as unknown");
@@ -203,13 +204,21 @@ class ForgeClientConsumerFlowTest {
         private final Class<?> manager;
         private final Method create;
         ColdForgeTooltip() throws Exception {
-            super(ClassLoader.getPlatformClassLoader());
+            // The test classloader, not the platform one: the carrier's manager field is a guava ImmutableMap,
+            // and guava is on the test classpath but not in the JDK.
+            super(ColdForgeTooltip.class.getClassLoader());
             tooltip = defineInterface("net.minecraft.world.inventory.tooltip.TooltipComponent");
             clientTooltip = defineInterface("net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent");
             defineInterface("net.minecraftforge.eventbus.internal.Event");
+            // The carrier's ClientTooltipComponentManager implements the PUBLIC event marker, which the
+            // kernel deps put on the real classpath but this isolated loader has to stub too.
+            defineInterface("net.minecraftforge.eventbus.api.Event");
             defineInterface("net.minecraftforge.eventbus.api.bus.EventBus");
             defineUnusedInitializationEvent();
-            Path jar = Path.of(System.getenv().getOrDefault("FORBRIC_OLD", "../forbric-loader"), "run/forge-runtime/forge-runtime.jar");
+            Path jar = Path.of(System.getenv().getOrDefault("FORBRIC_OLD", "../forbric-loader"),
+                    "run/forge-runtime/forge-runtime.jar");
+            // The dev prepare stages the carrier under the kernel, not under the loader's run dir.
+            if (!Files.isRegularFile(jar)) jar = Path.of(".dev/staged/run/forge-runtime/forge-runtime.jar");
             assumeTrue(Files.isRegularFile(jar), "staged Forge carrier absent");
             String binary = "net.minecraftforge.client.gui.ClientTooltipComponentManager";
             try (ZipFile zip = new ZipFile(jar.toFile())) {
@@ -224,7 +233,9 @@ class ForgeClientConsumerFlowTest {
         Object create(Object input) { return invoke(create, input); }
         void factory(Object input, Function<Object, Object> factory) throws Exception { setFactories(Map.of(input.getClass(), factory)); }
         private void setFactories(Map<?, ?> value) throws Exception {
-            var field = manager.getDeclaredField("FACTORIES"); field.setAccessible(true); field.set(null, value);
+            var field = manager.getDeclaredField("FACTORIES"); field.setAccessible(true);
+            // The carrier types this as guava ImmutableMap, so a plain Map.of() is not assignable.
+            field.set(null, com.google.common.collect.ImmutableMap.copyOf(value));
         }
         private void defineUnusedInitializationEvent() {
             String name = "net/minecraftforge/client/event/RegisterClientTooltipComponentFactoriesEvent";

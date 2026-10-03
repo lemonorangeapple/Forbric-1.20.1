@@ -38,7 +38,7 @@ public final class ForgeOptionsInjector implements ClassTransformer {
 
 		List<MethodNode> constructors = node.methods.stream().filter(m -> m.name.equals("<init>")).toList();
 		if (constructors.size() != 1) return bytes;
-		MethodNode constructor = constructors.getFirst();
+		MethodNode constructor = constructors.get(0);
 		List<AbstractInsnNode> insns = instructions(constructor);
 		int write = -1, initialLoad = -1;
 		for (int i = 0; i < insns.size(); i++) {
@@ -75,7 +75,7 @@ public final class ForgeOptionsInjector implements ClassTransformer {
 			if (saveInsns.get(i) instanceof MethodInsnNode c && c.getOpcode() == Opcodes.INVOKESPECIAL
 					&& c.owner.equals("java/io/PrintWriter") && c.name.equals("<init>") && c.desc.equals("(Ljava/io/Writer;)V")
 					&& saveInsns.get(i + 1) instanceof VarInsnNode store && store.getOpcode() == Opcodes.ASTORE) {
-				if (writerSlot >= 0 || saveInsns.indexOf(saves.getFirst()) <= i) return bytes;
+				if (writerSlot >= 0 || saveInsns.indexOf(saves.get(0)) <= i) return bytes;
 				writerSlot = store.var;
 			}
 		}
@@ -108,7 +108,7 @@ public final class ForgeOptionsInjector implements ClassTransformer {
 		pending.add(new FieldInsnNode(Opcodes.GETFIELD, OPTIONS, "keyMappings", "[Lnet/minecraft/client/KeyMapping;"));
 		pending.add(new VarInsnNode(Opcodes.ALOAD, writerSlot));
 		pending.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HELPER, "writePendingKeys", WRITE, false));
-		save.instructions.insert(saves.getFirst(), pending);
+		save.instructions.insert(saves.get(0), pending);
 		save.maxStack = Math.max(save.maxStack, 3);
 		ClassWriter output = new ClassWriter(0);
 		node.accept(output);
@@ -119,7 +119,7 @@ public final class ForgeOptionsInjector implements ClassTransformer {
 	private static MethodNode method(ClassNode node, String name, String desc) {
 		List<MethodNode> matches = node.methods.stream().filter(m -> m.name.equals(name) && m.desc.equals(desc)
 				&& (m.access & (Opcodes.ACC_STATIC | Opcodes.ACC_ABSTRACT | Opcodes.ACC_NATIVE)) == 0).toList();
-		return matches.size() == 1 ? matches.getFirst() : null;
+		return matches.size() == 1 ? matches.get(0) : null;
 	}
 	private static List<AbstractInsnNode> instructions(MethodNode method) {
 		return Arrays.stream(method.instructions.toArray()).filter(i -> i.getOpcode() >= 0).toList();

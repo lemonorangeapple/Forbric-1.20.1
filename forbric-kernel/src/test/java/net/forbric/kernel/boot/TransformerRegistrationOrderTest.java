@@ -48,7 +48,7 @@ class TransformerRegistrationOrderTest {
 		List<String> order = new ArrayList<>();
 		for (MethodNode m : cn.methods) {
 			if (!m.name.equals("launch") || m.instructions == null) continue;
-			for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn.getOpcode() != Opcodes.NEW || !(insn instanceof TypeInsnNode t)) continue;
 				if (!t.desc.startsWith("net/forbric/kernel/transform/")) continue;
 				// Only real transformers: TransformChain and TransformContext are constructed here too, and a

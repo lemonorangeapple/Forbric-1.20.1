@@ -23,8 +23,8 @@ import net.forbric.kernel.util.Reflect;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 
 /**
  * Delivers {@code RegisterKeyMappingsEvent} to the buses of mods that are not NeoForge mods.
@@ -52,7 +52,7 @@ public final class KernelForeignShimKeys {
 	/**
 	 * Posts the event at {@code buses} and returns how many mappings that added, or -1 if it could not run.
 	 *
-	 * @param buses {@code net.neoforged.bus.api.IEventBus} instances, handed over untyped from the boot side
+	 * @param buses {@code net.minecraftforge.eventbus.api.IEventBus} instances, handed over untyped from the boot side
 	 */
 	public static int deliver(Collection<Object> buses) {
 		Minecraft minecraft = Minecraft.getInstance();

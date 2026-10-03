@@ -25,7 +25,7 @@ import net.forbric.api.DiscoveredMod;
 /**
  * The boot-side door to the kernel's mod-container factory, which lives on the GAME side.
  *
- * <p>Manufacturing a {@code ModContainer} means naming {@code net.neoforged.fml.ModContainer},
+ * <p>Manufacturing a {@code ModContainer} means naming {@code net.minecraftforge.fml.ModContainer},
  * {@code neoforgespi.language.IModInfo}/{@code IModFileInfo}/{@code IConfigurable},
  * {@code neoforgespi.locating.IModFile} and {@code bus.api.IEventBus} — game types, which boot-side code cannot
  * name. So it was done here with {@code Class.forName} for each of them, four {@link java.lang.reflect.Proxy}

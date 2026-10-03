@@ -46,7 +46,7 @@ class ResultBridgeFidelityTest {
 		List<String> out = new ArrayList<>();
 		for (MethodNode m : cn.methods) {
 			if (m.instructions == null) continue;
-			for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn instanceof MethodInsnNode mi) out.add(mi.owner + "." + mi.name);
 			}
 		}

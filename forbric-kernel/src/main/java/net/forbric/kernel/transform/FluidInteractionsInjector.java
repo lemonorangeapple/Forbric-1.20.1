@@ -148,10 +148,10 @@ public final class FluidInteractionsInjector implements ClassTransformer {
 		InsnList code = canInteract.instructions;
 		MethodInsnNode inner = hasNext.get(1);
 		// Its own first match returns at once: interact, then `return true`.
-		AbstractInsnNode afterInteract = next(interact.getFirst());
+		AbstractInsnNode afterInteract = next(interact.get(0));
 		boolean returnsAtOnce = afterInteract != null && afterInteract.getOpcode() == Opcodes.ICONST_1
 				&& next(afterInteract) != null && next(afterInteract).getOpcode() == Opcodes.IRETURN;
-		if (!returnsAtOnce || code.indexOf(neighbour) > code.indexOf(inner) || code.indexOf(inner) > code.indexOf(interact.getFirst())
+		if (!returnsAtOnce || code.indexOf(neighbour) > code.indexOf(inner) || code.indexOf(inner) > code.indexOf(interact.get(0))
 				|| !(next(inner) instanceof JumpInsnNode exit) || exit.getOpcode() != Opcodes.IFEQ) {
 			return declined("NeoForge's canInteract does not walk its rules per neighbour, returning at the first match");
 		}
@@ -214,7 +214,7 @@ public final class FluidInteractionsInjector implements ClassTransformer {
 			InsnList handOver = new InsnList();
 			handOver.add(new FieldInsnNode(Opcodes.GETSTATIC, registry.name, INTERACTIONS, "Ljava/util/Map;"));
 			handOver.add(new MethodInsnNode(Opcodes.INVOKESTATIC, RUNTIME, REGISTRY, "(Ljava/util/Map;)V", false));
-			clinit.instructions.insertBefore(returns.getFirst(), handOver);
+			clinit.instructions.insertBefore(returns.get(0), handOver);
 			changed++;
 		}
 		if (!callsRuntime(add)) {

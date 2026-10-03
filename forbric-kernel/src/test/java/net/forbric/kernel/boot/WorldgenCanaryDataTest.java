@@ -51,9 +51,9 @@ class WorldgenCanaryDataTest {
 			assertTrue(((Number) configured.get("config.size")).intValue() >= 1);
 			List<UnmodifiableConfig> targets = configured.get("config.targets");
 			assertEquals(1, targets.size());
-			assertEquals("minecraft:tag_match", targets.getFirst().get("target.predicate_type"));
-			assertEquals("minecraft:stone_ore_replaceables", targets.getFirst().get("target.tag"));
-			return targets.getFirst().get("state.Name");
+			assertEquals("minecraft:tag_match", targets.get(0).get("target.predicate_type"));
+			assertEquals("minecraft:stone_ore_replaceables", targets.get(0).get("target.tag"));
+			return targets.get(0).get("state.Name");
 		}
 	}
 

@@ -281,7 +281,7 @@ public final class RegistrySyncParityInjector implements ClassTransformer {
 		target.instructions.insert(head);
 
 		int returns = 0;
-		for (AbstractInsnNode insn = target.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = target.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn.getOpcode() != Opcodes.ARETURN) continue;
 			// The Set of missing keys is on the stack; hand a copy to the flush and leave the original to return.
 			InsnList flush = new InsnList();
@@ -347,7 +347,7 @@ public final class RegistrySyncParityInjector implements ClassTransformer {
 		head.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HOOK_OWNER, "beginSnapshotApplication", "(Ljava/lang/Class;)V", false));
 		target.instructions.insert(head);
 		int returns = 0;
-		for (AbstractInsnNode insn = target.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = target.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn.getOpcode() != Opcodes.RETURN) continue;
 			InsnList flush = new InsnList();
 			flush.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HOOK_OWNER, "finishFabricRemap", "()V", false));

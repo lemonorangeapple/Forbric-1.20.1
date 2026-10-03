@@ -235,7 +235,7 @@ public final class PostMixinFixups {
 			// If the mixin already injected into the wide constructor too, adding a second call would double-run it.
 			if (callsHandler(wide, replay.call)) continue;
 
-			for (AbstractInsnNode insn = wide.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = wide.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn.getOpcode() != Opcodes.RETURN) continue;
 				wide.instructions.insertBefore(insn, cloneRange(replay));
 			}
@@ -322,7 +322,7 @@ public final class PostMixinFixups {
 
 	/** The {@code this(...)} chain call opening {@code ctor}, or null when it calls {@code super(...)} instead. */
 	private static MethodInsnNode thisDelegation(ClassNode node, MethodNode ctor) {
-		for (AbstractInsnNode insn = ctor.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = ctor.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn.getOpcode() != Opcodes.INVOKESPECIAL) continue;
 			MethodInsnNode call = (MethodInsnNode) insn;
 			if (!call.name.equals("<init>")) continue;
@@ -339,7 +339,7 @@ public final class PostMixinFixups {
 	}
 
 	private static boolean callsHandler(MethodNode method, MethodInsnNode handler) {
-		for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof MethodInsnNode mi && mi.name.equals(handler.name) && mi.desc.equals(handler.desc)) {
 				return true;
 			}
@@ -386,7 +386,7 @@ public final class PostMixinFixups {
 		for (MethodNode m : node.methods) {
 			if (!m.name.equals("<init>")) continue;
 			ctors++;
-			for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null && !woven; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = m.instructions.get(0); insn != null && !woven; insn = insn.getNext()) {
 				if (insn instanceof MethodInsnNode mi && mi.name.startsWith(HANDLER_PREFIX)) woven = true;
 			}
 		}
@@ -437,7 +437,7 @@ public final class PostMixinFixups {
 		// initializer. Only a write on the constructor's own path proves the field is initialized before use.
 		for (MethodNode m : node.methods) {
 			if (!m.name.equals("<init>")) continue;
-			for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn instanceof FieldInsnNode fi && fi.getOpcode() == Opcodes.PUTFIELD
 						&& PIP_RENDERERS.equals(fi.name)) {
 					return bytes;
@@ -514,7 +514,7 @@ public final class PostMixinFixups {
 
 	/** The {@code invokespecial Object.<init>()} that opens a super()-calling ctor, or null for a this()-delegating one. */
 	private static AbstractInsnNode superInitCall(MethodNode ctor) {
-		for (AbstractInsnNode insn = ctor.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = ctor.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn.getOpcode() != Opcodes.INVOKESPECIAL) continue;
 			MethodInsnNode call = (MethodInsnNode) insn;
 			if (!call.name.equals("<init>")) continue;

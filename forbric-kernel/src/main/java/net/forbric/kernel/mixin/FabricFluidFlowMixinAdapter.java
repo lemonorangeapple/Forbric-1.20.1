@@ -27,7 +27,7 @@ public final class FabricFluidFlowMixinAdapter {
 		List<MethodNode> callbacks = mixin.methods.stream().filter(m -> m.desc.equals("(" + LEVEL + POS + STATE + "L" + CIR + ";)V")
 				&& MixinFit.injectorOf(m) != null).toList();
 		if (callbacks.size() != 1) return 0;
-		MethodNode original = callbacks.getFirst();
+		MethodNode original = callbacks.get(0);
 		ClassNode target = targets.apply(TARGET);
 		if (original == null || target == null || MixinFit.injectorOf(original) == null) return 0;
 		List<MethodNode> hosts = new ArrayList<>(); List<MethodInsnNode> nativeCalls = new ArrayList<>();
@@ -40,7 +40,7 @@ public final class FabricFluidFlowMixinAdapter {
 					&& call.desc.equals("(" + LEVEL + POS + ")Z")
 					&& Set.of(ForeignType.FLUID_INTERACTION_REGISTRY.internal(Ecosystem.FORGE),ForeignType.FLUID_INTERACTION_REGISTRY.internal(Ecosystem.NEOFORGE)).contains(call.owner)) matches.add(call);
 			if (matches.size() != 1) return 0;
-			hosts.add(host); nativeCalls.add(matches.getFirst());
+			hosts.add(host); nativeCalls.add(matches.get(0));
 		}
 		MethodNode shape = target.methods.stream().filter(m -> m.name.equals("updateShape")
 				&& m.desc.startsWith("(" + STATE + "Lnet/minecraft/world/level/LevelReader;Lnet/minecraft/world/level/ScheduledTickAccess;" + POS)).findFirst().orElse(null);
@@ -53,7 +53,7 @@ public final class FabricFluidFlowMixinAdapter {
 		original.visibleAnnotations.remove(MixinFit.injectorOf(original));
 		original.name += "$forbricOriginal";
 		for (int i=0;i<hosts.size();i++) mixin.methods.add(wrapper(mixin, original, hosts.get(i), nativeCalls.get(i)));
-		mixin.methods.add(scheduleWrapper(mixin, original, shape, schedules.getFirst()));
+		mixin.methods.add(scheduleWrapper(mixin, original, shape, schedules.get(0)));
 		ForbricLog.info("[Forbric/FluidFlow] Fabric's original ALLOW callback now guards both carrier interactions "
 				+ "and the neighbor-shape scheduling path; denied flow does not schedule a fluid tick");
 		return 3;

@@ -47,7 +47,7 @@ class MixinSubtypeOwnerRetargetTest {
 		assertEquals(1, MixinSubtypeOwnerRetarget.adapt(mixin, n -> target));
 		MethodNode handler = mixin.methods.stream().filter(m -> m.name.equals("loadFromResource")).findFirst().orElseThrow();
 		assertEquals("Lcom/mojang/serialization/Codec;parse(Lcom/mojang/serialization/DynamicOps;Ljava/lang/Object;)Lcom/mojang/serialization/DataResult;",
-				MixinFit.value(MixinFit.atNodes(MixinFit.injectorOf(handler)).getFirst(), "target"));
+				MixinFit.value(MixinFit.atNodes(MixinFit.injectorOf(handler)).get(0), "target"));
 		assertEquals(0, MixinSubtypeOwnerRetarget.adapt(mixin, n -> target), "a second pass changes nothing");
 	}
 

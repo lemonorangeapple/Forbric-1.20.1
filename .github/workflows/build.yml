@@ -1,7 +1,7 @@
 # This workflow exists to keep the bootstrap honest.
 #
 # Forbric does not vendor its fabric-loader substrate: bootstrap.sh clones it at the pinned
-# fabric_loader_ref and applies forbric-loader/patches/fabric-loader/, and only then does the build have
+# forbric.fabric.loader (VERSIONS.properties) and applies forbric-loader/patches/fabric-loader/, and only then does the build have
 # a complete source set. That is the fragile part of a clean clone -- if the pinned tag moves, a patch
 # stops applying, or the build stops compiling against the substrate, this job goes red.
 name: build

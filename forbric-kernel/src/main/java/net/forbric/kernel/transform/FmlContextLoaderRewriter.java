@@ -64,7 +64,7 @@ import net.forbric.kernel.util.ForbricLog;
  * <p>{@code -Dforbric.fmlTransformerView=off} rewrites nothing.
  */
 public final class FmlContextLoaderRewriter implements ClassTransformer {
-	static final String TRANSFORMING_LOADER = "net/neoforged/fml/classloading/transformation/TransformingClassLoader";
+	static final String TRANSFORMING_LOADER = "net/minecraftforge/fml/classloading/transformation/TransformingClassLoader";
 	static final String VIEW = "net/forbric/kernel/runtime/KernelFmlTransformerView";
 	/** The field of {@code TransformingClassLoader} a walk to the Mixin weaver reads first. */
 	static final String WALKED_FIELD = "classTransformer";

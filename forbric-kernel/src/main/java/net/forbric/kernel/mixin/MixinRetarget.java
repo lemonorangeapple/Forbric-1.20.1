@@ -679,7 +679,7 @@ public final class MixinRetarget {
 	static MethodNode delegateOf(ClassNode owner, MethodNode stub) {
 		if (stub.instructions == null || stub.instructions.size() == 0) return null;
 		MethodInsnNode delegation = null;
-		for (AbstractInsnNode insn = stub.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = stub.instructions.get(0); insn != null; insn = insn.getNext()) {
 			int op = insn.getOpcode();
 			if (op < 0) continue;
 			if (insn instanceof JumpInsnNode || insn instanceof TableSwitchInsnNode || insn instanceof LookupSwitchInsnNode) return null;

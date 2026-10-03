@@ -30,9 +30,9 @@ class BarrelRollCameraAdapterTest {
 		ClassNode mixin=mixin(),camera=camera();System.setProperty(BarrelRollCameraAdapter.PROPERTY,"off");assertEquals(0,BarrelRollCameraAdapter.adapt(mixin,n->camera));reset();
 		MethodNode align=handler(camera,"alignWithEntity");for(var i:align.instructions)if(i instanceof MethodInsnNode c&&c.name.equals("setRotation"))c.desc="(FF)V";
 		assertEquals(0,BarrelRollCameraAdapter.adapt(mixin,n->camera));
-		assertEquals(BarrelRollCameraAdapter.SHORT,MixinFit.value(MixinFit.atNodes(MixinFit.injectorOf(handler(mixin,"doABarrelRoll$addRoll1"))).getFirst(),"target"));
+		assertEquals(BarrelRollCameraAdapter.SHORT,MixinFit.value(MixinFit.atNodes(MixinFit.injectorOf(handler(mixin,"doABarrelRoll$addRoll1"))).get(0),"target"));
 	}
-	private static void check(ClassNode n,String name,String target,int ordinal){AnnotationNode at=MixinFit.atNodes(MixinFit.injectorOf(handler(n,name))).getFirst();assertEquals(target,MixinFit.value(at,"target"));assertEquals(ordinal,MixinFit.value(at,"ordinal"));}
+	private static void check(ClassNode n,String name,String target,int ordinal){AnnotationNode at=MixinFit.atNodes(MixinFit.injectorOf(handler(n,name))).get(0);assertEquals(target,MixinFit.value(at,"target"));assertEquals(ordinal,MixinFit.value(at,"ordinal"));}
 	private static MethodNode handler(ClassNode n,String name){return n.methods.stream().filter(m->m.name.equals(name)).findFirst().orElseThrow();}
 	private static ClassNode mixin() throws Exception {return read(Path.of("build/compat-inputs/c2me-barrel-20261001/do_a_barrel_roll-fabric-3.8.4+26.2.jar"),BarrelRollCameraAdapter.MIXIN);}
 	private static ClassNode camera() throws Exception {return read(Path.of(System.getenv().getOrDefault("FORBRIC_OLD","../forbric-loader"),"run/merged-base/patched-mc-merged-26.2.jar"),BarrelRollCameraAdapter.CAMERA);}

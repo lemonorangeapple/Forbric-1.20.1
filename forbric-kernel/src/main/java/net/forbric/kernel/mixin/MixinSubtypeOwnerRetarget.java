@@ -69,9 +69,9 @@ public final class MixinSubtypeOwnerRetarget {
 				int paren = member.indexOf('(');
 				if (paren < 0) continue;
 				String name = member.substring(0, paren), desc = member.substring(paren);
-				if (target == null) target = targets.apply(owners.getFirst());
+				if (target == null) target = targets.apply(owners.get(0));
 				if (target == null) return moved;
-				MethodNode host = select(target, selectors.getFirst());
+				MethodNode host = select(target, selectors.get(0));
 				if (host == null) continue;
 				List<MethodInsnNode> through = new ArrayList<>();
 				int direct = 0;
@@ -80,7 +80,7 @@ public final class MixinSubtypeOwnerRetarget {
 					if (call.owner.equals(owner)) direct++;
 					else if (call.owner.equals(subtype)) through.add(call);
 				}
-				if (direct != 0 || through.size() != 1 || !localsCover(handler, host, through.getFirst())) continue;
+				if (direct != 0 || through.size() != 1 || !localsCover(handler, host, through.get(0))) continue;
 				setTarget(at, "L" + subtype + ";" + member);
 				moved++;
 				described.add(handler.name + " → " + subtype.substring(subtype.lastIndexOf('/') + 1) + "." + name);
@@ -116,7 +116,7 @@ public final class MixinSubtypeOwnerRetarget {
 					Object named = MixinFit.value(annotation, "name");
 					List<String> names = named == null ? List.of() : MixinFit.stringList(named);
 					if (names.size() != 1 || MixinFit.value(annotation, "ordinal") != null) return false;
-					if (!covers(host, names.getFirst(), params[i].getDescriptor(), at)) return false;
+					if (!covers(host, names.get(0), params[i].getDescriptor(), at)) return false;
 				}
 			}
 		}

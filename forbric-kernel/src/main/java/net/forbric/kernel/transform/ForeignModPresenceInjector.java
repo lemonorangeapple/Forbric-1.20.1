@@ -93,7 +93,7 @@ public final class ForeignModPresenceInjector implements ClassTransformer {
 		int idSlot = (isLoaded.access & Opcodes.ACC_STATIC) != 0 ? 0 : 1;
 
 		int returns = 0;
-		for (var insn = isLoaded.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (var insn = isLoaded.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn.getOpcode() != Opcodes.IRETURN) continue;
 			InsnList orForeign = new InsnList();
 			orForeign.add(new VarInsnNode(Opcodes.ALOAD, idSlot));

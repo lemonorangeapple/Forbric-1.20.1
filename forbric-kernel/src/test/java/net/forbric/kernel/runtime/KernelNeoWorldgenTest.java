@@ -58,7 +58,7 @@ class KernelNeoWorldgenTest {
 		MethodNode load = find(node, "loadDataMaps");
 		boolean live = false;
 		List<FieldInsnNode> empties = new ArrayList<>();
-		for (AbstractInsnNode insn = load.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = load.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof MethodInsnNode c && "net/minecraft/server/ReloadableServerResources".equals(c.owner) && "getConditionContext".equals(c.name)) live = true;
 			if (insn instanceof FieldInsnNode f && f.getOpcode() == Opcodes.GETSTATIC && "EMPTY".equals(f.name)
 					&& "net/neoforged/neoforge/common/conditions/ICondition$IContext".equals(f.owner)) empties.add(f);
@@ -75,7 +75,7 @@ class KernelNeoWorldgenTest {
 		new ClassReader(Files.readAllBytes(COMPILED)).accept(node, 0);
 		MethodNode before = find(node, "beforeServerStart");
 		int read = -1, load = -1, i = 0;
-		for (AbstractInsnNode insn = before.instructions.getFirst(); insn != null; insn = insn.getNext(), i++) {
+		for (AbstractInsnNode insn = before.instructions.get(0); insn != null; insn = insn.getNext(), i++) {
 			if (insn instanceof MethodInsnNode c && "appliedTotal".equals(c.name) && c.owner.endsWith("KernelNeoDataMapWatch") && read < 0) read = i;
 			if (insn instanceof MethodInsnNode c && "loadDataMaps".equals(c.name) && load < 0) load = i;
 		}

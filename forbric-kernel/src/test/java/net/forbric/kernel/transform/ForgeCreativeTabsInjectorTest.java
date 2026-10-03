@@ -82,8 +82,8 @@ class ForgeCreativeTabsInjectorTest {
 	@Test void declaresTheRealClassAsRequiredOnlyWhileEnabled() {
 		var anchors = injector.anchors().anchors();
 		assertEquals(1, anchors.size());
-		assertEquals(TARGET, anchors.getFirst().binaryName());
-		assertEquals(AnchorSet.Severity.REQUIRED, anchors.getFirst().severity());
+		assertEquals(TARGET, anchors.get(0).binaryName());
+		assertEquals(AnchorSet.Severity.REQUIRED, anchors.get(0).severity());
 	}
 
 	@Test void unexpectedShapesStandDownWithoutPartialChanges() {
@@ -135,7 +135,7 @@ class ForgeCreativeTabsInjectorTest {
 			}
 		}
 		assertEquals(1, merges.size(), "the collector must use the carrier's measured visibility merge");
-		MethodNode merge = named(forge, merges.getFirst().getName(), mergeDesc);
+		MethodNode merge = named(forge, merges.get(0).getName(), mergeDesc);
 		assertNotNull(merge);
 		assertEquals(List.of(Opcodes.GETSTATIC, Opcodes.ARETURN), opcodes(merge));
 		FieldInsnNode result = (FieldInsnNode) java.util.Arrays.stream(merge.instructions.toArray())

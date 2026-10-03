@@ -375,7 +375,7 @@ public final class ForbricClassLoader extends URLClassLoader {
 	 * (reentrant) lock, still sees {@code findLoadedClass == null}, and defines it — then this outer call fails with
 	 * {@code LinkageError: attempted duplicate class definition}.
 	 *
-	 * <p>Observed on a 64-mod NeoForge pack: {@code net.neoforged.fml.ModList} is the first class the kernel loads
+	 * <p>Observed on a 64-mod NeoForge pack: {@code net.minecraftforge.fml.ModList} is the first class the kernel loads
 	 * after Mixin bootstrap ({@code PassiveSeeder.seedNeoForgeModList}), so it is the one that pays. Seeding then
 	 * failed, {@code ModList.get()} stayed null, and the client died in {@code Options.<init>} at
 	 * {@code ClientHooks.onRegisterKeyMappings} — three steps away, with nothing connecting it back. The trigger is

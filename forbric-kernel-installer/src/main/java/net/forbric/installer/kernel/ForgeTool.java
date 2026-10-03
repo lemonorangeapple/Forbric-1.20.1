@@ -57,6 +57,21 @@ final class ForgeTool {
 		return home + java.io.File.separator + "bin" + java.io.File.separator + (win ? "java.exe" : "java");
 	}
 
+	/**
+	 * Spawn {@code java -cp <classpath> mainClass <args>}; for install-profile tools that are not fat jars
+	 * (Forge's {@code jarsplitter} needs {@code jopt-simple} and {@code srgutils} beside it).
+	 */
+	void runClasspath(List<Path> classpath, String mainClass, List<String> args, String label) throws IOException {
+		List<String> cmd = new ArrayList<>();
+		cmd.add(javaBin());
+		cmd.add("-cp");
+		cmd.add(classpath.stream().map(Path::toString).collect(java.util.stream.Collectors.joining(
+				java.io.File.pathSeparator)));
+		cmd.add(mainClass);
+		cmd.addAll(args);
+		runProcess(cmd, label);
+	}
+
 	/** Spawn {@code java -jar toolJar <args>}; stream output into the log; throw on a non-zero exit. */
 	void runJar(Path toolJar, List<String> args, String label) throws IOException {
 		List<String> cmd = new ArrayList<>();
@@ -68,7 +83,7 @@ final class ForgeTool {
 	}
 
 	/**
-	 * Package-visible because {@link MergedBaseTool} spawns the byte-merge tools the same way — same streaming,
+	 * Package-visible because the build tools are all spawned the same way — same streaming,
 	 * same tail-on-failure — and a second copy of that loop is a second place for it to drift.
 	 */
 	void runProcess(List<String> cmd, String label) throws IOException {

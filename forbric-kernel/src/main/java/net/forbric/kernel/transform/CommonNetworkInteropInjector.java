@@ -46,7 +46,7 @@ import net.forbric.api.ForeignType;
  * <p>Both ecosystems implement the cross-loader "Common Networking" spec — version + channel negotiation over the
  * {@code c:version}/{@code c:register} wire channels — each with its OWN payload class registered for the same id.
  * On a normal instance only one ecosystem is present, so only one registration exists; on Forbric both do, and the
- * decode registry hands a {@code net.neoforged.…CommonVersionPayload} to Fabric's addon, whose handler casts it to
+ * decode registry hands a {@code net.minecraftforge.…CommonVersionPayload} to Fabric's addon, whose handler casts it to
  * {@code net.fabricmc.…CommonVersionPayload} → {@code ClassCastException} → the client is kicked "The server sent an
  * invalid packet" right after reaching the world.
  *
@@ -170,7 +170,7 @@ public final class CommonNetworkInteropInjector implements ClassTransformer {
 	private static final String ON_NEO_REGISTRATION_DESC = "(Ljava/lang/Object;Ljava/lang/Object;Z)V";
 	private static final String HANDLE_PAYLOAD = "handleCustomPayload";
 	private static final String HANDLE_PAYLOAD_DESC = "(Lnet/minecraft/network/protocol/common/ClientboundCustomPayloadPacket;)V";
-	private static final String NEO_PACKAGE = "net/neoforged/";
+	private static final String NEO_PACKAGE = "net/minecraftforge/";
 	private static final String NEO_SEND_INITIAL_CHANNELS = "sendInitialListeningChannels";
 
 	/**
@@ -555,7 +555,7 @@ public final class CommonNetworkInteropInjector implements ClassTransformer {
 	 * is authored and no existing branch target moves.
 	 */
 	private static boolean startForgeNetworkingOnActivation(MethodNode m) {
-		for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn.getOpcode() != Opcodes.GETFIELD) continue;
 			if (!DELAYED_DISCONNECT.equals(((org.objectweb.asm.tree.FieldInsnNode) insn).name)) continue;
 			AbstractInsnNode loadThis = previousOpcode(insn);
@@ -571,7 +571,7 @@ public final class CommonNetworkInteropInjector implements ClassTransformer {
 
 	/** {@code interop.gatherForgeConfigurationTasks(this);} right after NeoForge queues its own early tasks. */
 	private static boolean gatherForgeTasksWithNeoForges(MethodNode m) {
-		for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn.getOpcode() != Opcodes.INVOKESTATIC) continue;
 			MethodInsnNode call = (MethodInsnNode) insn;
 			if (!NEO_EARLY_TASKS.equals(call.name) || !call.owner.startsWith(NEO_PACKAGE)) continue;
@@ -595,7 +595,7 @@ public final class CommonNetworkInteropInjector implements ClassTransformer {
 			if (TASK_CONTEXT_FIELD.equals(f.name) && FORGE_TASK_CONTEXT.equals(f.desc)) hasContext = true;
 		}
 		if (!hasContext) return false;
-		for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn.getOpcode() != Opcodes.INVOKEINTERFACE) continue;
 			MethodInsnNode call = (MethodInsnNode) insn;
 			if (!CONFIGURATION_TASK.equals(call.owner) || !TASK_START.equals(call.name)
@@ -614,7 +614,7 @@ public final class CommonNetworkInteropInjector implements ClassTransformer {
 
 	/** {@code interop.onClientConfigurationFinished(this);} after NeoForge's own finish, before the reply goes out. */
 	private static boolean completeForgeConfiguration(MethodNode m) {
-		for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn.getOpcode() != Opcodes.INVOKESTATIC) continue;
 			MethodInsnNode call = (MethodInsnNode) insn;
 			if (!NEO_CONFIG_FINISHED.equals(call.name) || !call.owner.startsWith(NEO_PACKAGE)) continue;
@@ -642,7 +642,7 @@ public final class CommonNetworkInteropInjector implements ClassTransformer {
 		}
 		if (!hasFlag) return 0;
 		int guarded = 0;
-		for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn.getOpcode() != Opcodes.INVOKESTATIC) continue;
 			MethodInsnNode call = (MethodInsnNode) insn;
 			if (!INITIALIZE_OTHER.equals(call.name) || !call.owner.startsWith(NEO_PACKAGE)) continue;
@@ -730,7 +730,7 @@ public final class CommonNetworkInteropInjector implements ClassTransformer {
 	 * @return whether the method was rewritten
 	 */
 	private static boolean letNeoForgePayloadsThrough(MethodNode m) {
-		for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (!(insn instanceof MethodInsnNode call) || call.getOpcode() != Opcodes.INVOKESTATIC) continue;
 			if (!FORGE_HOOKS.equals(call.owner) || !ON_CUSTOM_PAYLOAD.equals(call.name)) continue;
 
@@ -851,7 +851,7 @@ public final class CommonNetworkInteropInjector implements ClassTransformer {
 	private static boolean shareMinecraftRegisterWithSuper(MethodNode m) {
 		// Follow the method's OWN super call rather than naming the superclass, so this tracks a renamed base class.
 		MethodInsnNode superCall = null;
-		for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn.getOpcode() != Opcodes.INVOKESPECIAL) continue;
 			MethodInsnNode call = (MethodInsnNode) insn;
 			if (call.name.equals(HANDLE_PAYLOAD) && call.desc.equals(HANDLE_PAYLOAD_DESC)) {
@@ -862,7 +862,7 @@ public final class CommonNetworkInteropInjector implements ClassTransformer {
 		if (superCall == null) return false;
 
 		boolean patched = false;
-		for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn.getOpcode() != Opcodes.INVOKESTATIC) continue;
 			MethodInsnNode call = (MethodInsnNode) insn;
 			if (!call.name.equals(NEO_SEND_INITIAL_CHANNELS) || !call.owner.startsWith(NEO_PACKAGE)) continue;

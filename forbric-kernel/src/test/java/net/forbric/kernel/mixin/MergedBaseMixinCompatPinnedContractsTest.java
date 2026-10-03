@@ -83,7 +83,7 @@ class MergedBaseMixinCompatPinnedContractsTest {
 	 */
 	@Test
 	void thePinnedContractPrefilterTurnsAwayOnlyWhatTheParseWould() throws Exception {
-		MergedBaseMixinCompat.PinnedContract row = MergedBaseMixinCompat.PINNED_CONTRACTS.getFirst();
+		MergedBaseMixinCompat.PinnedContract row = MergedBaseMixinCompat.PINNED_CONTRACTS.get(0);
 		byte[] named = net.forbric.kernel.util.ByteScan.needle(row.contract());
 		Map<String, byte[]> classes = new HashMap<>();
 		for (var e : entries(fabricApiModules().get("fabric-creative-tab-api-v1")).entrySet()) {

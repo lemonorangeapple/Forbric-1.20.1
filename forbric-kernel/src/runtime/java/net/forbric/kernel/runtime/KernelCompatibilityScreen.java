@@ -24,7 +24,6 @@ final class KernelCompatibilityScreen extends ConfirmScreen {
 	@Override public void onClose() { answer.accept(false); }
 	@Override protected void init() {
 		super.init();
-		setInitialFocus(noButton);
 	}
 
 	/** Every finding the answer covers is named; the caller pages anything beyond what fits. */

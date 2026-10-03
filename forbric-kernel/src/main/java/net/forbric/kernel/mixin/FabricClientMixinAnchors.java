@@ -34,14 +34,14 @@ public final class FabricClientMixinAnchors {
   if(wrap==null||!wrap.desc.equals("Lcom/llamalad7/mixinextras/injector/wrapoperation/WrapOperation;")
     ||!MixinFit.stringList(MixinFit.value(wrap,"method")).equals(List.of("extractRenderState"))||MixinFit.value(wrap,"slice")!=null)return 0;
   List<AnnotationNode> ats=MixinFit.atNodes(wrap);
-  if(ats.size()!=1||!"INVOKE".equals(MixinFit.value(ats.getFirst(),"value"))||MixinFit.value(ats.getFirst(),"ordinal")!=null
-    ||!("L"+SCREEN+";extractRenderStateWithTooltipAndSubtitles("+GRAPHICS+"IIF)V").equals(MixinFit.value(ats.getFirst(),"target")))return 0;
+  if(ats.size()!=1||!"INVOKE".equals(MixinFit.value(ats.get(0),"value"))||MixinFit.value(ats.get(0),"ordinal")!=null
+    ||!("L"+SCREEN+";extractRenderStateWithTooltipAndSubtitles("+GRAPHICS+"IIF)V").equals(MixinFit.value(ats.get(0),"target")))return 0;
   // The handler this reproduces: before-extract, the one draw, after-extract — no cancel, nothing else.
   if(calls(handler,EVENTS,"beforeExtract")!=1||calls(handler,EVENTS,"afterExtract")!=1||calls(handler,OPERATION,"call")!=1)return 0;
   ClassNode gui=targets.apply("net/minecraft/client/gui/Gui");if(gui==null)return 0;
   List<MethodNode> hosts=gui.methods.stream().filter(m->m.name.equals("extractRenderState")).toList();
   int direct=0,stacked=0;for(MethodNode host:hosts){direct+=calls(host,SCREEN,"extractRenderStateWithTooltipAndSubtitles");
-   for(var i:host.instructions)if(i instanceof MethodInsnNode c&&c.owner.equals("net/neoforged/neoforge/client/ClientHooks")&&c.name.equals("extractScreen")&&c.desc.equals(STACK_CALL))stacked++;}
+   for(var i:host.instructions)if(i instanceof MethodInsnNode c&&c.owner.equals("net/minecraftforge/client/ClientHooks")&&c.name.equals("extractScreen")&&c.desc.equals(STACK_CALL))stacked++;}
   // Fabric's own anchor still present means its wrap binds as written; two stack calls would bracket twice.
   if(direct!=0||stacked!=1)return 0;
   String desc="(L"+SCREEN+";Ljava/util/Stack;"+GRAPHICS+"IIFL"+OPERATION+";)V";
@@ -49,7 +49,7 @@ public final class FabricClientMixinAnchors {
   MethodNode moved=new MethodNode(Opcodes.ACC_PRIVATE,"forbric$onExtractScreens",desc,null,null);
   moved.visibleAnnotations=new ArrayList<>(List.of(wrap));
   if(handler.visibleAnnotations!=null)handler.visibleAnnotations.remove(wrap);if(handler.invisibleAnnotations!=null)handler.invisibleAnnotations.remove(wrap);
-  set(ats.getFirst(),"target","Lnet/neoforged/neoforge/client/ClientHooks;extractScreen"+STACK_CALL);
+  set(ats.get(0),"target","Lnet/minecraftforge/client/ClientHooks;extractScreen"+STACK_CALL);
   InsnList code=moved.instructions;
   event(code,"beforeExtract","BeforeExtract");
   code.add(new VarInsnNode(Opcodes.ALOAD,7));code.add(new IntInsnNode(Opcodes.BIPUSH,6));code.add(new TypeInsnNode(Opcodes.ANEWARRAY,"java/lang/Object"));
@@ -80,7 +80,7 @@ public final class FabricClientMixinAnchors {
   if(!(slice instanceof AnnotationNode sliced)||!(MixinFit.value(sliced,"from") instanceof AnnotationNode from)
     ||!("L"+owner+";createBlockEntity(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/entity/BlockEntity;").equals(MixinFit.value(from,"target")))return 0;
   List<AnnotationNode> ats=MixinFit.atNodes(injector).stream().filter(a->"Ljava/util/Map;remove(Ljava/lang/Object;)Ljava/lang/Object;".equals(MixinFit.value(a,"target"))).toList();if(ats.size()!=1)return 0;
-  Object originalOrdinal=MixinFit.value(ats.getFirst(),"ordinal");if(originalOrdinal!=null&&!Integer.valueOf(0).equals(originalOrdinal))return 0;
+  Object originalOrdinal=MixinFit.value(ats.get(0),"ordinal");if(originalOrdinal!=null&&!Integer.valueOf(0).equals(originalOrdinal))return 0;
   try{
    Frame<SourceValue>[] frames=new Analyzer<>(new SourceInterpreter()).analyze(owner,host);int ordinal=0,selected=-1,matches=0,selectedInstruction=-1,factory=-1,factories=0;
    for(var instruction:host.instructions)if(instruction instanceof MethodInsnNode call&&call.owner.equals(owner)&&call.name.equals("createBlockEntity")&&call.desc.equals("(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/entity/BlockEntity;")){factory=host.instructions.indexOf(instruction);factories++;}
@@ -89,18 +89,18 @@ public final class FabricClientMixinAnchors {
     if(frame!=null&&frame.getStackSize()>=2){SourceValue receiver=frame.getStack(frame.getStackSize()-2);if(receiver.insns.size()==1&&receiver.insns.iterator().next() instanceof FieldInsnNode field&&field.getOpcode()==Opcodes.GETFIELD&&field.owner.equals(owner)&&field.name.equals("blockEntities")&&field.desc.equals("Ljava/util/Map;")){selected=ordinal;selectedInstruction=host.instructions.indexOf(instruction);matches++;}}
     ordinal++;
    }
-   if(matches!=1||factories!=1||selectedInstruction>=factory)return 0;set(ats.getFirst(),"ordinal",selected);remove(injector,"slice");return 1;
+   if(matches!=1||factories!=1||selectedInstruction>=factory)return 0;set(ats.get(0),"ordinal",selected);remove(injector,"slice");return 1;
   }catch(AnalyzerException malformed){return 0;}
  }
  private static int render(ClassNode mixin,Function<String,ClassNode> targets){
   String model="net/minecraft/client/renderer/block/dispatch/BlockStateModel",tail="Lnet/minecraft/util/RandomSource;Ljava/util/List;)V";
   MethodNode handler=find(mixin,"cancelCollectParts","(L"+model+";"+tail);if(handler==null||group(handler))return 0;
-  List<AbstractInsnNode> code=new ArrayList<>();for(var i:handler.instructions)if(i.getOpcode()>=0)code.add(i);if(code.size()!=1||code.getFirst().getOpcode()!=Opcodes.RETURN)return 0;
+  List<AbstractInsnNode> code=new ArrayList<>();for(var i:handler.instructions)if(i.getOpcode()>=0)code.add(i);if(code.size()!=1||code.get(0).getOpcode()!=Opcodes.RETURN)return 0;
   ClassNode target=targets.apply("net/minecraft/client/renderer/LevelRenderer");if(target==null)return 0;
   MethodNode host=find(target,"submitBlockDestroyAnimation","(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/level/LevelRenderState;)V");if(host==null)return 0;
   String extended="(Lnet/minecraft/client/renderer/block/BlockAndTintGetter;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;"+tail;
   int matches=0;for(var i:host.instructions)if(i instanceof MethodInsnNode c&&c.owner.equals(model)&&c.name.equals("collectParts")){if(c.desc.equals("("+tail))return 0;if(c.desc.equals(extended))matches++;}if(matches!=1)return 0;
-  AnnotationNode redirect=MixinFit.injectorOf(handler);if(redirect==null||MixinFit.atNodes(redirect).size()!=1)return 0;AnnotationNode at=MixinFit.atNodes(redirect).getFirst();if(!("L"+model+";collectParts("+tail).equals(MixinFit.value(at,"target")))return 0;
+  AnnotationNode redirect=MixinFit.injectorOf(handler);if(redirect==null||MixinFit.atNodes(redirect).size()!=1)return 0;AnnotationNode at=MixinFit.atNodes(redirect).get(0);if(!("L"+model+";collectParts("+tail).equals(MixinFit.value(at,"target")))return 0;
   set(at,"target","L"+model+";collectParts"+extended);handler.desc="(L"+model+";"+extended.substring(1);handler.signature=null;handler.parameters=null;handler.visibleParameterAnnotations=null;handler.invisibleParameterAnnotations=null;handler.localVariables=null;handler.maxLocals=7;return 1;
  }
  private static boolean group(MethodNode m){for(var list:Arrays.asList(m.visibleAnnotations,m.invisibleAnnotations))if(list!=null&&list.stream().anyMatch(a->a.desc.equals("Lorg/spongepowered/asm/mixin/injection/Group;")))return true;return false;}

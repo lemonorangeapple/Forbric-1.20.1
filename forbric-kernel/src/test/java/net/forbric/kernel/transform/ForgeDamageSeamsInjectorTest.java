@@ -40,7 +40,7 @@ class ForgeDamageSeamsInjectorTest {
 			}
 			assertEquals(List.of("isInvulnerableTo", "hurt", "getDamageAfterArmorAbsorb", "onLivingDamagePre",
 					"setAbsorptionAmount", "damage", "setHealth"), order.subList(0, 7), owner + ": " + order);
-			MethodInsnNode damage = calls(hurt, "damage").getFirst();
+			MethodInsnNode damage = calls(hurt, "damage").get(0);
 			assertTrue(damage.getNext() instanceof VarInsnNode store && store.getOpcode() == Opcodes.FSTORE && store.var == 3,
 					"the Damage answer replaces the health damage the body goes on to apply");
 			new Analyzer<>(new BasicVerifier()).analyze(owner, hurt);
@@ -52,7 +52,7 @@ class ForgeDamageSeamsInjectorTest {
 		ClassNode player = node(new ForgeDamageSeamsInjector().transform(PLAYER.replace('/', '.'),
 				NativeCoremodParityTest.read(MERGED, PLAYER), null));
 		MethodNode server = method(player, "hurtServer", ForgeDamageSeamsInjector.SERVER_DESC);
-		AbstractInsnNode first = server.instructions.getFirst();
+		AbstractInsnNode first = server.instructions.get(0);
 		while (first.getOpcode() < 0) first = first.getNext();
 		for (int i = 0; i < 3; i++) first = first.getNext();
 		assertTrue(first instanceof MethodInsnNode call && call.name.equals("playerAttack"), "before difficulty scaling and the zero-damage return");

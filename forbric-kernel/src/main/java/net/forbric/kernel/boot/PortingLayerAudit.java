@@ -38,7 +38,7 @@ import org.objectweb.asm.tree.MethodNode;
  * Names, at boot, every Fabric mod that ships its own copy of a Forge-family class the carrier also has — and
  * whether the two agree.
  *
- * <p>A "porting layer" is a Fabric mod that re-implements {@code net.neoforged.*} or {@code net.minecraftforge.*}
+ * <p>A "porting layer" is a Fabric mod that re-implements {@code net.minecraftforge.*} or {@code net.minecraftforge.*}
  * so Fabric mods can use that API. On a normal Fabric instance its copy IS the API. Under Forbric those packages
  * are {@code ALWAYS_GAME}, so the CARRIER's copy wins and the port's is never loaded — which is correct and
  * usually harmless, because the port is trying to be the real thing and mostly succeeds.
@@ -75,7 +75,7 @@ public final class PortingLayerAudit {
 	private static final String SWITCH = "forbric.portingLayerAudit";
 
 	/**
-	 * Compares every {@code net/neoforged/**} and {@code net/minecraftforge/**} class in {@code modJars} against
+	 * Compares every {@code net/minecraftforge/**} and {@code net/minecraftforge/**} class in {@code modJars} against
 	 * the carriers'.
 	 *
 	 * <p>Deliberately NOT {@code net/fabricmc/fabric/**}: that is {@code ALWAYS_GAME} too, but no carrier provides
@@ -90,7 +90,7 @@ public final class PortingLayerAudit {
 				for (ZipEntry entry : zip.stream().toList()) {
 					String name = entry.getName();
 					if (!name.endsWith(".class")) continue;
-					if (!name.startsWith("net/neoforged/") && !name.startsWith("net/minecraftforge/")) continue;
+					if (!name.startsWith("net/minecraftforge/") && !name.startsWith("net/minecraftforge/")) continue;
 					byte[] theirs;
 					try (InputStream in = zip.getInputStream(entry)) {
 						theirs = in.readAllBytes();
@@ -130,7 +130,7 @@ public final class PortingLayerAudit {
 					skew.onlyInJar(), skew.onlyInCarrier());
 		}
 		ForbricLog.warn("[Forbric/PortAudit] %d of %d shadowed class(es) disagree with the carrier. A Fabric mod "
-				+ "that re-implements net.neoforged.* / net.minecraftforge.* loses to the carrier by design; where "
+				+ "that re-implements net.minecraftforge.* / net.minecraftforge.* loses to the carrier by design; where "
 				+ "the two disagree, every consumer of that API breaks, and the error surfaces in the CONSUMER",
 				report.skews().size(), report.shadowed());
 	}

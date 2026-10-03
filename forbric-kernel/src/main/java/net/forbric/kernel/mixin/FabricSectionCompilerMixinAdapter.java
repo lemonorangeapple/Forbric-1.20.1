@@ -103,9 +103,9 @@ public final class FabricSectionCompilerMixinAdapter {
 		List<String> selectors = MixinFit.stringList(MixinFit.value(injector, "method"));
 		List<AnnotationNode> at = MixinFit.atNodes(injector);
 		if (!selectors.equals(List.of("compile")) && !selectors.equals(List.of("compile" + OLD))) return false;
-		return at.size() == 1 && "INVOKE".equals(MixinFit.value(at.getFirst(), "value"))
-				&& anchor.equals(normalize(String.valueOf(MixinFit.value(at.getFirst(), "target"))))
-				&& MixinFit.value(at.getFirst(), "ordinal") == null;
+		return at.size() == 1 && "INVOKE".equals(MixinFit.value(at.get(0), "value"))
+				&& anchor.equals(normalize(String.valueOf(MixinFit.value(at.get(0), "target"))))
+				&& MixinFit.value(at.get(0), "ordinal") == null;
 	}
 
 	private static boolean grouped(MethodNode method) {

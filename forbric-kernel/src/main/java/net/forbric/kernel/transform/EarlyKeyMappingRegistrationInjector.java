@@ -134,7 +134,7 @@ public final class EarlyKeyMappingRegistrationInjector implements ClassTransform
 		// read of the field if fabric-api ever grows one.
 		AbstractInsnNode call = null;
 		JumpInsnNode ifNull = null;
-		for (AbstractInsnNode insn = target.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = target.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (!(insn instanceof MethodInsnNode m) || m.getOpcode() != Opcodes.INVOKESTATIC) continue;
 			if (!MINECRAFT.equals(m.owner) || !GET_INSTANCE.equals(m.name) || !GET_INSTANCE_DESC.equals(m.desc)) continue;
 
@@ -183,7 +183,7 @@ public final class EarlyKeyMappingRegistrationInjector implements ClassTransform
 	 * whose value a {@code GETFIELD options} consumes, never a bare {@code IFNULL}.
 	 */
 	private static boolean alreadyGuarded(MethodNode method) {
-		AbstractInsnNode first = method.instructions.getFirst();
+		AbstractInsnNode first = method.instructions.get(0);
 		while (first != null && first.getOpcode() < 0) first = first.getNext();
 		if (!(first instanceof MethodInsnNode m) || m.getOpcode() != Opcodes.INVOKESTATIC) return false;
 		if (!MINECRAFT.equals(m.owner) || !GET_INSTANCE.equals(m.name) || !GET_INSTANCE_DESC.equals(m.desc)) return false;

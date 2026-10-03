@@ -96,7 +96,7 @@ class ClientSmokeTickInjectorTest {
 		assertEquals(1, hookCalls(tick), "the hook goes at the HEAD once — hooking each return would call the "
 				+ "controller more than once on the paths that have several");
 
-		AbstractInsnNode first = tick.instructions.getFirst();
+		AbstractInsnNode first = tick.instructions.get(0);
 		assertTrue(first instanceof VarInsnNode load && load.var == 0 && load.getOpcode() == Opcodes.ALOAD,
 				"tick() is an INSTANCE method, so slot 0 is the Minecraft the controller needs");
 		assertTrue(tick.instructions.get(1) instanceof MethodInsnNode call && HOOK_OWNER.equals(call.owner));

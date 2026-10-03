@@ -37,7 +37,7 @@ public final class KernelTransferInterop {
 		installed = false;
 		boolean requested = !"off".equalsIgnoreCase(System.getProperty("forbric.transferBridge", "on"))
 				&& present(loader, "net/fabricmc/fabric/api/transfer/v1/storage/Storage.class")
-				&& present(loader, "net/neoforged/neoforge/transfer/ResourceHandler.class");
+				&& present(loader, "net/minecraftforge/transfer/ResourceHandler.class");
 		active = requested && present(loader, BRIDGE.replace('.', '/') + ".class")
 				&& present(loader, ISSUES.replace('.', '/') + ".class")
 				&& present(loader, TRANSACTIONS.replace('.', '/') + ".class");
@@ -51,7 +51,7 @@ public final class KernelTransferInterop {
 		// without it runs Fabric's mixin as written.
 		boolean hopperWanted = !"off".equalsIgnoreCase(System.getProperty("forbric.hopperFabricStorage", "on"))
 				&& present(loader, "net/fabricmc/fabric/api/transfer/v1/item/ItemStorage.class")
-				&& present(loader, "net/neoforged/neoforge/transfer/item/ContainerOrHandler.class");
+				&& present(loader, "net/minecraftforge/transfer/item/ContainerOrHandler.class");
 		hopper = hopperWanted && present(loader, HOPPER.replace('.', '/') + ".class");
 		if (hopperWanted && !hopper) {
 			CompatibilityFindings.record(new CompatibilityFinding("transfer-hopper-component", "forbric",

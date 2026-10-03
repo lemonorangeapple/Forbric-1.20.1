@@ -36,7 +36,7 @@ public final class CompatPluginPlatformInjector implements ClassTransformer {
                 if(instruction instanceof MethodInsnNode c&&c.name.equals("setAccessible")&&transformer){end=instruction;break;}
             }
             if(!delegate||!transformer||end==null)return bytes;
-            AbstractInsnNode next=end.getNext();for(var instruction=hook.instructions.getFirst();instruction!=next;){var following=instruction.getNext();hook.instructions.remove(instruction);instruction=following;}
+            AbstractInsnNode next=end.getNext();for(var instruction=hook.instructions.get(0);instruction!=next;){var following=instruction.getNext();hook.instructions.remove(instruction);instruction=following;}
             InsnList code=new InsnList();
             code.add(new InsnNode(Opcodes.ACONST_NULL));code.add(new VarInsnNode(Opcodes.ASTORE,0));
             code.add(new InsnNode(Opcodes.ACONST_NULL));code.add(new VarInsnNode(Opcodes.ASTORE,1));

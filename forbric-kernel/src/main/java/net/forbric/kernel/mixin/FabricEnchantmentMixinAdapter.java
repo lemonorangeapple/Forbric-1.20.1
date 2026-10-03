@@ -28,13 +28,13 @@ public final class FabricEnchantmentMixinAdapter {
    ClassNode target=targets.apply(route.host());if(target==null)return 0;
    List<MethodNode> hosts=target.methods.stream().filter(m->m.name.equals(route.selector())).toList();if(hosts.size()!=1)return 0;
    if(route.caller()!=null&&target.methods.stream().noneMatch(m->m.name.equals(route.caller())&&calls(m,target.name,route.selector())))return 0;
-   int calls=0;for(var i:hosts.getFirst().instructions)if(i instanceof MethodInsnNode c&&c.owner.equals(route.callOwner())&&c.name.equals(route.call())&&c.desc.equals("("+HOLDER+")Z"))calls++;
+   int calls=0;for(var i:hosts.get(0).instructions)if(i instanceof MethodInsnNode c&&c.owner.equals(route.callOwner())&&c.name.equals(route.call())&&c.desc.equals("("+HOLDER+")Z"))calls++;
    if(calls!=1)return 0;
    AnnotationNode redirect=MixinFit.injectorOf(handler);if(redirect==null||!redirect.desc.equals("Lorg/spongepowered/asm/mixin/injection/Redirect;"))return 0;
    List<AnnotationNode> points=MixinFit.atNodes(redirect);if(points.size()!=1)return 0;
-   AnnotationNode at=points.getFirst();String original=String.valueOf(MixinFit.value(at,"target"));
+   AnnotationNode at=points.get(0);String original=String.valueOf(MixinFit.value(at,"target"));
    if(!original.equals("Lnet/minecraft/world/item/enchantment/Enchantment;"+(route.context().equals("PRIMARY")?"isPrimaryItem":"canEnchant")+"(L"+STACK+";)Z"))return 0;
-   set(redirect,"method",new ArrayList<>(List.of(hosts.getFirst().name+hosts.getFirst().desc)));set(at,"target","L"+route.callOwner()+";"+route.call()+"("+HOLDER+")Z");
+   set(redirect,"method",new ArrayList<>(List.of(hosts.get(0).name+hosts.get(0).desc)));set(at,"target","L"+route.callOwner()+";"+route.call()+"("+HOLDER+")Z");
    handler.desc="(L"+route.callOwner()+";"+HOLDER+")Z";handler.signature=null;handler.parameters=null;handler.visibleParameterAnnotations=null;handler.invisibleParameterAnnotations=null;handler.localVariables=null;handler.tryCatchBlocks.clear();handler.instructions.clear();
    int slot=(handler.access&Opcodes.ACC_STATIC)!=0?0:1;handler.instructions.add(new VarInsnNode(Opcodes.ALOAD,slot));if(!route.callOwner().equals(STACK))handler.instructions.add(new TypeInsnNode(Opcodes.CHECKCAST,STACK));
    handler.instructions.add(new VarInsnNode(Opcodes.ALOAD,slot+1));handler.instructions.add(new FieldInsnNode(Opcodes.GETSTATIC,"net/fabricmc/fabric/api/item/v1/EnchantingContext",route.context(),"Lnet/fabricmc/fabric/api/item/v1/EnchantingContext;"));

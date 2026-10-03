@@ -54,7 +54,7 @@ class KernelGameScreenEventsTest {
    } else cl.loadClass("net.minecraftforge.eventbus.api.bus.EventBus").getMethod("addListener",Consumer.class).invoke(forgeBus,action);
    post(cl,bus,event);
    assertEquals(1,seen.get());assertEquals(2,adds.get());assertEquals(1,removes.get());
-   assertEquals(1,children.size());assertSame(widget,children.getFirst());
+   assertEquals(1,children.size());assertSame(widget,children.get(0));
    if(phase.equals("Pre")) assertEquals(true,cl.loadClass("net.neoforged.bus.api.ICancellableEvent").getMethod("isCanceled").invoke(event));
   }
  }

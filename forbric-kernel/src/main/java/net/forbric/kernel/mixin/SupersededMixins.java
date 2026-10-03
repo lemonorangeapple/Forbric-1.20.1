@@ -84,7 +84,7 @@ public final class SupersededMixins {
 		map.put("net.fabricmc.fabric.mixin.resource.conditions.SimpleJsonResourceReloadListenerMixin",
 				new Replacement("the kernel evaluates fabric:load_conditions at ConditionalOps' funnel instead "
 						+ "(KernelFabricConditions), which covers every consumer rather than this one call site",
-						"forbric.fabricConditions", "net.neoforged.neoforge.common.conditions.ConditionalOps",
+						"forbric.fabricConditions", "net.minecraftforge.common.conditions.ConditionalOps",
 						SupersededMixins::conditionalOpsAsksFabric));
 		// fabric-transfer-api's hopper mixin is two injectors, both "ask ItemStorage.SIDED where vanilla found no
 		// container": after getAttachedContainer in ejectItems, after getSourceContainer in suckInItems. NeoForge's

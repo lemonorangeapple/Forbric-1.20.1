@@ -93,7 +93,7 @@ public final class MixinWrapOperationShim {
 	static int adaptExplicit(ClassNode mixin, MethodNode handler, MethodInsnNode live) {
 		AnnotationNode injector=MixinFit.injectorOf(handler);
 		if(injector==null||!WRAP_OPERATION.equals(injector.desc)||MixinFit.atNodes(injector).size()!=1)return 0;
-		AnnotationNode at=MixinFit.atNodes(injector).getFirst();
+		AnnotationNode at=MixinFit.atNodes(injector).get(0);
 		MixinAtWidenedCall.Member old=MixinAtWidenedCall.parse(MixinFit.asString(MixinFit.value(at,"target")));
 		if(old==null||!old.owner().equals(live.owner)||!Type.getReturnType(old.descriptor()).equals(Type.getReturnType(live.desc)))return 0;
 		if(old.name().equals(live.name)&&old.descriptor().equals(live.desc))return 0;
@@ -157,7 +157,7 @@ public final class MixinWrapOperationShim {
 		if (MixinFit.value(injector, "slice") != null || MixinFit.value(injector, "target") != null) return null;
 		List<AnnotationNode> points = MixinFit.atNodes(injector);
 		if (points.size() != 1) return null;
-		AnnotationNode at = points.getFirst();
+		AnnotationNode at = points.get(0);
 		if (!"INVOKE".equals(MixinFit.asString(MixinFit.value(at, "value"))) || MixinFit.value(at, "ordinal") != null
 				|| MixinFit.value(at, "slice") != null) return null;
 		MixinAtWidenedCall.Member named = MixinAtWidenedCall.parse(MixinFit.asString(MixinFit.value(at, "target")));

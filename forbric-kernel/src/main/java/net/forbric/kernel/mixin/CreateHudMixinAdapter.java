@@ -10,7 +10,7 @@ public final class CreateHudMixinAdapter {
 	public static int adapt(ClassNode mixin,Function<String,ClassNode> targets){
 		if(!mixin.name.equals("com/zurrtum/create/client/mixin/HudMixin"))return 0;MethodNode original=CreateInjectionAdapters.named(mixin,"renderMainHud");ClassNode target=targets.apply(HUD);MethodNode host=target==null?null:CarpetMixinAdapter.selector(target,"extractRenderState(L"+GRAPHICS+";L"+DELTA+";)V");
 		if(original==null||host==null||MixinFit.injectorOf(original)==null||!Type.getReturnType(original.desc).equals(Type.getObjectType(HUD+"$ContextualInfo"))||CarpetMixinAdapter.count(host,"L"+HUD+";updateContextualBarRenderer()V")!=1)return 0;
-		AnnotationNode inject=MixinFit.injectorOf(original);CarpetMixinAdapter.set(inject,"method",List.of(host.name+host.desc));CarpetMixinAdapter.set(MixinFit.atNodes(inject).getFirst(),"target","L"+HUD+";updateContextualBarRenderer()V");
+		AnnotationNode inject=MixinFit.injectorOf(original);CarpetMixinAdapter.set(inject,"method",List.of(host.name+host.desc));CarpetMixinAdapter.set(MixinFit.atNodes(inject).get(0),"target","L"+HUD+";updateContextualBarRenderer()V");
 		MethodNode callback=callback(mixin,original);mixin.methods.add(callback);
 		MethodNode wrapper=new MethodNode(Opcodes.ACC_PRIVATE,original.name,"(L"+HUD+";L"+OP+";L"+GRAPHICS+";L"+DELTA+";)V",null,null);wrapper.visibleAnnotations=new ArrayList<>(List.of(inject));wrapper.invisibleParameterAnnotations=original.invisibleParameterAnnotations;
 		original.name+="$forbricOriginal";CreateInjectionAdapters.removeInjector(original,inject);original.invisibleParameterAnnotations=null;original.visibleParameterAnnotations=null;

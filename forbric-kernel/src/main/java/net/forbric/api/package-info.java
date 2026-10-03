@@ -26,7 +26,7 @@
  * <p>BOOT side, parent-pinned in {@code DelegationPolicy} for the same reason {@code net.fabricmc.api.} is: there
  * must be exactly ONE copy per JVM, or an {@link net.forbric.api.Ecosystem} constant handed across the boot/game
  * boundary stops equalling itself. Consequently nothing here may name a game type — {@code net.minecraft.*},
- * {@code net.minecraftforge.*}, {@code net.neoforged.*}, {@code net.fabricmc.fabric.*}. Game objects cross as
+ * {@code net.minecraftforge.*}, {@code net.minecraftforge.*}, {@code net.fabricmc.fabric.*}. Game objects cross as
  * {@code java.lang.Object}, which is the convention the kernel's hooks already used before this package existed.
  *
  * <h2>Two rules it is built on, both learned the hard way</h2>

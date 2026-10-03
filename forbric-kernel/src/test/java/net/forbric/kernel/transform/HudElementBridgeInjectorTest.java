@@ -127,7 +127,7 @@ class HudElementBridgeInjectorTest {
 
 	/** ALOAD 1; ALOAD 2; INVOKESTATIC wrap; CHECKCAST GuiLayer; ASTORE 2 — and it must come FIRST. */
 	private static void assertPrologue(MethodNode m) {
-		AbstractInsnNode insn = m.instructions.getFirst();
+		AbstractInsnNode insn = m.instructions.get(0);
 		while (insn != null && insn.getOpcode() == -1) insn = insn.getNext();
 
 		assertEquals(Opcodes.ALOAD, insn.getOpcode());

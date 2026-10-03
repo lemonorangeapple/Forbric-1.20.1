@@ -87,7 +87,30 @@ public final class Installer {
 		// The vanilla base has to exist before the artifacts are built, not after: its jar is one of the merge's
 		// three inputs, and NFRT reuses the client and server the launcher already fetched.
 		Map<String, Object> baseJson = ensureBaseVersion(versions, mcVersion);
-		List<String> mcLibraries = minecraftLibraryPaths(baseJson);
+		List<String> mcLibraries = new ArrayList<>(minecraftLibraryPaths(baseJson));
+		// 1.20.1's version metadata carries no jline, but the dedicated console and the kernel's log wrapper need it.
+		// The dev runner adds the same jars by hand; without this a freshly installed server dies on
+		// NoClassDefFoundError: org/jline/... rather than ever opening its console.
+		Path jlineDir = libraries.resolve("org/jline");
+		if (Files.isDirectory(jlineDir)) {
+			try (java.util.stream.Stream<Path> walk = Files.walk(jlineDir)) {
+				walk.filter(Files::isRegularFile)
+						.filter(p -> p.getFileName().toString().endsWith(".jar"))
+						.map(Path::toString)
+						.filter(p -> !mcLibraries.contains(p))
+						.forEach(mcLibraries::add);
+			}
+		} else if (remote != null) {
+			for (String module : List.of("jline-reader", "jline-terminal", "jline-terminal-jna")) {
+				String path = "org/jline/" + module + "/" + Pins.JLINE + "/" + module + "-" + Pins.JLINE + ".jar";
+				Path dest = libraries.resolve(path);
+				if (!Files.isRegularFile(dest)) {
+					Files.createDirectories(dest.getParent());
+					remote.fetchInto(new Lib("org.jline:" + module + ":" + Pins.JLINE, null, path, null, 0), dest);
+				}
+				mcLibraries.add(dest.toString());
+			}
+		}
 		log.accept(mcLibraries.size() + " Minecraft libraries the kernel will own");
 
 		if (artifacts == null) artifacts = obtainGameArtifacts(mcDir, mcVersion, null, explicitJdk);
@@ -106,7 +129,7 @@ public final class Installer {
 		Files.createDirectories(mods);
 		log.accept("");
 		log.accept("Installed. In your launcher, pick the version \"" + id + "\".");
-		log.accept("Fabric, MinecraftForge and NeoForge mods all go in " + mods
+		log.accept("Fabric and MinecraftForge mods all go in " + mods
 				+ " (a launcher with per-version isolation uses versions/" + id + "/mods instead).");
 		return id;
 	}
@@ -125,12 +148,10 @@ public final class Installer {
 		List<Object> game = new ArrayList<>();
 		game.add("--gameJar");
 		game.add(libraryRef(coordinate("net.forbric:patched-mc-merged", mcVersion)));
-		// Both runtimes travel in ONE flag, joined the way a classpath is. A launcher may read game arguments as a
-		// flag-to-value map and keep only the last occurrence of a repeated flag — PCL2 does, and says so — which
-		// would drop MinecraftForge's runtime and kill the game on the first net.minecraftforge class it touches.
+		// One runtime carrier. A launcher may read game arguments as a flag-to-value map and keep only the last
+		// occurrence of a repeated flag, so a single --runtimeJar value has nothing to drop.
 		game.add("--runtimeJar");
-		game.add(libraryRef(coordinate("net.forbric:forge-runtime", mcVersion)) + java.io.File.pathSeparator
-				+ libraryRef(coordinate("net.forbric:neoforge-runtime", mcVersion)));
+		game.add(libraryRef(coordinate("net.forbric:forge-runtime", mcVersion)));
 		game.add("--libraryPath");
 		game.add(String.join(java.io.File.pathSeparator, mcLibraries));
 
@@ -149,7 +170,7 @@ public final class Installer {
 	 * {@code KernelFabricEcosystem.FABRIC_LOADER_API_LEVEL}, because this module does not compile against the
 	 * kernel — it builds the kernel jar as a subprocess — so nothing else would notice the two drifting apart.
 	 */
-	private static final String DECLARED_LOADER = "net.fabricmc:fabric-loader:0.19.3";
+	private static final String DECLARED_LOADER = "net.fabricmc:fabric-loader:0.16.10";
 
 	/**
 	 * What this profile tells a LAUNCHER it is. Metadata only: no launcher loads anything named here, and the
@@ -171,12 +192,12 @@ public final class Installer {
 	 */
 	private static Map<String, Object> launcherIdentity() {
 		Map<String, Object> identity = new LinkedHashMap<>();
-		identity.put("comment", "Metadata for launchers, not classpath. Forbric runs Fabric, traditional Forge and "
-				+ "NeoForge mods in one instance; a launcher can only be told about one loader, so it is told "
-				+ "about the one below. Change 'declares' if you want the launcher to offer a different "
-				+ "ecosystem's builds by default.");
+		identity.put("comment", "Metadata for launchers, not classpath. Forbric runs Fabric and traditional Forge "
+				+ "mods in one instance; a launcher can only be told about one loader, so it is told about the "
+				+ "one below. Change 'declares' if you want the launcher to offer a different ecosystem's builds "
+				+ "by default.");
 		identity.put("declares", DECLARED_LOADER);
-		identity.put("ecosystems", List.of("fabric", "forge", "neoforge"));
+		identity.put("ecosystems", List.of("fabric", "forge"));
 		return identity;
 	}
 
@@ -368,20 +389,6 @@ public final class Installer {
 			// nothing outside itself, and that is how #13 installed three unrelated jars "successfully".
 			supplied.verifyContents(mcVersion);
 			log.accept("  each file holds what its name says");
-			JdkLocator.Jvm jvm = JdkLocator.locate(mcDir, explicitJdk, line -> log.accept("link-check JVM: " + line));
-			try {
-				new MergedBaseTool(mcDir.resolve(".forbric-build").resolve("tools"), log).linkCheck(jvm,
-						found.get(ArtifactBuilder.MERGED), found.get(ArtifactBuilder.NEOFORGE_RUNTIME),
-						found.get(ArtifactBuilder.FORGE_RUNTIME));
-			} catch (MergedBaseTool.Failed doNotLink) {
-				// Each file is the right kind of file, or the content check would have said so; together they still
-				// do not make one game — one of them damaged, or the three from different builds. This used to
-				// reach the player as the link checker's own output, a stack trace with no way out in it.
-				throw new IOException("Built artifacts: the files in " + artifactDir + " do not fit together: each"
-						+ " is the right kind of file, but the link check of the three failed (one may be damaged, or"
-						+ " they come from different builds).\n" + GameArtifacts.LEAVE_EMPTY + "\n"
-						+ doNotLink.getMessage(), doNotLink);
-			}
 			return found;
 		}
 		JdkLocator.Jvm jvm = JdkLocator.locate(mcDir, explicitJdk, line -> log.accept("build JVM: " + line));

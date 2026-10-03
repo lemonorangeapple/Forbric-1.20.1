@@ -74,7 +74,7 @@ public final class NeoScreenEventsInjector implements ClassTransformer {
 		MethodInsnNode opening = null, closing = null;
 		int openings = 0, closings = 0;
 		for (AbstractInsnNode insn : set.instructions) {
-			if (insn instanceof TypeInsnNode type && type.desc.startsWith("net/neoforged/neoforge/client/event/ScreenEvent")) return false;
+			if (insn instanceof TypeInsnNode type && type.desc.startsWith("net/minecraftforge/client/event/ScreenEvent")) return false;
 			if (insn instanceof LdcInsnNode) continue;
 			if (!(insn instanceof MethodInsnNode call)) continue;
 			if (call.owner.equals(RUNTIME)) return false;

@@ -22,12 +22,11 @@ import java.util.HashMap;
 
 import net.forbric.api.DiscoveredMod;
 import net.forbric.kernel.util.ForbricLog;
-import net.minecraftforge.unsafe.UnsafeHacks;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.javafmlmod.FMLModContainer;
-import net.neoforged.fml.mclanguageprovider.MinecraftModContainer;
-import net.neoforged.neoforgespi.language.IModInfo;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.ModContainer;
+import net.minecraftforge.fml.javafmlmod.FMLModContainer;
+import net.minecraftforge.fml.mclanguageprovider.MinecraftModContainer;
+import net.minecraftforge.forgespi.language.IModInfo;
 
 /**
  * The game side of the kernel's mod-container factory — the one entry point the boot side calls by name.
@@ -79,7 +78,7 @@ public final class KernelContainers {
 	/**
 	 * A {@code ModContainer} for {@code modId} whose {@code getEventBus()} returns {@code bus}.
 	 *
-	 * @param bus a {@code net.neoforged.bus.api.IEventBus}, handed over untyped from the boot side
+	 * @param bus a {@code net.minecraftforge.eventbus.api.IEventBus}, handed over untyped from the boot side
 	 * @param jar the mod's own jar, or null for a presence alias
 	 */
 	public static Object container(String modId, Object bus, Path jar) {
@@ -122,7 +121,7 @@ public final class KernelContainers {
 	 */
 	private static ModContainer genuineFmlContainer(String modId, IModInfo modInfo, IEventBus bus) {
 		try {
-			FMLModContainer container = UnsafeHacks.newInstance(FMLModContainer.class);
+			FMLModContainer container = KernelUnsafe.newInstance(FMLModContainer.class);
 			set(FMLModContainer.class, "eventBus", container, bus);
 			set(ModContainer.class, "modId", container, modId);
 			set(ModContainer.class, "namespace", container, modId);
@@ -140,6 +139,6 @@ public final class KernelContainers {
 
 	private static void set(Class<?> owner, String name, Object target, Object value) throws Exception {
 		Field field = owner.getDeclaredField(name);
-		UnsafeHacks.setField(field, target, value);
+		KernelUnsafe.setField(field, target, value);
 	}
 }

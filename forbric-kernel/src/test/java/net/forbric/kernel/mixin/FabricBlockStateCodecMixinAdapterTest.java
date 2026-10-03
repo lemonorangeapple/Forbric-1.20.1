@@ -25,16 +25,17 @@ class FabricBlockStateCodecMixinAdapterTest {
 
 	private static MethodNode handler(ClassNode mixin, int ordinal) {
 		return mixin.methods.stream().filter(m -> MixinFit.injectorOf(m) != null)
-				.filter(m -> Integer.valueOf(ordinal).equals(MixinFit.value(MixinFit.atNodes(MixinFit.injectorOf(m)).getFirst(), "ordinal")))
+				.filter(m -> Integer.valueOf(ordinal).equals(MixinFit.value(MixinFit.atNodes(MixinFit.injectorOf(m)).get(0), "ordinal")))
 				.findFirst().orElseThrow();
 	}
 
 	private static List<String> code(MethodNode method) {
-		return java.util.stream.StreamSupport.stream(method.instructions.spliterator(), false).filter(i -> i.getOpcode() >= 0).map(i -> switch (i) {
-			case VarInsnNode v -> "ALOAD " + v.var;
-			case MethodInsnNode m -> m.owner + "." + m.name;
-			case FieldInsnNode f -> f.owner + "." + f.name;
-			default -> String.valueOf(i.getOpcode());
+		return java.util.stream.StreamSupport.stream(method.instructions.spliterator(), false).filter(i -> i.getOpcode() >= 0).map(i -> {
+			// Java 17: pattern `instanceof`, not a pattern switch.
+			if (i instanceof VarInsnNode v) return "ALOAD " + v.var;
+			if (i instanceof MethodInsnNode m) return m.owner + "." + m.name;
+			if (i instanceof FieldInsnNode f) return f.owner + "." + f.name;
+			return String.valueOf(i.getOpcode());
 		}).toList();
 	}
 

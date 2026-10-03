@@ -101,7 +101,7 @@ public final class ExitHookInjector implements ClassTransformer {
 			return classBytes;
 		}
 		int returns = 0;
-		for (AbstractInsnNode insn = close.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = close.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn.getOpcode() != Opcodes.RETURN) continue;
 			close.instructions.insertBefore(insn, hookCall(node.name));
 			returns++;

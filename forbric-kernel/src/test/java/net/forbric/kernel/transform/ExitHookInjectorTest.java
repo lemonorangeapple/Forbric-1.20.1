@@ -137,7 +137,7 @@ class ExitHookInjectorTest {
 
 	private static int hookCallsBeforeReturns(MethodNode m) {
 		int hooked = 0;
-		for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn.getOpcode() != Opcodes.RETURN) continue;
 			AbstractInsnNode prev = insn.getPrevious();
 			while (prev != null && prev.getOpcode() < 0) prev = prev.getPrevious();

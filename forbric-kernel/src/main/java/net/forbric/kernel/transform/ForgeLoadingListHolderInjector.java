@@ -132,7 +132,7 @@ public final class ForgeLoadingListHolderInjector implements ClassTransformer {
 		int instanceWrites = 0;
 		int news = 0;
 		int ctorCalls = 0;
-		for (var insn = clinit.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (var insn = clinit.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof FieldInsnNode field) {
 				if (insn.getOpcode() == Opcodes.GETSTATIC && IMPL_INTERNAL.equals(field.owner)
 						&& TEMP.equals(field.name)) {

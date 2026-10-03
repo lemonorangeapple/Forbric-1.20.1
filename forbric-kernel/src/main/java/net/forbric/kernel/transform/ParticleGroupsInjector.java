@@ -108,7 +108,7 @@ public final class ParticleGroupsInjector implements ClassTransformer {
 		init.add(new FieldInsnNode(Opcodes.PUTSTATIC, ENGINE_INTERNAL, ORDER, LIST));
 		clinit.instructions.insert(init);
 
-		orderReads.getFirst().name = ORDER;
+		orderReads.get(0).name = ORDER;
 
 		InsnList merge = new InsnList();
 		merge.add(new VarInsnNode(Opcodes.ALOAD, 3));

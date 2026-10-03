@@ -151,7 +151,7 @@ class MergedBaseRandomSourcePrecisionTest {
 	private static boolean carries(ClassNode node, int widen, int multiply, Number unit) {
 		for (MethodNode method : node.methods) {
 			boolean sawWiden = false, sawUnit = false;
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn.getOpcode() == widen) sawWiden = true;
 				if (insn instanceof LdcInsnNode ldc && unit.equals(ldc.cst)) sawUnit = true;
 				if (insn.getOpcode() == multiply && sawWiden && sawUnit) return true;

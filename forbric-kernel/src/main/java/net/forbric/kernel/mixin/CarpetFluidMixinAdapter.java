@@ -50,7 +50,7 @@ public final class CarpetFluidMixinAdapter {
 		if (original == null || target == null || (original.access & Opcodes.ACC_STATIC)!=0 || !HANDLER.equals(original.desc)) return 0;
 		AnnotationNode inject = MixinFit.injectorOf(original);
 		List<AnnotationNode> ats = inject == null ? List.of() : MixinFit.atNodes(inject);
-		if (!selects(inject, "shouldSpreadLiquid") || ats.size()!=1 || !"TAIL".equals(MixinFit.value(ats.getFirst(),"value"))) return 0;
+		if (!selects(inject, "shouldSpreadLiquid") || ats.size()!=1 || !"TAIL".equals(MixinFit.value(ats.get(0),"value"))) return 0;
 		List<MethodNode> hosts = new ArrayList<>(); List<MethodInsnNode> calls = new ArrayList<>();
 		for (String name : List.of("onPlace", "neighborChanged")) {
 			MethodNode host = named(target,name); if(host==null)return 0;
@@ -61,9 +61,9 @@ public final class CarpetFluidMixinAdapter {
 			// The registry's answer decides the fluid tick: true (handled) jumps past scheduleTick. The wrap answers true
 			// for a cell Carpet converted, so it must keep meaning "handled" here.
 			String tick="L"+LEVEL+";scheduleTick("+POS+"Lnet/minecraft/world/level/material/Fluid;I)V";
-			if(count(host,tick)!=1||!(next(found.getFirst()) instanceof JumpInsnNode skip)||skip.getOpcode()!=Opcodes.IFNE
+			if(count(host,tick)!=1||!(next(found.get(0)) instanceof JumpInsnNode skip)||skip.getOpcode()!=Opcodes.IFNE
 					||index(host,skip)>index(host,first(host,tick))||index(host,first(host,tick))>index(host,skip.label))return 0;
-			hosts.add(host);calls.add(found.getFirst());
+			hosts.add(host);calls.add(found.get(0));
 		}
 		original.visibleAnnotations.remove(inject); original.name += "$forbricOriginal";
 		for(int i=0;i<hosts.size();i++) {
@@ -84,7 +84,7 @@ public final class CarpetFluidMixinAdapter {
 			// would run NeoForge mods' rules on placement, which NeoForge's own onPlace never does.
 			if(call.owner.equals(REGISTRIES.get(1))&&!FluidInteractionsInjector.enabled()) {
 				code.add(new VarInsnNode(Opcodes.ALOAD,1));code.add(new VarInsnNode(Opcodes.ALOAD,2));
-				code.add(new MethodInsnNode(Opcodes.INVOKESTATIC,REGISTRIES.getFirst(),"canInteract",INTERACT,false));
+				code.add(new MethodInsnNode(Opcodes.INVOKESTATIC,REGISTRIES.get(0),"canInteract",INTERACT,false));
 				code.add(new JumpInsnNode(Opcodes.IFNE,handled));
 			}
 			callback(code,4);
@@ -105,7 +105,7 @@ public final class CarpetFluidMixinAdapter {
 		AnnotationNode inject=MixinFit.injectorOf(original);
 		if(!selects(inject,"shouldSpreadLiquid"))return 0;
 		List<AnnotationNode> oldAt=MixinFit.atNodes(inject);
-		if(oldAt.size()!=1||!("L"+FLUID_STATE+";isSource()Z").equals(MixinFit.value(oldAt.getFirst(),"target")))return 0;
+		if(oldAt.size()!=1||!("L"+FLUID_STATE+";isSource()Z").equals(MixinFit.value(oldAt.get(0),"target")))return 0;
 		// Vanilla has a real shouldSpreadLiquid caller, so this adaptation is only for the registry carriers.
 		MethodNode onPlace=named(liquid,"onPlace");
 		if(onPlace==null||REGISTRIES.stream().noneMatch(r->count(onPlace,"L"+r+";canInteract"+INTERACT)==1))return 0;
@@ -113,7 +113,7 @@ public final class CarpetFluidMixinAdapter {
 		// Placement asks MinecraftForge's registry and a neighbour change NeoForge's (FluidInteractionsInjector), so the
 		// rule goes into both. With -Dforbric.fluidInteractions=off MinecraftForge's is neutered — no interact call to
 		// inject at — and the blackstone fallback hands placement to NeoForge's, which then carries it alone.
-		List<String> registries=FluidInteractionsInjector.enabled()?REGISTRIES:List.of(REGISTRIES.getFirst());
+		List<String> registries=FluidInteractionsInjector.enabled()?REGISTRIES:List.of(REGISTRIES.get(0));
 		String interact="interact(L"+LEVEL+";"+POS+POS+"L"+FLUID_STATE+";)V";
 		for(String registry:registries) {
 			ClassNode target=targets.apply(registry);if(target==null)return 0;
@@ -179,7 +179,7 @@ public final class CarpetFluidMixinAdapter {
 		for(var i:m.instructions) {
 			if(i instanceof VarInsnNode v)v.var--;
 			if(i instanceof IincInsnNode v)v.var--;
-			if(i instanceof FrameNode frame&&(frame.type==Opcodes.F_FULL||frame.type==Opcodes.F_NEW)&&frame.local!=null&&!frame.local.isEmpty()&&frame.local.getFirst().equals(owner))frame.local.removeFirst();
+			if(i instanceof FrameNode frame&&(frame.type==Opcodes.F_FULL||frame.type==Opcodes.F_NEW)&&frame.local!=null&&!frame.local.isEmpty()&&frame.local.get(0).equals(owner))frame.local.remove(0);
 		}
 		if(m.localVariables!=null){m.localVariables.removeIf(v->v.index==0);for(var v:m.localVariables)v.index--;}
 		m.maxLocals--;
@@ -194,7 +194,7 @@ public final class CarpetFluidMixinAdapter {
 	private static AnnotationNode at(String target){AnnotationNode a=new AnnotationNode("Lorg/spongepowered/asm/mixin/injection/At;");a.values=new ArrayList<>(List.of("value","INVOKE","target",target));return a;}
 	private static AnnotationNode annotation(String kind,String method,List<AnnotationNode> ats,boolean cancel){
 		AnnotationNode a=new AnnotationNode(kind.equals("Inject")?"Lorg/spongepowered/asm/mixin/injection/Inject;":"Lcom/llamalad7/mixinextras/injector/wrapoperation/WrapOperation;");
-		a.values=new ArrayList<>(List.of("method",List.of(method),"at",kind.equals("Inject")?ats:ats.getFirst(),"require",1));
+		a.values=new ArrayList<>(List.of("method",List.of(method),"at",kind.equals("Inject")?ats:ats.get(0),"require",1));
 		if(cancel){a.values.add("cancellable");a.values.add(true);}return a;
 	}
 }

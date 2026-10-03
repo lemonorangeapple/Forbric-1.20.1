@@ -15,23 +15,19 @@ public final class DevPrepare {
 		Path mc = Path.of(args[0]).toAbsolutePath();
 		Path stage = Path.of(args[1]).toAbsolutePath();
 		JdkLocator.Jvm jvm = JdkLocator.locate(mc, Path.of(args[2]), System.out::println);
-		if (jvm.feature() < 25) throw new IOException("Minecraft 26.2 development needs JDK 25 or newer");
+		if (jvm.feature() < 17) throw new IOException("Minecraft 1.20.1 development needs JDK 17 or newer");
 		Path version = mc.resolve("versions").resolve(Pins.MINECRAFT);
 		if (!Files.isRegularFile(version.resolve(Pins.MINECRAFT + ".jar"))
 				|| !Files.isRegularFile(version.resolve(Pins.MINECRAFT + ".json"))) {
 			new MojangDownloader(System.out::println).downloadClient(Pins.MINECRAFT, version);
 		}
 		Map<String, Path> artifacts = new ArtifactBuilder(System.out::println).build(mc, Pins.MINECRAFT, jvm);
-		copy(artifacts.get(ArtifactBuilder.MERGED), stage.resolve("merged-base/patched-mc-merged-26.2.jar"));
-		copy(artifacts.get(ArtifactBuilder.FORGE_RUNTIME), stage.resolve("merged-base/forge-runtime-interop.jar"));
-		copy(artifacts.get(ArtifactBuilder.NEOFORGE_RUNTIME), stage.resolve("neoforge-runtime/neoforge-runtime.jar"));
-		// Compilation and bytecode tests read the raw carrier, while launch uses the interop-patched carrier.
-		copy(mc.resolve(".forbric-build/out/forge-runtime.jar"), stage.resolve("forge-runtime/forge-runtime.jar"));
-		// Both patched sides too: the bytecode tests compare the merged base against each of them.
-		copy(mc.resolve(".forbric-build/out/patched-mc-forge-26.2.jar"),
-				stage.resolve("forge-patched/patched-mc-forge-26.2.jar"));
-		copy(mc.resolve(".forbric-build/out/patched-mc-neoforge-26.2.jar"),
-				stage.resolve("neoforge-patched/patched-mc-neoforge-26.2.jar"));
+		copy(artifacts.get(ArtifactBuilder.MERGED),
+				stage.resolve("merged-base/patched-mc-merged-" + Pins.MINECRAFT + ".jar"));
+		copy(artifacts.get(ArtifactBuilder.FORGE_RUNTIME), stage.resolve("forge-runtime/forge-runtime.jar"));
+		// The Forge-patched jar the base is built from: the bytecode tests compare against it.
+		copy(mc.resolve(".forbric-build/out/patched-mc-forge-" + Pins.MINECRAFT + ".jar"),
+				stage.resolve("forge-patched/patched-mc-forge-" + Pins.MINECRAFT + ".jar"));
 		System.out.println("Development artifacts staged under " + stage);
 	}
 

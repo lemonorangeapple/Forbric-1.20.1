@@ -56,7 +56,7 @@ final class InteropHookAssertions {
 		int checked = 0;
 		for (MethodNode method : node.methods) {
 			if (method.instructions == null) continue;
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (!(insn instanceof MethodInsnNode call) || !call.owner.startsWith(INTEROP_PACKAGE)) continue;
 				assertResolves(call);
 				checked++;

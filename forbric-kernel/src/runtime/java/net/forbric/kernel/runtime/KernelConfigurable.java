@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import net.forbric.kernel.metadata.forge.FmlConfigElements;
-import net.neoforged.neoforgespi.language.IConfigurable;
+import net.minecraftforge.forgespi.language.IConfigurable;
 
 /**
  * The {@code IConfigurable} the kernel's NeoForge mod infos report: one table of the mod's {@code neoforge.mods.toml}

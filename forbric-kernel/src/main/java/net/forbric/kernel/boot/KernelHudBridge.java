@@ -109,7 +109,7 @@ public final class KernelHudBridge {
 	private static final String ROOT_LAYER = REGISTRY_IMPL + "$RootLayer";
 	private static final String VANILLA_ELEMENTS = "net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements";
 	private static final String HUD_ELEMENT = "net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement";
-	private static final String GUI_LAYER = "net.neoforged.neoforge.client.gui.GuiLayer";
+	private static final String GUI_LAYER = "net.minecraftforge.client.gui.GuiLayer";
 
 	private static final String GEN = "net/forbric/kernel/runtime/KernelHudLayer";
 

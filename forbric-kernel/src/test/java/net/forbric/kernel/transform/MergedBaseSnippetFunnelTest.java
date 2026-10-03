@@ -76,7 +76,7 @@ class MergedBaseSnippetFunnelTest {
 		List<MethodInsnNode> ctors = new ArrayList<>();
 		TypeInsnNode construction = null;
 		MethodInsnNode scope = null, clear = null;
-		for (AbstractInsnNode insn = build.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = build.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof TypeInsnNode t && t.getOpcode() == Opcodes.NEW) construction = t;
 			if (insn instanceof MethodInsnNode c && "<init>".equals(c.name) && SnippetConstructorFunnel.SNIPPET_INTERNAL.equals(c.owner)) ctors.add(c);
 			if (insn instanceof MethodInsnNode c && SnippetConstructorFunnel.RUNTIME.equals(c.owner) && "scope".equals(c.name)) scope = c;
@@ -172,7 +172,7 @@ class MergedBaseSnippetFunnelTest {
 
 	private static int count(MethodNode m, String owner, String name) {
 		int n = 0;
-		for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof MethodInsnNode c && owner.equals(c.owner) && name.equals(c.name)) n++;
 		}
 		return n;
@@ -180,7 +180,7 @@ class MergedBaseSnippetFunnelTest {
 
 	private static int index(MethodNode m, AbstractInsnNode target) {
 		int i = 0;
-		for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn.getOpcode() < 0) continue;
 			if (insn == target) return i;
 			i++;

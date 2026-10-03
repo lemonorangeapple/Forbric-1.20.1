@@ -62,7 +62,7 @@ class KernelMonsterRoomDrawTest {
 		MethodNode draw = method("randomMonsterRoomMob");
 		int guardAt = -1, dataMapAt = -1, index = 0;
 		boolean branchedBetween = false;
-		for (AbstractInsnNode insn = draw.instructions.getFirst(); insn != null; insn = insn.getNext(), index++) {
+		for (AbstractInsnNode insn = draw.instructions.get(0); insn != null; insn = insn.getNext(), index++) {
 			if (insn instanceof MethodInsnNode call) {
 				if (GUARD.equals(call.name)) guardAt = index;
 				if (HOOKS.equals(call.owner) && "getRandomMonsterRoomMob".equals(call.name)) dataMapAt = index;
@@ -79,7 +79,7 @@ class KernelMonsterRoomDrawTest {
 	void bothPathsSpendExactlyOneDraw() throws Exception {
 		MethodNode draw = method("randomMonsterRoomMob");
 		List<String> draws = new ArrayList<>();
-		for (AbstractInsnNode insn = draw.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = draw.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof MethodInsnNode call && "nextInt".equals(call.name)) draws.add(call.owner);
 			if (insn instanceof MethodInsnNode call && HOOKS.equals(call.owner)
 					&& "getRandomMonsterRoomMob".equals(call.name)) {
@@ -94,7 +94,7 @@ class KernelMonsterRoomDrawTest {
 	void theShippedWeightsAreTheOnesNeoForgeActuallyShips() throws Exception {
 		MethodNode init = method("<clinit>");
 		List<Integer> constants = new ArrayList<>();
-		for (AbstractInsnNode insn = init.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = init.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof IntInsnNode push && push.getOpcode() == Opcodes.BIPUSH) constants.add(push.operand);
 			if (insn instanceof IntInsnNode push && push.getOpcode() == Opcodes.SIPUSH) constants.add(push.operand);
 			if (insn instanceof LdcInsnNode ldc && ldc.cst instanceof Integer value) constants.add(value);
@@ -111,7 +111,7 @@ class KernelMonsterRoomDrawTest {
 		MethodNode guard = method(GUARD);
 		List<String> named = new ArrayList<>();
 		List<String> called = new ArrayList<>();
-		for (AbstractInsnNode insn = guard.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = guard.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof LdcInsnNode ldc && ldc.cst instanceof String text) named.add(text);
 			if (insn instanceof MethodInsnNode call) called.add(call.name);
 		}

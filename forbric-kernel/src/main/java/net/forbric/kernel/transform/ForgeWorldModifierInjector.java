@@ -114,7 +114,7 @@ public final class ForgeWorldModifierInjector implements ClassTransformer {
 	private static boolean widenAddAllToCollection(ClassNode node) {
 		int repaired = 0;
 		for (MethodNode method : node.methods) {
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn instanceof MethodInsnNode call && call.getOpcode() == Opcodes.INVOKEVIRTUAL
 						&& WEIGHTED_BUILDER.equals(call.owner) && "addAll".equals(call.name)
 						&& ("(Ljava/lang/Iterable;)" + BUILDER_DESC).equals(call.desc)) {
@@ -134,7 +134,7 @@ public final class ForgeWorldModifierInjector implements ClassTransformer {
 	private static boolean routeRemoveIfThroughTheLostDefault(ClassNode node) {
 		int repaired = 0;
 		for (MethodNode method : node.methods) {
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn instanceof MethodInsnNode call && call.getOpcode() == Opcodes.INVOKEVIRTUAL
 						&& WEIGHTED_BUILDER.equals(call.owner) && "removeIf".equals(call.name)
 						&& ("(Ljava/util/function/Predicate;)" + BUILDER_DESC).equals(call.desc)) {
@@ -164,7 +164,7 @@ public final class ForgeWorldModifierInjector implements ClassTransformer {
 		List<MethodInsnNode> materialisations = new ArrayList<>();
 		List<String> helpers = new ArrayList<>();
 		String lastKey = null;
-		for (AbstractInsnNode insn = run.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = run.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof MethodInsnNode call && RUNTIME.equals(call.owner)) return false;   // already spliced
 			if (insn instanceof FieldInsnNode field && field.getOpcode() == Opcodes.GETSTATIC && NEO_KEYS.equals(field.owner)) {
 				lastKey = field.name;

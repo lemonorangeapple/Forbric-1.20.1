@@ -64,9 +64,9 @@ class MixinAtWidenedCallTest {
 
 	@Test void aSingleModifiedArgumentAtAnExplicitIndexSurvivesAppendedParameters() {
 		ClassNode mixin = mixin("Lorg/spongepowered/asm/mixin/injection/ModifyArg;");
-		MethodNode handler = mixin.methods.getFirst();
+		MethodNode handler = mixin.methods.get(0);
 		handler.desc = "(Ljava/util/List;)Ljava/util/List;";
-		handler.visibleAnnotations.getFirst().values.addAll(List.of("index", 0));
+		handler.visibleAnnotations.get(0).values.addAll(List.of("index", 0));
 		assertEquals(1, MixinAtWidenedCall.widen(mixin, name -> targetClass(LONG_DESC)));
 		assertEquals(MOVED, atTarget(mixin));
 	}
@@ -74,26 +74,26 @@ class MixinAtWidenedCallTest {
 	@Test void aModifyArgThatCapturesAllParametersOrInfersItsIndexRemainsUntouched() {
 		for (String desc : List.of("(Ljava/util/List;Ljava/lang/Object;)Ljava/util/List;", "(Ljava/util/List;)Z")) {
 			ClassNode mixin = mixin("Lorg/spongepowered/asm/mixin/injection/ModifyArg;");
-			mixin.methods.getFirst().desc = desc;
-			mixin.methods.getFirst().visibleAnnotations.getFirst().values.addAll(List.of("index", 0));
+			mixin.methods.get(0).desc = desc;
+			mixin.methods.get(0).visibleAnnotations.get(0).values.addAll(List.of("index", 0));
 			assertEquals(0, MixinAtWidenedCall.widen(mixin, name -> targetClass(LONG_DESC)));
 		}
 		ClassNode mixin = mixin("Lorg/spongepowered/asm/mixin/injection/ModifyArg;");
-		mixin.methods.getFirst().desc = "(Ljava/util/List;)Ljava/util/List;";
+		mixin.methods.get(0).desc = "(Ljava/util/List;)Ljava/util/List;";
 		assertEquals(0, MixinAtWidenedCall.widen(mixin, name -> targetClass(LONG_DESC)));
 	}
 
 	@Test void fixedIndexMustNameAnOriginalArgumentAndGroupsStillDoNotMove() {
 		for (int index : List.of(-1, 1)) {
 			ClassNode mixin = mixin("Lorg/spongepowered/asm/mixin/injection/ModifyArg;");
-			mixin.methods.getFirst().desc = "(Ljava/util/List;)Ljava/util/List;";
-			mixin.methods.getFirst().visibleAnnotations.getFirst().values.addAll(List.of("index", index));
+			mixin.methods.get(0).desc = "(Ljava/util/List;)Ljava/util/List;";
+			mixin.methods.get(0).visibleAnnotations.get(0).values.addAll(List.of("index", index));
 			assertEquals(0, MixinAtWidenedCall.widen(mixin, name -> targetClass(LONG_DESC)));
 		}
 		ClassNode mixin = mixin("Lorg/spongepowered/asm/mixin/injection/ModifyArg;");
-		mixin.methods.getFirst().desc = "(Ljava/util/List;)Ljava/util/List;";
-		mixin.methods.getFirst().visibleAnnotations.getFirst().values.addAll(List.of("index", 0));
-		mixin.methods.getFirst().invisibleAnnotations = List.of(new AnnotationNode("Lorg/spongepowered/asm/mixin/injection/Group;"));
+		mixin.methods.get(0).desc = "(Ljava/util/List;)Ljava/util/List;";
+		mixin.methods.get(0).visibleAnnotations.get(0).values.addAll(List.of("index", 0));
+		mixin.methods.get(0).invisibleAnnotations = List.of(new AnnotationNode("Lorg/spongepowered/asm/mixin/injection/Group;"));
 		assertEquals(0, MixinAtWidenedCall.widen(mixin, name -> targetClass(LONG_DESC)));
 	}
 
@@ -119,7 +119,7 @@ class MixinAtWidenedCallTest {
 		ClassNode target = MixinFit.parse(targetBytes), mixin = MixinFit.parse(mixinBytes);
 		assertEquals(1, MixinAtWidenedCall.widen(mixin, name -> target));
 		MethodNode handler = mixin.methods.stream().filter(m -> m.name.equals("modifyLoadedEntries")).findFirst().orElseThrow();
-		AnnotationNode at = MixinFit.atNodes(MixinFit.injectorOf(handler)).getFirst();
+		AnnotationNode at = MixinFit.atNodes(MixinFit.injectorOf(handler)).get(0);
 		String member = (String) MixinFit.value(at, "target");
 		org.junit.jupiter.api.Assertions.assertTrue(member.contains("Ljava/util/concurrent/Executor;Ljava/util/List;)Ljava/util/concurrent/CompletableFuture;"), member);
 	}
@@ -303,9 +303,9 @@ class MixinAtWidenedCallTest {
 		int moved = 0;
 		for (String[] kind : kinds) {
 			ClassNode mixin = mixin(kind[0]);
-			mixin.methods.getFirst().desc = kind[1];
-			if ("index".equals(kind[2])) mixin.methods.getFirst().visibleAnnotations.getFirst().values.addAll(List.of("index", 0));
-			if ("group".equals(kind[2])) mixin.methods.getFirst().visibleAnnotations.add(new AnnotationNode("Lorg/spongepowered/asm/mixin/injection/Group;"));
+			mixin.methods.get(0).desc = kind[1];
+			if ("index".equals(kind[2])) mixin.methods.get(0).visibleAnnotations.get(0).values.addAll(List.of("index", 0));
+			if ("group".equals(kind[2])) mixin.methods.get(0).visibleAnnotations.add(new AnnotationNode("Lorg/spongepowered/asm/mixin/injection/Group;"));
 			byte[] target = bytes(targetClass(LONG_DESC));
 			MixinFit.Result verdict = MixinFit.evaluate(bytes(mixin), name -> name.equals("net/example/Target.class") ? target : null);
 			int widened = MixinAtWidenedCall.widen(mixin, name -> targetClass(LONG_DESC));
@@ -319,7 +319,7 @@ class MixinAtWidenedCallTest {
 		System.setProperty(MixinFit.ANCHOR_MOVERS_PROPERTY, "off");
 		try {
 			ClassNode redirect = mixin("Lorg/spongepowered/asm/mixin/injection/Redirect;");
-			redirect.methods.getFirst().desc = "(Ljava/util/List;)Lnet/minecraft/network/codec/StreamCodec;";
+			redirect.methods.get(0).desc = "(Ljava/util/List;)Lnet/minecraft/network/codec/StreamCodec;";
 			byte[] target = bytes(targetClass(LONG_DESC));
 			assertEquals(MixinFit.Verdict.FIT, MixinFit.evaluate(bytes(redirect), name -> name.equals("net/example/Target.class") ? target : null).verdict());
 		} finally {
@@ -334,7 +334,7 @@ class MixinAtWidenedCallTest {
 	 */
 	@Test void aGroupAlternativeOnAWidenedCallIsJudgedAsAnAlternative() throws Exception {
 		ClassNode mixin = mixin("Lorg/spongepowered/asm/mixin/injection/Inject;");
-		mixin.methods.getFirst().visibleAnnotations.add(new AnnotationNode("Lorg/spongepowered/asm/mixin/injection/Group;"));
+		mixin.methods.get(0).visibleAnnotations.add(new AnnotationNode("Lorg/spongepowered/asm/mixin/injection/Group;"));
 		byte[] target = bytes(targetClass(LONG_DESC));
 		assertEquals(MixinFit.Verdict.FIT, MixinFit.evaluate(bytes(mixin), name -> name.equals("net/example/Target.class") ? target : null).verdict());
 		assertEquals(0, MixinAtWidenedCall.widen(mixin, name -> targetClass(LONG_DESC)), "and it is not moved");

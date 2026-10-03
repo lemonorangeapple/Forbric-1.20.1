@@ -27,11 +27,10 @@ import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 
 import net.forbric.api.DiscoveredMod;
 import net.forbric.kernel.metadata.forge.FmlConfigElements;
-import net.neoforged.neoforgespi.language.IConfigurable;
-import net.neoforged.neoforgespi.language.IModFileInfo;
-import net.neoforged.neoforgespi.language.IModInfo;
-import net.neoforged.neoforgespi.language.IModLanguageLoader;
-import net.neoforged.neoforgespi.locating.ForgeFeature;
+import net.minecraftforge.forgespi.language.IConfigurable;
+import net.minecraftforge.forgespi.language.IModFileInfo;
+import net.minecraftforge.forgespi.language.IModInfo;
+import net.minecraftforge.forgespi.locating.ForgeFeature;
 
 /**
  * The {@code IModInfo} a kernel-constructed {@code ModContainer} carries.
@@ -170,16 +169,6 @@ public final class KernelModInfo implements IModInfo {
 	@Override
 	public boolean getLogoBlur() {
 		return false;
-	}
-
-	/**
-	 * Null, as before — the one method the proxy never named, so it came back through the default and nothing
-	 * recorded that it had. A kernel mod has no FML language loader: the kernel constructs {@code @Mod} classes
-	 * itself rather than asking javafmlmod to.
-	 */
-	@Override
-	public IModLanguageLoader getLoader() {
-		return null;
 	}
 
 	@Override

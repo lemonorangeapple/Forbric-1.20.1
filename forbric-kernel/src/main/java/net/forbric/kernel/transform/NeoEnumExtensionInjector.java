@@ -70,9 +70,9 @@ public final class NeoEnumExtensionInjector implements ClassTransformer {
 			Class<?> extenderCls = Class.forName(
 					ForeignType.RUNTIME_ENUM_EXTENDER.binary(Ecosystem.NEOFORGE), false, gameLoader);
 			Class<?> selection = Class.forName(
-					"net.neoforged.neoforgespi.transformation.ClassProcessor$SelectionContext", false, gameLoader);
+					"net.minecraftforge.forgespi.transformation.ClassProcessor$SelectionContext", false, gameLoader);
 			Class<?> transformation = Class.forName(
-					"net.neoforged.neoforgespi.transformation.ClassProcessor$TransformationContext", false, gameLoader);
+					"net.minecraftforge.forgespi.transformation.ClassProcessor$TransformationContext", false, gameLoader);
 
 			return new NeoEnumExtensionInjector(
 					extenderCls.getConstructor().newInstance(),

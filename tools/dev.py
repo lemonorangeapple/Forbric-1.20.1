@@ -22,22 +22,62 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 KERNEL = ROOT / 'forbric-kernel'
 STATE = KERNEL / '.dev'
-MC_VERSION = '26.2'
+
+
+def _load_versions(path=None):
+    """Read the repository-root VERSIONS.properties (Java .properties syntax)."""
+    path = Path(path) if path is not None else ROOT / 'VERSIONS.properties'
+    values = {}
+    for raw in path.read_text(encoding='utf-8').splitlines():
+        line = raw.strip()
+        if not line or line.startswith('#') or '=' not in line:
+            continue
+        key, value = line.split('=', 1)
+        values[key.strip()] = value.strip()
+    return values
+
+
+VERSIONS = _load_versions()
+
+
+def vpin(key):
+    """Value of forbric.<key> from VERSIONS.properties; fail loudly when it is absent."""
+    full = f'forbric.{key}'
+    if not VERSIONS.get(full):
+        raise SystemExit(f'VERSIONS.properties is missing {full}')
+    return VERSIONS[full]
+
+
+# Target versions -- the single source of truth is VERSIONS.properties. Do not hardcode a
+# Minecraft / loader version anywhere in this file.
+MC_VERSION = vpin('minecraft.version')
+FORGE_VERSION = vpin('forge.version')
+FABRIC_LOADER_REF = vpin('fabric.loader')
+FABRIC_API_VERSION = vpin('fabric.api')
+ENERGY_VERSION = vpin('energy.version')
+RUNTIME_NAMESPACE = vpin('runtime.namespace')
+
 API_PINS = (
-    ('fabric-api-0.155.2+26.2.jar',
-     'https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api/0.155.2+26.2/fabric-api-0.155.2+26.2.jar',
-     'd6518c770024cbe8a556248f16fcdbb91c6a62f50227a6c3bae8190511e2c1b8'),
-    ('energy-5.0.0.jar', 'https://maven.modmuss50.me/teamreborn/energy/5.0.0/energy-5.0.0.jar',
+    (f'fabric-api-{FABRIC_API_VERSION}.jar',
+     f'{vpin("fabric.maven")}/net/fabricmc/fabric-api/fabric-api/{FABRIC_API_VERSION}/'
+     f'fabric-api-{FABRIC_API_VERSION}.jar',
+     '0ece50476da3692111ab04b75945c5458e70d98cd069eefc044ab3e57977deeb'),
+    (f'energy-{ENERGY_VERSION}.jar',
+     f'https://maven.modmuss50.me/teamreborn/energy/{ENERGY_VERSION}/energy-{ENERGY_VERSION}.jar',
      '889afc438d3e4add5cfdac76517da7987a2c495e4731690a56f2c5dee775db59'),
 )
-STAGED_FILES = ('merged-base/patched-mc-merged-26.2.jar', 'forge-runtime/forge-runtime.jar',
-                'merged-base/forge-runtime-interop.jar', 'neoforge-runtime/neoforge-runtime.jar',
-                # Not launched, but the bytecode tests compare the merge against both patched sides.
-                'forge-patched/patched-mc-forge-26.2.jar', 'neoforge-patched/patched-mc-neoforge-26.2.jar')
+# The dual-loader (Fabric + MinecraftForge) staged set. There is no NeoForge carrier and no cross-family
+# interop jar any more: with a single Forge family there is no byte-merge whose widened interfaces the
+# interop patcher existed to satisfy. STAGED_FILES[1] (forge-runtime) is the one --runtimeJar the kernel
+# is handed; STAGED_FILES[2] is not launched but the bytecode tests read the Forge-patched base.
+STAGED_FILES = (f'merged-base/patched-mc-merged-{MC_VERSION}.jar',
+                'forge-runtime/forge-runtime.jar',
+                f'forge-patched/patched-mc-forge-{MC_VERSION}.jar')
+JLINE_VERSION = vpin('console.jline.version')
 CONSOLE_PINS = (
-    ('jline-reader', '26333a275de502adf1dd9e6ea50aa0b4021412c71490df9ed5e88a648886ee89'),
-    ('jline-terminal', 'c0f5d70901255da66a94e59778b265d19f9308342578e34c88fc92d1b0c65fef'),
-    ('jline-terminal-jna', '58ca9d719c373206af15775ee3cd5f268136ea0d0c4e009c3e96a6d4612d5c66'),
+    ('jline-reader', 'f239f84166775f0519fb88a8aa08236d6ccb6dfb821f2dbd0cf3d8780a77c97c'),
+    ('jline-terminal', '870aecf5452190a74a3897b412c95ee9a7ae92a3fe44f5a9a8b1a2e2e66a7e13'),
+    ('jline-terminal-jna', '1cd570400d315c11ac6b3f5d0af73c05a79766bf9f00ede0a5d5f345c2bf3855'),
 )
 
 
@@ -197,7 +237,7 @@ def stage_minecraft(mc, native_dir, arch=None):
     print(f'[dev] {len(objects)} assets ready', flush=True)
     # Forge-family runtimes omit JLine as a game-provided library, but vanilla metadata does not list it.
     for name, sha in CONSOLE_PINS:
-        relative = f'org/jline/{name}/3.25.1/{name}-3.25.1.jar'
+        relative = f'org/jline/{name}/{JLINE_VERSION}/{name}-{JLINE_VERSION}.jar'
         fetch('https://repo.maven.apache.org/maven2/' + relative, mc / 'libraries' / relative,
               sha, 'sha256', cache=default_minecraft_dir() / 'libraries' / relative)
 
@@ -214,7 +254,7 @@ def java_bin(requested=None):
     return shutil.which('java') or 'java'
 
 
-def java_environment(java, minimum=25):
+def java_environment(java, minimum=17):
     result = subprocess.run([java, '-XshowSettings:properties', '-version'], capture_output=True, text=True, check=True)
     values = dict(re.findall(r'^\s*(java\.specification\.version|java\.home|os\.arch)\s*=\s*(.*?)\s*$',
                              result.stderr + result.stdout, re.M))
@@ -275,7 +315,7 @@ def ready(mc, stage, natives, arch=None):
     metadata = json.loads((mc / f'versions/{MC_VERSION}/{MC_VERSION}.json').read_text())
     if any(not confined(mc / 'libraries', lib['path']).is_file() for lib in libraries(metadata, arch=arch)):
         return False
-    if any(not (mc / f'libraries/org/jline/{name}/3.25.1/{name}-3.25.1.jar').is_file() for name, _ in CONSOLE_PINS):
+    if any(not (mc / f'libraries/org/jline/{name}/{JLINE_VERSION}/{name}-{JLINE_VERSION}.jar').is_file() for name, _ in CONSOLE_PINS):
         return False
     index = confined(mc / 'assets/indexes', metadata['assetIndex']['id'] + '.json')
     if not index.is_file():
@@ -296,7 +336,7 @@ def launch_arguments(side, info, mc, stage, instance, natives, jvm=(), game=(), 
     if missing:
         raise RuntimeError('missing Minecraft libraries; run prepare: ' + ', '.join(missing[:3]))
     # The dedicated console uses jline, absent from some version metadata.
-    owned += [str(p) for p in sorted((mc / 'libraries/org/jline').glob('**/jline-*-3.25.1.jar')) if str(p) not in owned]
+    owned += [str(p) for p in sorted((mc / 'libraries/org/jline').glob(f'**/jline-*-{JLINE_VERSION}.jar')) if str(p) not in owned]
     boot = os.environ.get('FORBRIC_BOOT_JAR', info['bootJar'])
     with zipfile.ZipFile(boot) as archive:
         if 'META-INF/jars/forbric-kernel-runtime.jar' not in archive.namelist():
@@ -312,14 +352,24 @@ def launch_arguments(side, info, mc, stage, instance, natives, jvm=(), game=(), 
     args = ([] if side == 'server' or system != 'osx' else ['-XstartOnFirstThread'])
     args += [f'-Djava.library.path={natives}',
              '-Djava.awt.headless=true'] if side == 'server' else [f'-Djava.library.path={natives}']
+    # Activate the kernel's DEOBF_REMAP stage (SRG -> named) so Forge carrier/mixin strings are rewritten at load.
+    mappings = mc / '.forbric-build' / 'mappings'
+    if (mappings / 'joined.tsrg').is_file():
+        args += [f'-Dforbric.mappings.intermediary={mappings / "intermediary.tiny"}',
+                 f'-Dforbric.mappings.mojmap={mappings / "client.txt"}',
+                 f'-Dforbric.mappings.srg={mappings / "joined.tsrg"}']
     args += [f'-Dforbric.compatibilityPolicy={os.environ.get("FORBRIC_COMPAT_POLICY", "strict")}',
              f'-Dforbric.dependencyDialog={os.environ.get("FORBRIC_DEP_DIALOG", "off")}']
+    # MixinExtras's @Local sugar emits an unverifiable surrogate for this handler on the named base (the target
+    # LVT carries SRG parameter names, not the yarn names the sugar infers from). The event it serves is niche;
+    # drop it rather than take the whole game down at Mob load. Override with FORBRIC_SUPPRESS_MIXINS.
+    args += [f'-Dforbric.suppressMixins={os.environ.get("FORBRIC_SUPPRESS_MIXINS", "fabric-entity-events-v1.mixins.json:MobEntityMixin")}']
     args += list(jvm) + ['-cp', cp, 'net.forbric.kernel.boot.Kernel' + side.title() + 'Launch',
                         '--gameJar', str(stage / STAGED_FILES[0]),
-                        '--runtimeJar', pathsep.join([str(stage / STAGED_FILES[2]), str(stage / STAGED_FILES[3])]),
+                        '--runtimeJar', str(stage / STAGED_FILES[1]),
                         '--libraryPath', pathsep.join(owned), '--', '--gameDir', str(instance)]
     if side == 'client':
-        args += ['--version', '26.2-forbric-dev', '--assetsDir', str(mc / 'assets'),
+        args += ['--version', f'{MC_VERSION}-forbric-dev', '--assetsDir', str(mc / 'assets'),
                  '--assetIndex', metadata['assetIndex']['id'], '--accessToken', '0',
                  '--username', 'ForbricDev', '--uuid', '00000000000000000000000000000000',
                  '--userType', 'legacy', '--versionType', 'release']
@@ -411,6 +461,10 @@ def launch(args, java, env):
     if args.dry_run:
         print(json.dumps([java] + command, indent=2))
         return
+    # ForgeVersion reads FORGE_SPEC when the assembled carrier manifest lacks Specification-Version; a real
+    # ModLauncher launch always sets it, so set it here too or ForgeMod dies in its own static initialiser.
+    env = dict(env)
+    env.setdefault('FORGE_SPEC', '47')
     print(f'[dev] {args.command}: {instance}', flush=True)
     if os.name == 'nt' and any(not value.isascii() for value in [str(argument_file)] + command):
         gradle('forbric-kernel-installer', ['devToolsJar'], env)
@@ -474,7 +528,7 @@ def main(argv=None):
             subprocess.run([sys.executable, '-m', 'unittest', 'discover', '-s', str(KERNEL / 'run/compat'), '-p', 'test_*.py'], check=True, cwd=KERNEL)
             return 0
         java = java_bin(args.java)
-        env = java_environment(java, minimum=21 if args.command == 'test' else 25)
+        env = java_environment(java, minimum=17)
         if args.command == 'prepare':
             prepare(args, java, env)
         elif args.command in ('client', 'server'):

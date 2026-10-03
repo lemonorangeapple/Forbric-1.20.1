@@ -62,7 +62,7 @@ public final class InstallerWindowInputTest {
 		// A supplied set it refuses on content, so nothing is downloaded: the refusal names the files inside the
 		// unquoted folder, which is the proof the quotes were dropped before the installer looked.
 		Path wrong = Files.createDirectories(work.resolve("wrong set"));
-		for (String name : List.of("patched-mc-merged-26.2.jar", "forge-runtime-interop.jar", "neoforge-runtime.jar")) {
+		for (String name : List.of("patched-mc-merged-1.20.1.jar", "forge-runtime.jar")) {
 			try (ZipOutputStream out = new ZipOutputStream(Files.newOutputStream(wrong.resolve(name)))) {
 				out.putNextEntry(new ZipEntry("com/google/gson/Gson.class"));
 				out.closeEntry();
@@ -71,7 +71,7 @@ public final class InstallerWindowInputTest {
 		log = install("\"" + mcDir + "\"", " \"" + wrong + "\" ");
 		requireFailed(log, "Install failed: Built artifacts: these files are not the game files Forbric needs");
 		require(log.contains("Minecraft directory: " + mcDir), "the game directory was not the unquoted folder: " + log);
-		require(String.join("\n", log).contains(wrong.resolve("neoforge-runtime.jar").toString()),
+		require(String.join("\n", log).contains(wrong.resolve("forge-runtime.jar").toString()),
 				"the refusal does not name the files in the unquoted folder: " + log);
 		require(!Files.exists(mcDir.resolve("versions")), "something was written for a refused set");
 		checks += 3;

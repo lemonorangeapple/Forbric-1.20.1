@@ -92,6 +92,14 @@ public final class ClassTweakerTransformer implements ClassTransformer {
 
 		for (File sourced : files) {
 			byte[] file = sourced.bytes();
+			// A Fabric access widener names Intermediary classes/members, but this game runs under Mojang's names.
+			// Widen the file itself to named (or every entry matches nothing and a mixin that relied on the widening
+			// dies with IllegalAccessError at weave time), exactly as the mixin refmaps are widened.
+			String rawText = new String(file, java.nio.charset.StandardCharsets.UTF_8);
+			String widened = "off".equalsIgnoreCase(System.getProperty("forbric.awRemap"))
+					? rawText
+					: net.forbric.kernel.transform.IntermediaryRemapTransformer.rewriteReferenceNames(rawText);
+			if (!widened.equals(rawText)) file = widened.getBytes(java.nio.charset.StandardCharsets.UTF_8);
 			try {
 				String fileNamespace = ClassTweakerReader.readHeader(file).getNamespace();
 

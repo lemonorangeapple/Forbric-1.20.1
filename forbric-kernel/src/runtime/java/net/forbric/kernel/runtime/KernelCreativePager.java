@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Objects;
 
 import net.minecraft.world.item.CreativeModeTab;
-import net.neoforged.neoforge.client.gui.CreativeTabsScreenPage;
-import net.neoforged.neoforge.common.CreativeModeTabRegistry;
+import net.minecraftforge.client.gui.CreativeTabsScreenPage;
+import net.minecraftforge.common.CreativeModeTabRegistry;
 
 /**
  * fabric-creative-tab-api-v1's {@code FabricCreativeModeInventoryScreen}, answered from NeoForge's creative pager.

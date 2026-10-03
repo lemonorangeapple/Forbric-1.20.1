@@ -21,7 +21,7 @@ public final class FabricSoundMixinAdapter {
   int dispatch=0;for(var i:fallback.instructions)if(i instanceof MethodInsnNode c&&c.owner.equals(FabricSoundContractTransformer.API)&&c.name.equals("getAudioStream"))dispatch++;if(dispatch!=1)return 0;
   MethodNode play=engine.methods.stream().filter(m->m.name.equals("play")&&m.desc.equals("(L"+sound+";)Lnet/minecraft/client/sounds/SoundEngine$PlayResult;")).findFirst().orElse(null);if(play==null)return 0;
   int calls=0;for(var i:play.instructions)if(i instanceof MethodInsnNode c&&c.owner.equals(sound)&&c.name.equals("getStream")&&c.desc.equals(FabricSoundContractTransformer.DESC))calls++;if(calls!=1)return 0;
-  AnnotationNode redirect=MixinFit.injectorOf(handler);if(redirect==null||MixinFit.atNodes(redirect).size()!=1)return 0;AnnotationNode at=MixinFit.atNodes(redirect).getFirst();
+  AnnotationNode redirect=MixinFit.injectorOf(handler);if(redirect==null||MixinFit.atNodes(redirect).size()!=1)return 0;AnnotationNode at=MixinFit.atNodes(redirect).get(0);
   if(!("Lnet/minecraft/client/sounds/SoundBufferLibrary;getStream(Lnet/minecraft/resources/Identifier;Z)"+future).equals(MixinFit.value(at,"target")))return 0;
   for(int i=0;i<at.values.size();i+=2)if(at.values.get(i).equals("target"))at.values.set(i+1,"L"+sound+";getStream"+FabricSoundContractTransformer.DESC);
   handler.desc="(L"+sound+";"+FabricSoundContractTransformer.DESC.substring(1);handler.signature=null;handler.parameters=null;handler.visibleParameterAnnotations=null;handler.invisibleParameterAnnotations=null;handler.localVariables=null;handler.tryCatchBlocks.clear();handler.instructions.clear();

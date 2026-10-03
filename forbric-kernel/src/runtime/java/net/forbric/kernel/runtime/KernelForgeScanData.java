@@ -56,11 +56,9 @@ public final class KernelForgeScanData {
 					f.target(),
 					Type.getObjectType(f.ownerInternalName()),
 					f.memberName(),
-					// MinecraftForge's own scanner stores an enum member as ModFileScanData.EnumData(Type, String).
-					// SuperMartijn642's Core Lib casts straight to it, so a String here is a ClassCastException the
-					// moment this index stops being empty.
-					ModFileScanner.wrapEnums(f.values(), (desc, value) ->
-							new ModFileScanData.EnumData(Type.getType(desc), value))));
+					// 1.20.1's AnnotationData takes the annotation value map directly (26.2 wrapped enums in an
+					// EnumData that this carrier does not have).
+					f.values()));
 		}
 
 		Set<ModFileScanData.ClassData> classSet = scanData.getClasses();

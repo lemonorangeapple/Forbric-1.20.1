@@ -37,7 +37,7 @@ public final class PortalSpawnInjector implements ClassTransformer {
 			+ "Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Z)V";
 	static final String HOOK_DESC = "(Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;"
 			+ "Ljava/util/Optional;)Ljava/util/Optional;";
-	static final String NEO = "net/neoforged/neoforge/event/EventHooks";
+	static final String NEO = "net/minecraftforge/event/EventHooks";
 	static final String FORGE = "net/minecraftforge/event/ForgeEventFactory";
 	static final String RUNTIME = "net/forbric/kernel/runtime/KernelPortalSpawn";
 	static final String NEO_ONLY = "onTrySpawnPortalNeoOnly";

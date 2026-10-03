@@ -46,7 +46,7 @@ class MixinWrapOperationShimTest {
 		assertEquals("(" + STATE + "Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/LevelReader;ZLnet/minecraft/world/entity/player/Player;"
 				+ "Lcom/llamalad7/mixinextras/injector/wrapoperation/Operation;"
 				+ "Lnet/minecraft/network/protocol/game/ServerboundPickItemFromBlockPacket;)Lnet/minecraft/world/item/ItemStack;", outer.desc);
-		AnnotationNode at = MixinFit.atNodes(MixinFit.injectorOf(outer)).getFirst();
+		AnnotationNode at = MixinFit.atNodes(MixinFit.injectorOf(outer)).get(0);
 		assertEquals(NEO_CLONE, MixinFit.value(at, "target"));
 		assertNotNull(outer.invisibleParameterAnnotations[6], "the packet's @Local(argsOnly) moved with it");
 		assertTrue(outer.invisibleParameterAnnotations[0] == null || outer.invisibleParameterAnnotations[0].isEmpty());

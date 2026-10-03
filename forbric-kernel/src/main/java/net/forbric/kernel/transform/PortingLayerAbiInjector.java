@@ -38,7 +38,7 @@ import net.forbric.kernel.util.ForbricLog;
  * Adapts ForgeConfigAPIPort's compiled call sites to the NeoForge API it is actually running against.
  *
  * <p>{@link net.forbric.kernel.boot.PortingLayerAudit} is the general half of this problem: it reports, for any
- * Fabric mod that ships its own {@code net.neoforged.*} / {@code net.minecraftforge.*}, where its copy and the
+ * Fabric mod that ships its own {@code net.minecraftforge.*} / {@code net.minecraftforge.*}, where its copy and the
  * carrier's disagree. This is the special half, and it is honestly special: a two-method ABI shim for one named
  * mod. There is no general repair, because "the port's copy differs from the real one" has as many right answers
  * as there are differences, and guessing is how a config ends up written to two files.
@@ -72,15 +72,15 @@ public final class PortingLayerAbiInjector implements ClassTransformer {
 
 	private static final String CONFIG_REGISTRY = "fuzs/forgeconfigapiport/fabric/impl/core/ConfigRegistryImpl";
 	private static final String ADAPTER_INTERNAL = "fuzs/forgeconfigapiport/fabric/impl/core/ForgeConfigSpecAdapter";
-	private static final String TRACKER = "net/neoforged/fml/config/ConfigTracker";
+	private static final String TRACKER = "net/minecraftforge/fml/config/ConfigTracker";
 	private static final String BRIDGE = "net/forbric/kernel/runtime/KernelConfigPortBridge";
-	private static final String MOD_CONFIG = "Lnet/neoforged/fml/config/ModConfig;";
-	private static final String SPEC = "Lnet/neoforged/fml/config/IConfigSpec;";
-	private static final String TYPE = "Lnet/neoforged/fml/config/ModConfig$Type;";
+	private static final String MOD_CONFIG = "Lnet/minecraftforge/fml/config/ModConfig;";
+	private static final String SPEC = "Lnet/minecraftforge/fml/config/IConfigSpec;";
+	private static final String TYPE = "Lnet/minecraftforge/fml/config/ModConfig$Type;";
 	private static final String BY_ID_3 = "(" + TYPE + SPEC + "Ljava/lang/String;)" + MOD_CONFIG;
 	private static final String BY_ID_4 = "(" + TYPE + SPEC + "Ljava/lang/String;Ljava/lang/String;)" + MOD_CONFIG;
 	private static final String VALIDATE_SPEC = "validateSpec";
-	private static final String CONFIG_SCREEN = "net/neoforged/neoforge/client/gui/ConfigurationScreen";
+	private static final String CONFIG_SCREEN = "net/minecraftforge/client/gui/ConfigurationScreen";
 	private static final String SCREEN = "Lnet/minecraft/client/gui/screens/Screen;";
 	/** The port's shape: a mod ID where real NeoForge takes a ModContainer. */
 	private static final String SCREEN_CTOR_BY_ID = "(Ljava/lang/String;" + SCREEN + ")V";
@@ -109,7 +109,7 @@ public final class PortingLayerAbiInjector implements ClassTransformer {
 	@Override
 	public byte[] transform(String className, byte[] classBytes, TransformContext context) {
 		if (classBytes == null || classBytes.length == 0) return classBytes;
-		if ("net.neoforged.fml.config.ConfigTracker".equals(className)) return leaveAnOpenConfigOpen(classBytes);
+		if ("net.minecraftforge.fml.config.ConfigTracker".equals(className)) return leaveAnOpenConfigOpen(classBytes);
 		boolean port = "fuzs.forgeconfigapiport.fabric.impl.core.ConfigRegistryImpl".equals(className)
 				|| "fuzs.forgeconfigapiport.fabric.impl.core.ForgeConfigSpecAdapter".equals(className);
 		// The screen constructor is named by the port's CONSUMERS, not by the port, so it can be in any class.
@@ -173,7 +173,7 @@ public final class PortingLayerAbiInjector implements ClassTransformer {
 			}
 		}
 		if (each == null || each.instructions == null || each.instructions.size() == 0) return classBytes;
-		AbstractInsnNode first = each.instructions.getFirst();
+		AbstractInsnNode first = each.instructions.get(0);
 		while (first != null && first.getOpcode() < 0) first = first.getNext();
 		if (first instanceof VarInsnNode load && load.getOpcode() == Opcodes.ALOAD && load.var == 2
 				&& load.getNext() instanceof MethodInsnNode call && "getLoadedConfig".equals(call.name)) {
@@ -182,8 +182,8 @@ public final class PortingLayerAbiInjector implements ClassTransformer {
 		LabelNode open = new LabelNode();
 		InsnList guard = new InsnList();
 		guard.add(new VarInsnNode(Opcodes.ALOAD, 2));
-		guard.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "net/neoforged/fml/config/ModConfig", "getLoadedConfig",
-				"()Lnet/neoforged/fml/config/IConfigSpec$ILoadedConfig;", false));
+		guard.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "net/minecraftforge/fml/config/ModConfig", "getLoadedConfig",
+				"()Lnet/minecraftforge/fml/config/IConfigSpec$ILoadedConfig;", false));
 		guard.add(new JumpInsnNode(Opcodes.IFNULL, open));
 		guard.add(new InsnNode(Opcodes.RETURN));
 		guard.add(open);

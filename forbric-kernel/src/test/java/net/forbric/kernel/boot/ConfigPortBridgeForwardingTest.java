@@ -93,7 +93,9 @@ class ConfigPortBridgeForwardingTest {
 			for (AbstractInsnNode insn : method.instructions) {
 				index++;
 				if (!(insn instanceof MethodInsnNode call)) continue;
-				if (call.owner.endsWith("ConfigTracker") && call.name.equals("registerConfig")) registered = index;
+				// The bridge hands the config to its container (ModContainer.addConfig) and then opens it; it no
+				// longer reaches for the carrier's ConfigTracker at all.
+				if (call.owner.endsWith("ModContainer") && call.name.equals("addConfig")) registered = index;
 				if (call.owner.endsWith("KernelConfigLoad") && call.name.equals("openAtRegistration")) opened = index;
 				assertTrue(!call.name.equals("loadConfigs"), "a whole-type load from the bridge opens other mods' configs");
 			}

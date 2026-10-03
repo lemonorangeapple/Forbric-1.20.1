@@ -33,7 +33,7 @@ import net.minecraftforge.forgespi.locating.ForgeFeature;
  * The {@code IModInfo} a kernel-manufactured TRADITIONAL-Forge container carries.
  *
  * <p>Traditional Forge and NeoForge each have their own {@code IModInfo} — {@code net.minecraftforge.forgespi.*}
- * against {@code net.neoforged.neoforgespi.*} — so this is a separate type from {@link KernelModInfo}, not a
+ * against {@code net.minecraftforge.forgespi.*} — so this is a separate type from {@link KernelModInfo}, not a
  * parameterisation of it. The two interfaces happen to be close in shape here, but nothing guarantees they stay
  * that way and a shared implementation could not name both.
  *

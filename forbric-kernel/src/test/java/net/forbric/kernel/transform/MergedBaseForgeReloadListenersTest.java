@@ -56,9 +56,9 @@ class MergedBaseForgeReloadListenersTest {
 				"a NeoForge-owned onResourceReload call is left — that reload would skip Forge's listeners");
 		List<MethodInsnNode> kernel = calls(after, KERNEL, "onResourceReload");
 		assertEquals(1, kernel.size(), "exactly one redirected call expected");
-		assertEquals(Opcodes.INVOKESTATIC, kernel.getFirst().getOpcode());
-		assertEquals(DESC, kernel.getFirst().desc, "same descriptor as the call it replaced, or the stack moves");
-		assertFalse(kernel.getFirst().itf);
+		assertEquals(Opcodes.INVOKESTATIC, kernel.get(0).getOpcode());
+		assertEquals(DESC, kernel.get(0).desc, "same descriptor as the call it replaced, or the stack moves");
+		assertFalse(kernel.get(0).itf);
 	}
 
 	@Test

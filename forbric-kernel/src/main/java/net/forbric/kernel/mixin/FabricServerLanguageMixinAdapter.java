@@ -16,18 +16,18 @@ public final class FabricServerLanguageMixinAdapter {
   MethodNode create=method(mixin,"create","("+MAP+")"+MAP),load=method(target,"loadDefault","()L"+TARGET+";");
   if(create!=null&&load!=null&&!group(create)&&MixinInstructionFingerprint.hash(create).equals("3ac4ff2d2897b3648f326af6daac8724b3b28e196e2457c05790753d24f13aee")
     &&calls(load,"java/util/Map","copyOf","("+MAP+")"+MAP)==0
-    &&calls(load,"net/neoforged/neoforge/server/LanguageHook","captureLanguageMap","("+MAP+MAP+")V")==1){
+    &&calls(load,"net/minecraftforge/server/LanguageHook","captureLanguageMap","("+MAP+MAP+")V")==1){
    AnnotationNode redirect=MixinFit.injectorOf(create);
    if(redirect!=null&&redirect.desc.equals("Lorg/spongepowered/asm/mixin/injection/Redirect;")&&MixinFit.atNodes(redirect).size()==1){
-    AnnotationNode at=MixinFit.atNodes(redirect).getFirst();
+    AnnotationNode at=MixinFit.atNodes(redirect).get(0);
     if(("Ljava/util/Map;copyOf("+MAP+")"+MAP).equals(MixinFit.value(at,"target"))){
      if(create.visibleAnnotations!=null)create.visibleAnnotations.remove(redirect);
      if(create.invisibleAnnotations!=null)create.invisibleAnnotations.remove(redirect);
      create.name="forbric$mergeFabricLanguages";
      MethodNode shim=new MethodNode(Opcodes.ACC_PRIVATE|Opcodes.ACC_STATIC,"forbric$captureLanguageMap","("+MAP+MAP+")V",null,null);
-     shim.visibleAnnotations=new ArrayList<>(List.of(redirect));set(at,"target","Lnet/neoforged/neoforge/server/LanguageHook;captureLanguageMap("+MAP+MAP+")V");
+     shim.visibleAnnotations=new ArrayList<>(List.of(redirect));set(at,"target","Lnet/minecraftforge/server/LanguageHook;captureLanguageMap("+MAP+MAP+")V");
      shim.instructions.add(new VarInsnNode(Opcodes.ALOAD,0));shim.instructions.add(new MethodInsnNode(Opcodes.INVOKESTATIC,MIXIN,create.name,create.desc,false));shim.instructions.add(new InsnNode(Opcodes.POP));
-     shim.instructions.add(new VarInsnNode(Opcodes.ALOAD,0));shim.instructions.add(new VarInsnNode(Opcodes.ALOAD,1));shim.instructions.add(new MethodInsnNode(Opcodes.INVOKESTATIC,"net/neoforged/neoforge/server/LanguageHook","captureLanguageMap","("+MAP+MAP+")V",false));shim.instructions.add(new InsnNode(Opcodes.RETURN));shim.maxStack=2;shim.maxLocals=2;mixin.methods.add(shim);count++;
+     shim.instructions.add(new VarInsnNode(Opcodes.ALOAD,0));shim.instructions.add(new VarInsnNode(Opcodes.ALOAD,1));shim.instructions.add(new MethodInsnNode(Opcodes.INVOKESTATIC,"net/minecraftforge/server/LanguageHook","captureLanguageMap","("+MAP+MAP+")V",false));shim.instructions.add(new InsnNode(Opcodes.RETURN));shim.maxStack=2;shim.maxLocals=2;mixin.methods.add(shim);count++;
     }
    }
   }

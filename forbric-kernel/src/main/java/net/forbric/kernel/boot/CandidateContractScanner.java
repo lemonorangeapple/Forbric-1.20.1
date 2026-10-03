@@ -58,13 +58,12 @@ final class CandidateContractScanner {
 			List<String> mixins, List<Entry> entries, List<Exclusion> exclusions) { }
 	/** A declared "cannot run with": {@code constraint} null means the range could not be read. */
 	private record Exclusion(String modId, String constraint, boolean hard) { }
-	private static final Set<String> LISTENERS = Set.of("Lnet/minecraftforge/eventbus/api/listener/SubscribeEvent;",
-			"Lnet/minecraftforge/eventbus/api/SubscribeEvent;", "Lnet/neoforged/bus/api/SubscribeEvent;");
+	private static final Set<String> LISTENERS = Set.of("Lnet/minecraftforge/eventbus/api/listener/SubscribeEvent;");
 	/** Mod-bus lifecycle events FML posts on every launch of that side; a null side means both. */
 	private static final Map<String, Optional<EnvType>> LIFECYCLE = lifecycleEvents();
 	private static Map<String, Optional<EnvType>> lifecycleEvents() {
 		Map<String, Optional<EnvType>> events = new HashMap<>();
-		for (String pkg : List.of("net/minecraftforge/fml/event/lifecycle/", "net/neoforged/fml/event/lifecycle/")) {
+		for (String pkg : List.of("net/minecraftforge/fml/event/lifecycle/", "net/minecraftforge/fml/event/lifecycle/")) {
 			for (String common : List.of("FMLCommonSetupEvent", "FMLLoadCompleteEvent", "InterModEnqueueEvent", "InterModProcessEvent")) events.put(pkg + common, Optional.empty());
 			events.put(pkg + "FMLClientSetupEvent", Optional.of(EnvType.CLIENT));
 			events.put(pkg + "FMLDedicatedServerSetupEvent", Optional.of(EnvType.SERVER));
@@ -246,7 +245,7 @@ final class CandidateContractScanner {
 	 * event of this side runs on every launch, so it is held to entrypoint rules; any other may never fire.
 	 */
 	private static List<Entry> subscriberEntries(DuplicateModArbiter.Claim claim, Inventory jar, EnvType side) throws IOException {
-		String annotation = claim.ecosystem() == Ecosystem.NEOFORGE ? "Lnet/neoforged/fml/common/EventBusSubscriber;" : "Lnet/minecraftforge/fml/common/Mod$EventBusSubscriber;";
+		String annotation = claim.ecosystem() == Ecosystem.NEOFORGE ? "Lnet/minecraftforge/fml/common/EventBusSubscriber;" : "Lnet/minecraftforge/fml/common/Mod$EventBusSubscriber;";
 		String dist = side == EnvType.SERVER ? "DEDICATED_SERVER" : "CLIENT";
 		List<Entry> entries = new ArrayList<>();
 		for (ClassNode node : jar.classesMentioning("EventBusSubscriber")) {
@@ -368,7 +367,7 @@ final class CandidateContractScanner {
 	private static void scanMixinBody(Path source, String mixin, ClassNode node, List<String> targets, Inventory jar,
 			List<UnifiedDependency> dependencies, Map<Path, Set<String>> symbolOwners, Map<Path, Inventory> inventories,
 			Set<String> transformedTargets, List<JointCandidateSelector.Rule> rules) {
-		String caller = targets.isEmpty() ? node.name : targets.getFirst();
+		String caller = targets.isEmpty() ? node.name : targets.get(0);
 		Set<String> seen = new HashSet<>();
 		for (MethodNode method : node.methods) {
 			if (method.instructions.size() == 0 || annotations(method.visibleAnnotations, method.invisibleAnnotations).stream()
@@ -551,7 +550,7 @@ final class CandidateContractScanner {
 				unproved(entry.owner() + "#" + entry.method(), "entrypoint dispatch/body is not uniquely known", entry.alwaysRuns());
 				return;
 			}
-			walk(node, methods.getFirst(), entry.alwaysRuns(), 0);
+			walk(node, methods.get(0), entry.alwaysRuns(), 0);
 		}
 
 		/** False means later instructions cannot inherit a proved unconditional call/return path. */
@@ -596,7 +595,7 @@ final class CandidateContractScanner {
 								unproved(target + "#" + name + descriptor, "local helper resolution is not unique", path);
 								path = false; complete = false; continue;
 							}
-							MethodNode helper = matches.getFirst();
+							MethodNode helper = matches.get(0);
 							boolean staticCall = call.getOpcode() == Opcodes.INVOKESTATIC;
 							boolean unique = staticCall == ((helper.access & Opcodes.ACC_STATIC) != 0)
 									&& call.itf == ((local.access & Opcodes.ACC_INTERFACE) != 0)
@@ -790,7 +789,7 @@ final class CandidateContractScanner {
 		}
 		byte[] read(String resource) throws IOException {
 			List<String> path = resources.get(resource); if (path == null) return null;
-			try (JarFile zip = new JarFile(jar.toFile()); InputStream in = zip.getInputStream(zip.getEntry(path.getFirst()))) {
+			try (JarFile zip = new JarFile(jar.toFile()); InputStream in = zip.getInputStream(zip.getEntry(path.get(0)))) {
 				byte[] bytes = bounded(in);
 				for (String name : path.subList(1, path.size())) {
 					boolean found = false;

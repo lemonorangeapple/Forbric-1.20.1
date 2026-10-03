@@ -4,7 +4,7 @@ package net.forbric.kernel.runtime;
 import java.util.List;
 
 import net.minecraft.world.item.CreativeModeTab;
-import net.neoforged.neoforge.client.gui.CreativeTabsScreenPage;
+import net.minecraftforge.client.gui.CreativeTabsScreenPage;
 
 /**
  * What {@link KernelCreativePager} needs from the merged {@code CreativeModeInventoryScreen}: NeoForge's pager state,

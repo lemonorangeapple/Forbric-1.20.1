@@ -168,13 +168,14 @@ public final class KernelModConfigScreens {
 	/** NeoForge's answer: an extension point on the mod's own container, exactly as its own Mods screen reads it. */
 	private static final class Neo {
 		static Screen resolve(String modId, Screen parent, boolean probe) {
-			Optional<? extends net.neoforged.fml.ModContainer> container =
-					net.neoforged.fml.ModList.get().getModContainerById(modId);
+			Optional<? extends net.minecraftforge.fml.ModContainer> container =
+					net.minecraftforge.fml.ModList.get().getModContainerById(modId);
 			if (container.isEmpty()) return null;
-			Optional<net.neoforged.neoforge.client.gui.IConfigScreenFactory> factory =
-					net.neoforged.neoforge.client.gui.IConfigScreenFactory.getForMod(container.get().getModInfo());
+			// 1.20.1's Forge exposes the config screen as a bi-function via ConfigScreenHandler.
+			Optional<BiFunction<Minecraft, Screen, Screen>> factory =
+					net.minecraftforge.client.ConfigScreenHandler.getScreenFactoryFor(container.get().getModInfo());
 			if (factory.isEmpty()) return null;
-			return probe ? PRESENT : factory.get().createScreen(container.get(), parent);
+			return probe ? PRESENT : factory.get().apply(Minecraft.getInstance(), parent);
 		}
 	}
 
@@ -183,7 +184,7 @@ public final class KernelModConfigScreens {
 		static Screen resolve(String modId, Screen parent, boolean probe) {
 			// Static, with no get(): the two families' ModList classes share a name and not much else.
 			Optional<? extends net.minecraftforge.fml.ModContainer> container =
-					net.minecraftforge.fml.ModList.getModContainerById(modId);
+					net.minecraftforge.fml.ModList.get().getModContainerById(modId);
 			if (container.isEmpty()) return null;
 			Optional<BiFunction<Minecraft, Screen, Screen>> factory =
 					net.minecraftforge.client.ConfigScreenHandler.getScreenFactoryFor(

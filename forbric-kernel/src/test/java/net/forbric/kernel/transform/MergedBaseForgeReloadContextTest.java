@@ -43,7 +43,7 @@ class MergedBaseForgeReloadContextTest {
 		ClassNode event = parse(bytesOf(FORGE_RUNTIME, EVENT));
 		List<MethodInsnNode> asks = calls(event, RSR, "getConditionContext");
 		assertEquals(1, asks.size(), "one Forge-typed ask expected in the carrier");
-		assertEquals("()" + FORGE_CONTEXT, asks.getFirst().desc);
+		assertEquals("()" + FORGE_CONTEXT, asks.get(0).desc);
 
 		ClassNode resources = parse(bytesOf(MERGED_BASE, RSR));
 		List<String> declared = new ArrayList<>();
@@ -66,10 +66,10 @@ class MergedBaseForgeReloadContextTest {
 		}
 		List<MethodInsnNode> kernel = calls(after, KERNEL, "contextOf");
 		assertEquals(1, kernel.size());
-		assertEquals(Opcodes.INVOKESTATIC, kernel.getFirst().getOpcode());
-		assertEquals("(L" + RSR + ";)" + FORGE_CONTEXT, kernel.getFirst().desc,
+		assertEquals(Opcodes.INVOKESTATIC, kernel.get(0).getOpcode());
+		assertEquals("(L" + RSR + ";)" + FORGE_CONTEXT, kernel.get(0).desc,
 				"receiver in, Forge-typed context out — the same stack as the call it replaced");
-		assertFalse(kernel.getFirst().itf);
+		assertFalse(kernel.get(0).itf);
 	}
 
 	@Test

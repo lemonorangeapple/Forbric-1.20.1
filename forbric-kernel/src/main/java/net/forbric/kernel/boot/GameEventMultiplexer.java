@@ -64,7 +64,7 @@ public final class GameEventMultiplexer {
 			return;
 		}
 		try {
-			Object neoBus = Class.forName("net.neoforged.neoforge.common.NeoForge", false, cl)
+			Object neoBus = Class.forName("net.minecraftforge.common.NeoForge", false, cl)
 					.getField("EVENT_BUS").get(null);
 			// Resolved for their ABSENCE, not their presence. Every bridge below is game-side now and names these
 			// families as TYPES, so a single-family instance would fail to LINK a game-side class — which arrives
@@ -72,7 +72,7 @@ public final class GameEventMultiplexer {
 			// from each family here turns that back into what it is: a ClassNotFoundException at THIS line, and
 			// one debug line saying there is only one family to bridge between.
 			Class.forName("net.minecraftforge.event.ForgeEventFactory", false, cl);
-			Class.forName("net.neoforged.neoforge.event.tick.ServerTickEvent", false, cl);
+			Class.forName("net.minecraftforge.event.tick.ServerTickEvent", false, cl);
 
 			// Each bridge is installed INDEPENDENTLY. They used to be five `n +=` calls in this one try, so the
 			// first setup failure skipped every bridge after it — and the cost of the ones skipped (see
@@ -351,7 +351,7 @@ public final class GameEventMultiplexer {
 	 */
 	public static void installDataMapWatch(ClassLoader cl) {
 		try {
-			Object neoBus = Class.forName("net.neoforged.neoforge.common.NeoForge", false, cl).getField("EVENT_BUS").get(null);
+			Object neoBus = Class.forName("net.minecraftforge.common.NeoForge", false, cl).getField("EVENT_BUS").get(null);
 			Class.forName("net.forbric.kernel.runtime.KernelNeoDataMapWatch", true, cl)
 					.getMethod("installDataMapWatch", Object.class).invoke(null, neoBus);
 			ForbricLog.debug("[Forbric/EventMux] watching NeoForge's data-map reload path");

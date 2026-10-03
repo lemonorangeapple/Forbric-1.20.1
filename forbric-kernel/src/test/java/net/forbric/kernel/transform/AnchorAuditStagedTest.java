@@ -112,7 +112,7 @@ class AnchorAuditStagedTest {
 
 		int moved = 0;
 		for (MethodNode method : node.methods) {
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn.getOpcode() == Opcodes.NEW && insn instanceof TypeInsnNode type
 						&& OPTIONS.equals(type.desc)) {
 					type.desc = "java/lang/Object";

@@ -73,7 +73,7 @@ class MergedBaseFeatureFlagsTest {
 		int n = 0;
 		for (MethodNode m : node.methods) {
 			if (!m.name.equals("<clinit>")) continue;
-			for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn instanceof MethodInsnNode call && owner.equals(call.owner)
 						&& ForbricMergedBaseCompatTransformer.LOAD_MODDED_FLAGS.equals(call.name)) n++;
 			}

@@ -173,7 +173,7 @@ class ForgeCapabilityCompositionTransformerTest {
 			for (String name : List.of("invalidateCaps", "reviveCaps")) {
 				List<MethodNode> declared = both.methods.stream().filter(m -> name.equals(m.name) && "()V".equals(m.desc)).toList();
 				assertEquals(1, declared.size(), root + " must declare " + name + " exactly once after both transformers");
-				assertTrue(declared.getFirst().instructions.size() > 1 && calls(declared.getFirst(), "KernelForgeCapabilities"),
+				assertTrue(declared.get(0).instructions.size() > 1 && calls(declared.get(0), "KernelForgeCapabilities"),
 						"the shim's delegate must survive; a bare-return stub would silently drop every LazyOptional invalidation");
 			}
 		}
@@ -203,7 +203,7 @@ class ForgeCapabilityCompositionTransformerTest {
 			for (MethodNode ctor : after.methods) {
 				if (!"<init>".equals(ctor.name)) continue;
 				MethodInsnNode superCall = null;
-				for (AbstractInsnNode insn = ctor.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+				for (AbstractInsnNode insn = ctor.instructions.get(0); insn != null; insn = insn.getNext()) {
 					if (insn instanceof MethodInsnNode call && call.getOpcode() == Opcodes.INVOKESPECIAL && "<init>".equals(call.name)
 							&& (after.superName.equals(call.owner) || after.name.equals(call.owner))) {
 						superCall = call;
@@ -250,7 +250,7 @@ class ForgeCapabilityCompositionTransformerTest {
 				ClassNode node = parse(bytes);
 				MethodNode revive = find(node, "reviveCaps", "()V");
 				if (revive == null) continue;
-				for (AbstractInsnNode insn = revive.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+				for (AbstractInsnNode insn = revive.instructions.get(0); insn != null; insn = insn.getNext()) {
 					if (!(insn instanceof FieldInsnNode f) || f.getOpcode() != Opcodes.PUTFIELD || !node.name.equals(f.owner)) continue;
 					boolean inCtor = false;
 					for (MethodNode m : node.methods) if ("<init>".equals(m.name) && assigns(m, node.name, f.name)) inCtor = true;
@@ -300,7 +300,7 @@ class ForgeCapabilityCompositionTransformerTest {
 	}
 
 	private static boolean assigns(MethodNode method, String owner, String field) {
-		for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof FieldInsnNode f && f.getOpcode() == Opcodes.PUTFIELD && owner.equals(f.owner) && field.equals(f.name)) return true;
 		}
 		return false;

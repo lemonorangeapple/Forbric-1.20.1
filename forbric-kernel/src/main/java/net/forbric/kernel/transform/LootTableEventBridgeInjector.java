@@ -106,7 +106,7 @@ public final class LootTableEventBridgeInjector implements ClassTransformer {
 		List<MethodInsnNode> loot = new ArrayList<>();
 		List<MethodInsnNode> tags = new ArrayList<>();
 		for (MethodNode method : node.methods) {
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (!(insn instanceof MethodInsnNode call) || call.getOpcode() != Opcodes.INVOKESTATIC) continue;
 				if (BRIDGE.equals(call.owner)) return classBytes;    // already routed
 				if (EVENT_HOOKS.equals(call.owner) && LOAD_LOOT_TABLE.equals(call.name) && LOAD_LOOT_TABLE_DESC.equals(call.desc)) {

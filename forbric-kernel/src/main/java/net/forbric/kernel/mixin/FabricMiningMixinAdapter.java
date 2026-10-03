@@ -20,7 +20,7 @@ public final class FabricMiningMixinAdapter {
   if(nativeCalls!=1||oldCalls!=0)return 0;
   AnnotationNode redirect=MixinFit.injectorOf(handler);if(redirect==null||!redirect.desc.equals("Lorg/spongepowered/asm/mixin/injection/Redirect;"))return 0;
   List<AnnotationNode> points=MixinFit.atNodes(redirect);if(points.size()!=1)return 0;
-  AnnotationNode at=points.getFirst();if(!("L"+STACK+";isSameItemSameComponents(L"+STACK+";L"+STACK+";)Z").equals(MixinFit.value(at,"target")))return 0;
+  AnnotationNode at=points.get(0);if(!("L"+STACK+";isSameItemSameComponents(L"+STACK+";L"+STACK+";)Z").equals(MixinFit.value(at,"target")))return 0;
   for(int i=0;i<at.values.size();i+=2)if(at.values.get(i).equals("target"))at.values.set(i+1,"L"+STACK+";shouldCauseBlockBreakReset(L"+STACK+";)Z");
   handler.instructions.clear();handler.tryCatchBlocks.clear();handler.localVariables=null;var out=handler.instructions;
   LabelNode keep=new LabelNode(),reset=new LabelNode();

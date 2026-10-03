@@ -44,7 +44,7 @@ public final class FabricFuelValuesInjector implements ClassTransformer {
 	public static final String PROPERTY = "forbric.fabricFuel";
 	/** Mirrors {@code KernelFabricFuel.RETURN_HOOKS}, which the game side reads; the boot side cannot name it. */
 	public static final String RETURN_HOOKS_PROPERTY = "forbric.fabricFuel.returnHooks";
-	static final String HOOKS = "net.neoforged.neoforge.common.DataMapHooks";
+	static final String HOOKS = "net.minecraftforge.common.DataMapHooks";
 	static final String FUEL_VALUES_CLASS = "net.minecraft.world.level.block.entity.FuelValues";
 	static final String FUEL_VALUES = "net/minecraft/world/level/block/entity/FuelValues";
 	static final String BUILDER = "net/minecraft/world/level/block/entity/FuelValues$Builder";

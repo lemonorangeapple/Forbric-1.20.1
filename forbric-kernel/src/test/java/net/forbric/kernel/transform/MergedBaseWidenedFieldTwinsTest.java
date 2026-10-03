@@ -70,7 +70,7 @@ class MergedBaseWidenedFieldTwinsTest {
 
 			int mergedWrites = 0, twinWrites = 0;
 			for (MethodNode m : after.methods) {
-				for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+				for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 					if (!(insn instanceof FieldInsnNode f) || f.getOpcode() != Opcodes.PUTFIELD || !f.name.equals(row.name())) continue;
 					if (f.desc.equals(row.mergedDesc())) {
 						mergedWrites++;
@@ -105,7 +105,7 @@ class MergedBaseWidenedFieldTwinsTest {
 		for (MethodNode m : after.methods) {
 			if ("<init>".equals(m.name)) continue;
 			boolean readsMap = false;
-			for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn instanceof FieldInsnNode f && f.getOpcode() == Opcodes.GETFIELD && f.name.equals(row.name()) && f.desc.equals(row.mergedDesc())) readsMap = true;
 			}
 			if (!readsMap) continue;
@@ -175,7 +175,7 @@ class MergedBaseWidenedFieldTwinsTest {
 	}
 
 	private static AbstractInsnNode firstReal(MethodNode m) {
-		AbstractInsnNode insn = m.instructions.getFirst();
+		AbstractInsnNode insn = m.instructions.get(0);
 		while (insn != null && insn.getOpcode() < 0) insn = insn.getNext();
 		return insn;
 	}

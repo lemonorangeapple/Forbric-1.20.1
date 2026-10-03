@@ -45,7 +45,7 @@ import javax.swing.WindowConstants;
 
 /** The window: pick a game version, a loader version and a directory, then press Install. */
 final class InstallerGui {
-	static final String DEFAULT_VERSION = "26.2";
+	static final String DEFAULT_VERSION = Pins.MINECRAFT;
 
 	private final JFrame frame = new JFrame("Forbric Installer");
 	private final JComboBox<String> gameVersion = new JComboBox<>(new String[] {DEFAULT_VERSION});
@@ -90,7 +90,7 @@ final class InstallerGui {
 		JPanel panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 		panel.setBorder(BorderFactory.createEmptyBorder(12, 12, 0, 12));
-		JLabel title = new JLabel("Forbric — Fabric, MinecraftForge and NeoForge mods in one game");
+		JLabel title = new JLabel("Forbric — Fabric and MinecraftForge mods in one game");
 		title.setFont(title.getFont().deriveFont(title.getFont().getSize2D() + 3f));
 		// BoxLayout positions a child by its own alignmentX, and these two did not agree: the title floated
 		// while the paragraph below it sat left, which is why the heading appeared shoved to one side.

@@ -5,24 +5,27 @@
 # It merges the Forge `-universal` jar (net.minecraftforge.* — the API + the targets of the MC binary patches)
 # with the FML/ModLauncher/eventbus/securemodules runtime libraries into ONE jar carrying a synthetic library
 # `fabric.mod.json` (id "forge"), so Knot loads every net.minecraftforge.* class in its transforming classloader,
-# co-located with the (Mojmap-native, Forge-patched) game classes. module-info/signatures/mods.toml are stripped
+# co-located with the (SRG-named, Forge-patched) game classes. module-info/signatures/mods.toml are stripped
 # and META-INF/services entries concatenated.
 #
 # Mixin is DELIBERATELY EXCLUDED here: Forge ships org.spongepowered:mixin:0.8.7, which would collide with Fabric's
 # sponge-mixin fork already on the Knot classpath. Forge-mod mixin support is wired separately (Stage 5).
 #
 # Output: $OUT (default run/forge-runtime/forge-runtime.jar), cached — rebuilt only if missing.
-# Pinned to Forge 26.2-65.0.1 (lib versions below come from its userdev config.json); bump FORGE_VERSION + the
-# versions together for a different Forge build.
+# Forge version defaults to forbric.forge.version in VERSIONS.properties.
+#
+# TODO(forbric-port item 10): the GAV list below is still the 26.2 set; for Forge 1.20.1 it must come from the
+# 1.20.1 -userdev config.json (modlauncher/securemodules/bootstrap/eventbus/accesstransformers/... all differ).
 set -euo pipefail
 
-FORGE_VERSION="${FORGE_VERSION:-26.2-65.0.1}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
+. "$HERE/lib-versions.sh"
+FORGE_VERSION="${FORGE_VERSION:-$FORBRIC_FORGE_VERSION}"
 OUT="${OUT:-$HERE/forge-runtime/forge-runtime.jar}"
 WORK="${WORK:-$HERE/forge-runtime/work}"
 BRIDGE_OUT="${BRIDGE_OUT:-$HERE/forge-runtime/forbric-bridge.jar}"
 BRIDGE_SRC="$HERE/bridge-src"
-PATCHED="${PATCHED:-$HERE/forge-patched/patched-mc-forge-26.2.jar}"
+PATCHED="${PATCHED:-$HERE/forge-patched/patched-mc-forge-$FORBRIC_MC_VERSION.jar}"
 FORGEMVN=https://maven.minecraftforge.net
 CENTRAL=https://repo1.maven.org/maven2
 

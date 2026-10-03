@@ -38,7 +38,7 @@ import org.objectweb.asm.tree.VarInsnNode;
 public final class ForgeLootPoolConditionsInjector implements ClassTransformer {
 	static final String PROPERTY = "forbric.forgePoolConditions";
 	static final String BUILDER = "net.minecraft.world.level.storage.loot.LootPool$Builder";
-	static final String HOOKS = "net.neoforged.neoforge.common.CommonHooks";
+	static final String HOOKS = "net.minecraftforge.common.CommonHooks";
 	static final String POOL = "net/minecraft/world/level/storage/loot/LootPool";
 	static final String CONDITION = "Lnet/minecraftforge/common/crafting/conditions/ICondition;";
 	static final String NEO_CTOR = "(Ljava/util/List;Ljava/util/List;Ljava/util/List;Lnet/minecraft/world/level/storage/loot/providers/number/NumberProvider;"

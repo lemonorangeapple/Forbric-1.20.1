@@ -56,8 +56,8 @@ public final class MixinShearsRelay {
 	static final String ADDED_SUFFIX = "$forbricshears";
 	private static final String WRAP_OPERATION = "Lcom/llamalad7/mixinextras/injector/wrapoperation/WrapOperation;";
 	private static final String GROUP = "Lorg/spongepowered/asm/mixin/injection/Group;";
-	private static final String ABILITIES = "net/neoforged/neoforge/common/ItemAbilities";
-	private static final String ABILITY = "Lnet/neoforged/neoforge/common/ItemAbility;";
+	private static final String ABILITIES = "net/minecraftforge/common/ItemAbilities";
+	private static final String ABILITY = "Lnet/minecraftforge/common/ItemAbility;";
 	private static final String TOOL_ACTIONS = "net/minecraftforge/common/ToolActions";
 	private static final String TOOL_ACTION = "Lnet/minecraftforge/common/ToolAction;";
 
@@ -105,7 +105,7 @@ public final class MixinShearsRelay {
 		if (MixinStubRebind.ecosystemOf(mixin.name) != Ecosystem.FABRIC) return 0;
 		List<String> targetNames = MixinOverloadPin.targetsOf(mixin);
 		if (targetNames.size() != 1) return 0;
-		String targetName = targetNames.getFirst();
+		String targetName = targetNames.get(0);
 		if (ROWS.stream().noneMatch(row -> row.target().equals(targetName))) return 0;
 		ClassNode target = targets.apply(targetName);
 		if (target == null || target.methods == null) return 0;
@@ -123,12 +123,12 @@ public final class MixinShearsRelay {
 		if (injector == null || !WRAP_OPERATION.equals(injector.desc) || MixinFit.value(injector, "slice") != null) return false;
 		List<AnnotationNode> points = MixinFit.atNodes(injector);
 		if (points.size() != 1) return false;
-		AnnotationNode at = points.getFirst();
+		AnnotationNode at = points.get(0);
 		if (!"INVOKE".equals(MixinFit.asString(MixinFit.value(at, "value"))) || !VANILLA_TARGET.equals(MixinFit.asString(MixinFit.value(at, "target")))
 				|| MixinFit.value(at, "ordinal") != null || MixinFit.value(at, "slice") != null) return false;
 		List<String> selectors = MixinFit.stringList(MixinFit.value(injector, "method"));
 		if (selectors.size() != 1) return false;
-		MethodNode body = selected(target, selectors.getFirst());
+		MethodNode body = selected(target, selectors.get(0));
 		if (body == null) return false;
 		Row row = ROWS.stream().filter(r -> r.target().equals(target.name) && r.method().equals(body.name)).findFirst().orElse(null);
 		if (row == null || carrierCalls(body, row) != 1) return false;

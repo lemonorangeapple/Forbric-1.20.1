@@ -48,7 +48,7 @@ class CompatibilityDecisionTest {
 	void strictRejectsEvenWhenPlayerPreviouslyAcceptedAndNeverCallsUi() {
 		assertTrue(CompatibilityDecision.decide(required(), CompatibilityDecision.Policy.CONTINUE, false, rows -> fail()));
 		assertFalse(CompatibilityDecision.decide(required(), CompatibilityDecision.Policy.STRICT, true, rows -> fail()));
-		CompatibilityFindings.record(required().getFirst());
+		CompatibilityFindings.record(required().get(0));
 		assertEquals(1, CompatibilityFindings.confirmedRequired().size(), "accepting never turns evidence green");
 	}
 
@@ -76,7 +76,7 @@ class CompatibilityDecisionTest {
 
 	@Test
 	void lateQueueIsNonInteractiveAndDropsResolvedFindings() {
-		CompatibilityFindings.record(required().getFirst());
+		CompatibilityFindings.record(required().get(0));
 		CompatibilityFindings.record(finding("resolved", CompatibilityFinding.Confidence.CONFIRMED, true));
 		CompatibilityDecision.queue();
 		CompatibilityFindings.resolve("resolved", "demo", "repair proved");
@@ -133,7 +133,7 @@ class CompatibilityDecisionTest {
 		assertTrue(CompatibilityDecision.decide(List.of(loss), CompatibilityDecision.Policy.ASK, true, true, missingDependency(), windows));
 		assertEquals(1, windows.confirmations.size(), "one window");
 		assertEquals(List.of(), windows.notices, "the old notice is not opened as a second window");
-		DependencyReport.Confirmation shown = windows.confirmations.getFirst();
+		DependencyReport.Confirmation shown = windows.confirmations.get(0);
 		assertEquals(List.of("forbricnosuchmod"), shown.coveredDeps().stream().map(DependencyReport.Row::requiredId).toList());
 		assertEquals(List.of("somelib"), shown.deps().stream().map(DependencyReport.Row::requiredId).toList());
 		assertEquals(List.of("preflight miss"), shown.suspected().stream().map(DependencyReport.CompatibilityRow::detail).toList(),
@@ -216,7 +216,7 @@ class CompatibilityDecisionTest {
 			assertTrue(CompatibilityDecision.decide(List.of(), CompatibilityDecision.Policy.ASK, true, true, held, windows));
 			assertEquals(1, windows.notices.size(), "a foreign break alone opens the one fail-open notice");
 			assertEquals(List.of("1/2 anchors resolve"),
-					windows.noticeDetails.getFirst().stream().map(DependencyReport.CompatibilityRow::detail).toList(),
+					windows.noticeDetails.get(0).stream().map(DependencyReport.CompatibilityRow::detail).toList(),
 					"the break's own suspicion is not listed a second time in the details");
 			assertEquals(List.of(), windows.confirmations, "and nothing is asked: a suspicion needs no answer");
 		} finally {
@@ -241,7 +241,7 @@ class CompatibilityDecisionTest {
 
 	@Test
 	void aStopTellsAnUnattendedOperatorWhichPropertyContinuesExplicitly() {
-		CompatibilityFindings.record(required().getFirst());
+		CompatibilityFindings.record(required().get(0));
 		System.setProperty(CompatibilityDecision.PROPERTY, "strict");
 		java.io.PrintStream err = System.err;
 		java.io.ByteArrayOutputStream log = new java.io.ByteArrayOutputStream();

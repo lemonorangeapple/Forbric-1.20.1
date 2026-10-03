@@ -50,6 +50,18 @@ public final class ForgeModRemapper {
 	}
 
 	/**
+	 * Builds a tiny-remapper provider that renames a 1.20.1 Forge mod from its production namespace (Mojmap class
+	 * names + SRG member names) to intermediary. Requires a {@link ForbricMappings} loaded with MCPConfig's tsrg.
+	 */
+	public static IMappingProvider srgMappingProvider(ForbricMappings mappings) {
+		if (!mappings.hasSrg()) {
+			throw new IllegalStateException(
+					"no SRG namespace: load ForbricMappings with MCPConfig's joined.tsrg");
+		}
+		return provider(mappings, ForbricMappings.SRG, ForbricMappings.INTERMEDIARY);
+	}
+
+	/**
 	 * Builds a tiny-remapper provider for an arbitrary namespace pair held in the merged tree
 	 * ({@code named}, {@code official}, {@code intermediary}). For example {@code provider(m, "official", "named")}
 	 * produces the mapping that deobfuscates the vanilla game jar to Mojmap (used to build the remap classpath).
@@ -78,6 +90,7 @@ public final class ForgeModRemapper {
 					String fieldDst = toIsSrc ? field.getSrcName() : field.getName(toId);
 					String fieldName = fromIsSrc ? field.getSrcName() : field.getName(fromId);
 					String fieldDesc = fromIsSrc ? field.getSrcDesc() : field.getDesc(fromId);
+					if (fieldDesc == null) fieldDesc = field.getSrcDesc();
 					if (fieldDst == null || fieldName == null) continue;
 
 					acceptor.acceptField(new IMappingProvider.Member(src, fieldName, fieldDesc), fieldDst);
@@ -87,6 +100,7 @@ public final class ForgeModRemapper {
 					String methodDst = toIsSrc ? method.getSrcName() : method.getName(toId);
 					String methodName = fromIsSrc ? method.getSrcName() : method.getName(fromId);
 					String methodDesc = fromIsSrc ? method.getSrcDesc() : method.getDesc(fromId);
+					if (methodDesc == null) methodDesc = method.getSrcDesc();
 					if (methodDst == null || methodName == null) continue;
 
 					acceptor.acceptMethod(new IMappingProvider.Member(src, methodName, methodDesc), methodDst);
@@ -103,6 +117,11 @@ public final class ForgeModRemapper {
 	 */
 	public static void remapJar(Path input, Path output, ForbricMappings mappings, List<Path> remapClasspath) throws IOException {
 		remapJar(input, output, mappingProvider(mappings), remapClasspath);
+	}
+
+	/** Remaps a 1.20.1 Forge jar (SRG production namespace) to intermediary. */
+	public static void remapForgeJar(Path input, Path output, ForbricMappings mappings, List<Path> remapClasspath) throws IOException {
+		remapJar(input, output, srgMappingProvider(mappings), remapClasspath);
 	}
 
 	/** Remaps {@code input} to {@code output} using an explicit provider (e.g. {@code provider(m, "official", "named")}). */

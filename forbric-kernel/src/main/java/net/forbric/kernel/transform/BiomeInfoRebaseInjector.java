@@ -25,9 +25,9 @@ import org.objectweb.asm.tree.VarInsnNode;
  * Fabric climate — it is a diagnostic control, not a setting.
  */
 public final class BiomeInfoRebaseInjector implements ClassTransformer {
-	static final String TARGET = "net.neoforged.neoforge.common.world.ModifiableBiomeInfo";
-	static final String OWNER = "net/neoforged/neoforge/common/world/ModifiableBiomeInfo";
-	static final String INFO = "net/neoforged/neoforge/common/world/ModifiableBiomeInfo$BiomeInfo";
+	static final String TARGET = "net.minecraftforge.common.world.ModifiableBiomeInfo";
+	static final String OWNER = "net/minecraftforge/common/world/ModifiableBiomeInfo";
+	static final String INFO = "net/minecraftforge/common/world/ModifiableBiomeInfo$BiomeInfo";
 	static final String APPLY_DESC = "(Lnet/minecraft/core/Holder;Ljava/util/List;Lnet/minecraft/core/RegistryAccess;)Z";
 	static final String RUNTIME = "net/forbric/kernel/runtime/KernelBiomeView";
 	static final String START_FROM = "(L" + INFO + ";Lnet/minecraft/core/Holder;)L" + INFO + ";";

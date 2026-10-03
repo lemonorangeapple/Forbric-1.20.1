@@ -49,7 +49,7 @@ public final class ForgeDamageSeamsInjector implements ClassTransformer {
 	public static final String PROPERTY = "forbric.forgeDamageSeams";
 	static final String LIVING = "net/minecraft/world/entity/LivingEntity";
 	static final String PLAYER = "net/minecraft/world/entity/player/Player";
-	static final String CONTAINER = "net/neoforged/neoforge/common/damagesource/DamageContainer";
+	static final String CONTAINER = "net/minecraftforge/common/damagesource/DamageContainer";
 	static final String RUNTIME = "net/forbric/kernel/runtime/KernelLivingDamage";
 	static final String SOURCE = "Lnet/minecraft/world/damagesource/DamageSource;";
 	static final String HURT_DESC = "(Lnet/minecraft/server/level/ServerLevel;" + SOURCE + "F)V";
@@ -109,7 +109,7 @@ public final class ForgeDamageSeamsInjector implements ClassTransformer {
 				|| !load(code.get(2), Opcodes.ALOAD, 2)
 				|| !(code.get(3) instanceof MethodInsnNode invulnerable) || !invulnerable.name.equals("isInvulnerableTo")
 				|| code.get(4).getOpcode() != Opcodes.IFNE) return false;
-		if (calls(method, "net/neoforged/neoforge/common/CommonHooks", "onLivingDamagePre") != 1
+		if (calls(method, "net/minecraftforge/common/CommonHooks", "onLivingDamagePre") != 1
 				|| calls(method, "com/google/common/base/Preconditions", "checkArgument") != 1) return false;
 		// The one `getNewDamage(); fstore 3` after NeoForge's Pre: the health damage the method goes on to apply.
 		AbstractInsnNode pre = null, store = null;
@@ -161,7 +161,7 @@ public final class ForgeDamageSeamsInjector implements ClassTransformer {
 		if (calls(method, "net/minecraftforge/common/ForgeHooks", "onPlayerAttack") != 0
 				|| calls(method, RUNTIME, "playerAttack") != 0) return false;
 		// Nothing jumps back to the first instruction: the seam's F_SAME frames are then relative to the entry frame.
-		for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null && insn.getOpcode() < 0; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = method.instructions.get(0); insn != null && insn.getOpcode() < 0; insn = insn.getNext()) {
 			if (insn instanceof FrameNode) return false;
 		}
 		if (code(method).isEmpty()) return false;

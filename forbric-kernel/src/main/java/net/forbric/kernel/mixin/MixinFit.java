@@ -1123,7 +1123,7 @@ public final class MixinFit {
 		boolean resolved = false;
 		int seen = -1;
 		for (MethodNode hit : hits) {
-			for (AbstractInsnNode insn = hit.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = hit.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (!(insn instanceof org.objectweb.asm.tree.TypeInsnNode t) || t.getOpcode() != Opcodes.NEW || !type.equals(t.desc)) continue;
 				for (AbstractInsnNode c = insn.getNext(); c != null; c = c.getNext()) {
 					if (c instanceof MethodInsnNode call && call.getOpcode() == Opcodes.INVOKESPECIAL && "<init>".equals(call.name) && type.equals(call.owner)) {

@@ -50,12 +50,22 @@ public final class KernelForgeBaseline {
 	 * created the custom registries (forge:fluid_type et al.) before anything enumerates them, and every
 	 * {@code DeferredRegister} — baseline or mod — flushes off the same event.
 	 */
-	public static void register(ClassLoader cl, List<KernelForgeModContext.Handle> modHandles) {
+	public static void register(ClassLoader cl, List<KernelForgeModContext.Handle> modHandles, boolean client) {
 		try {
 			Class.forName(FORGE_MOD, false, cl);
 		} catch (ClassNotFoundException absent) {
 			ForbricLog.debug("[Forbric/Forge] traditional-Forge ForgeMod not present — skipping");
 			return;
+		}
+		// Forge's own version classes read FMLLoader.versionInfo()/getDist(), which only ModLauncher would have
+		// populated. Bookkeeping NPEs there used to take ForgeMod (and every forge: registry it declares) down.
+		try {
+			KernelForgeModContext.seedLoaderStatics(cl,
+					KernelBoot.descriptor("forge.version", "47.4.0"),
+					KernelBoot.descriptor("minecraft.version", "1.20.1"),
+					"20230612.114412", client);
+		} catch (Throwable seedFailure) {
+			ForbricLog.debug("[Forbric/Forge] could not seed FMLLoader statics: %s", Reflect.unwrap(seedFailure));
 		}
 		// The baseline's own bring-up and the RegisterEvent pass are separated deliberately. They used to share one
 		// try, so a ForgeMod that failed to construct took the whole pass with it — including every real mod's
@@ -89,11 +99,10 @@ public final class KernelForgeBaseline {
 			// so those registries never exist and RegistryObjects like ForgeMod.EMPTY_TYPE (minecraft:empty fluid type,
 			// read by EntityFluidInteraction when a chest minecart spawns during worldgen) stay unbound. Fire it FIRST
 			// so the registries exist before the RegisterEvent pass enumerates + populates them.
-			int created = fireNewRegistryEvent(cl);
-
 			List<KernelForgeModContext.Handle> all = new java.util.ArrayList<>();
 			if (baseline != null) all.add(baseline);
 			all.addAll(modHandles);
+			int created = fireNewRegistryEvent(cl, all);
 			int n = KernelForgeModContext.fireRegisterEvents(cl, all);
 			ForbricLog.info("[Forbric/Forge] created %d custom registr(ies) via NewRegistryEvent + fired Forge "
 					+ "RegisterEvent x%d on %d bus(es) [%s + %d mod(s)]", created, n, all.size(),
@@ -106,11 +115,12 @@ public final class KernelForgeBaseline {
 	}
 
 	/**
-	 * Post a {@code NewRegistryEvent} on its global bus (delivering to ForgeMod's {@code DeferredRegister} subscribers,
-	 * which call {@code event.create(builder)}) then {@code fill()} it to build + register those registries into
+	 * 1.20.1's {@code NewRegistryEvent} implements {@code IModBusEvent} and has no static bus: Forge delivers it to
+	 * each mod's own bus. Post it on every handle's bus (ForgeMod's {@code DeferredRegister} subscribers call
+	 * {@code event.create(builder)}), then {@code fill()} it to build + register those registries into
 	 * {@code RegistryManager.ACTIVE}. Returns the count of registries that came into being. Best-effort.
 	 */
-	private static int fireNewRegistryEvent(ClassLoader cl) {
+	private static int fireNewRegistryEvent(ClassLoader cl, List<KernelForgeModContext.Handle> handles) {
 		try {
 			Class<?> newRegCls = Class.forName(ForeignType.NEW_REGISTRY_EVENT.binary(Ecosystem.FORGE), false, cl);
 			Class<?> regManager = Class.forName(ForeignType.REGISTRY_MANAGER.binary(Ecosystem.FORGE), false, cl);
@@ -120,23 +130,22 @@ public final class KernelForgeBaseline {
 			int before = ((java.util.Map<?, ?>) rf.get(active)).size();
 
 			Object event = newRegCls.getDeclaredConstructor().newInstance();
-			Object bus = newRegCls.getField("BUS").get(null);
+			Class<?> eventBase = Class.forName("net.minecraftforge.eventbus.api.Event", false, cl);
 
-			// The post and the fill are separated on purpose. This is traditional Forge's GLOBAL bus, so every
-			// mod's NewRegistryEvent listener runs inside one call and there is no seam to isolate them at. What
-			// there IS a seam for is the consequence: one listener throwing used to take fill() down with it, and
-			// with it EVERY Forge custom registry in the instance -- forge:fluid_type, holder_set_type, the
-			// modifier serializers -- including the ones listeners that already ran had created. Filling anyway
-			// keeps those. This is the same shape as the deferred-work drain in KernelNeoSetup: the failure is
-			// one mod's, and the cost should be too.
+			// The post and the fill are separated on purpose. One mod's listener must not take every other mod's
+			// registry down with it, so each bus is posted to in its own try and a thrower costs only its own mod's
+			// entries. fill() then still runs, keeping whatever the listeners before it created.
 			boolean posted = true;
-			try {
-				KernelForgeModContext.single(bus.getClass(), "post").invoke(bus, event);
-			} catch (Throwable t) {
-				posted = false;
-				ForbricLog.warn("[Forbric/Forge] a traditional-Forge mod's NewRegistryEvent listener failed — the "
-						+ "registries collected before it are still created below, the ones after it are not",
-						Reflect.unwrap(t));
+			for (KernelForgeModContext.Handle handle : handles) {
+				try {
+					Method post = handle.busGroup().getClass().getMethod("post", eventBase);
+					post.invoke(handle.busGroup(), event);
+				} catch (Throwable t) {
+					posted = false;
+					ForbricLog.warn("[Forbric/Forge] %s's NewRegistryEvent listener failed — the registries collected "
+							+ "before it are still created below, the ones after it are not", handle.modId(),
+							Reflect.unwrap(t));
+				}
 			}
 
 			Method fill = newRegCls.getDeclaredMethod("fill");

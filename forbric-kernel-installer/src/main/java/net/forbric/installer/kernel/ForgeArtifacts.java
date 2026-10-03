@@ -97,15 +97,17 @@ final class ForgeArtifacts {
 		final List<String> ats;          // ["ats/accesstransformer.cfg"] — AT resources inside the userdev jar
 		final String binpatcherCoordinate; // net.minecraftforge:binarypatcher:1.3.0:fatjar
 		final List<String> binpatcherArgs;  // ["--clean","{clean}","--output","{output}","--apply","{patch}"]
+		final String mcpCoordinate;      // de.oceanlabs.mcp:mcp_config:<mc>-<stamp>@zip — the SRG (joined.tsrg) source
 
 		UserdevConfig(List<String> libraries, String universalCoordinate, String binpatchesEntry, List<String> ats,
-		              String binpatcherCoordinate, List<String> binpatcherArgs) {
+		              String binpatcherCoordinate, List<String> binpatcherArgs, String mcpCoordinate) {
 			this.libraries = libraries;
 			this.universalCoordinate = universalCoordinate;
 			this.binpatchesEntry = binpatchesEntry;
 			this.ats = ats;
 			this.binpatcherCoordinate = binpatcherCoordinate;
 			this.binpatcherArgs = binpatcherArgs;
+			this.mcpCoordinate = mcpCoordinate;
 		}
 	}
 
@@ -130,6 +132,9 @@ final class ForgeArtifacts {
 		List<String> ats = asStringList(root.get("ats"));
 		if (ats.isEmpty()) ats = List.of("ats/accesstransformer.cfg");
 
+		// The MCPConfig coordinate carrying the SRG member names (see forbric-loader/MAPPINGS.md).
+		String mcp = root.get("mcp") instanceof String ? stripExtension((String) root.get("mcp")) : null;
+
 		Map<String, Object> binpatcher = root.get("binpatcher") instanceof Map
 				? (Map<String, Object>) root.get("binpatcher") : Map.of();
 		String binpatcherCoord = binpatcher.get("version") instanceof String
@@ -139,7 +144,7 @@ final class ForgeArtifacts {
 			binpatcherArgs = List.of("--clean", "{clean}", "--output", "{output}", "--apply", "{patch}");
 		}
 
-		return new UserdevConfig(libraries, universal, binpatchesEntry, ats, binpatcherCoord, binpatcherArgs);
+		return new UserdevConfig(libraries, universal, binpatchesEntry, ats, binpatcherCoord, binpatcherArgs, mcp);
 	}
 
 	private static List<String> asStringList(Object o) {

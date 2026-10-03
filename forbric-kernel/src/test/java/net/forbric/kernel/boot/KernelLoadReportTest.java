@@ -61,7 +61,9 @@ class KernelLoadReportTest {
 		var report = dir.resolve("load-report.txt");
 		var machine = dir.resolve("compatibility-report.json");
 		KernelLoadReport.writeTo(report);
-		try (var workers = java.util.concurrent.Executors.newFixedThreadPool(3)) {
+		// Java 17: ExecutorService is not AutoCloseable (that is Java 19+), so shut it down explicitly.
+		var workers = java.util.concurrent.Executors.newFixedThreadPool(3);
+		try {
 			var first = workers.submit(() -> { for (int i = 0; i < 40; i++) KernelLoadReport.writeTo(report); });
 			var second = workers.submit(() -> { for (int i = 0; i < 40; i++) KernelLoadReport.writeTo(report); });
 			var reader = workers.submit(() -> {
@@ -75,6 +77,8 @@ class KernelLoadReportTest {
 				}
 			});
 			first.get(); second.get(); reader.get();
+		} finally {
+			workers.shutdown();
 		}
 	}
 
@@ -169,7 +173,7 @@ class KernelLoadReportTest {
 		for (org.objectweb.asm.tree.MethodNode m : node.methods) {
 			if (!m.name.startsWith("lambda$installStarted$")) continue;
 			boolean hook = false;
-			for (org.objectweb.asm.tree.AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (org.objectweb.asm.tree.AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn instanceof org.objectweb.asm.tree.MethodInsnNode call && "handleServerStarted".equals(call.name)) hook = true;
 				if (insn instanceof org.objectweb.asm.tree.MethodInsnNode call && "net/forbric/kernel/boot/KernelLoadReport".equals(call.owner)
 						&& "write".equals(call.name)) writes |= hook;

@@ -33,10 +33,10 @@ import org.objectweb.asm.tree.VarInsnNode;
  * only the event's delivery changes.
  */
 public final class NeoTooltipAppendersInjector implements ClassTransformer {
-	static final String HANDLER = "net.neoforged.neoforge.common.tooltip.ItemTooltipHandler";
-	static final String EVENT = "net/neoforged/neoforge/event/RegisterTooltipAppendersEvent";
+	static final String HANDLER = "net.minecraftforge.common.tooltip.ItemTooltipHandler";
+	static final String EVENT = "net/minecraftforge/event/RegisterTooltipAppendersEvent";
 	static final String RUNTIME = "net/forbric/kernel/runtime/KernelNeoTooltips";
-	static final String APPENDER = "net/neoforged/neoforge/common/tooltip/TooltipAppender";
+	static final String APPENDER = "net/minecraftforge/common/tooltip/TooltipAppender";
 	static final String AROUND_DESC = "(L" + APPENDER + ";Lnet/minecraft/core/component/DataComponentType;)L" + APPENDER + ";";
 	private static volatile boolean around;
 
@@ -138,8 +138,8 @@ public final class NeoTooltipAppendersInjector implements ClassTransformer {
 			for (AbstractInsnNode insn : method.instructions) {
 				if (!(insn instanceof MethodInsnNode call)) continue;
 				if (call.owner.equals(RUNTIME)) return false;
-				if (call.getOpcode() == Opcodes.INVOKESTATIC && call.owner.equals("net/neoforged/fml/ModLoader")
-						&& call.name.equals("postEvent") && call.desc.equals("(Lnet/neoforged/bus/api/Event;)V")) {
+				if (call.getOpcode() == Opcodes.INVOKESTATIC && call.owner.equals("net/minecraftforge/fml/ModLoader")
+						&& call.name.equals("postEvent") && call.desc.equals("(Lnet/minecraftforge/eventbus/api/Event;)V")) {
 					post = call;
 					posts++;
 				}

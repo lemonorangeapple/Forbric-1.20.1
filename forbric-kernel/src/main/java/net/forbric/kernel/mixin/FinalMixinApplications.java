@@ -146,10 +146,10 @@ public final class FinalMixinApplications {
     List<Renamed> rename=names.find(mixin,injector.name(),injector.desc());
     List<MethodNode> candidates=merged.get(mixin).stream().filter(m->rename.stream().anyMatch(n->n.name().equals(m.name)&&n.desc().equals(m.desc))).toList();
     Outcome state=Outcome.UNKNOWN;
-    int references=candidates.size()==1?references(target,candidates.getFirst()):-1;
+    int references=candidates.size()==1?references(target,candidates.get(0)):-1;
     // Attached is not run: every call of the handler in a method nothing in the merged game calls. Judged whatever the
     // injector's shape, because a call in dead code is dead however it is counted; a mandatory one is then a loss.
-    String dead=references>0?neverRuns(plan,target,candidates.getFirst()):null;
+    String dead=references>0?neverRuns(plan,target,candidates.get(0)):null;
     if(dead!=null)
      state=injector.minimum()==0?Outcome.OPTIONAL:Outcome.NEVER_RUNS;
     else if(references>0&&references>=injector.minimum())state=Outcome.ATTACHED;
@@ -166,7 +166,7 @@ public final class FinalMixinApplications {
     // FuelValues.vanillaBurnTimes' stub (its captures need the stub's arguments), which the merged server never called
     // until the kernel's fuel bridge began handing its table through it (KernelFabricFuel.throughVanillaReturnHooks).
     // Still a reference, so not a loss; not a discharge either.
-    String stub=references>0?stubOnlyHost(target,candidates.getFirst(),plan.config().name()):null;
+    String stub=references>0?stubOnlyHost(target,candidates.get(0),plan.config().name()):null;
     observed.put(binary+"#"+injector.symbol(),stub!=null?Outcome.UNKNOWN:state);
     String id=id(plan,injector,binary),mod=owner(plan.config().name());
     // A mixin the kernel does the whole job of: its injector's miss is that job moving, not a loss, once the

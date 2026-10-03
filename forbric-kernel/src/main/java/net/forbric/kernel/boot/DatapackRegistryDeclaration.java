@@ -56,7 +56,7 @@ final class DatapackRegistryDeclaration {
 	static final String RECONCILE_SWITCH = "forbric.datapackRegistryReconcile";
 
 	static final String LOADER = "net.minecraft.resources.RegistryDataLoader";
-	static final String HOOKS = "net.neoforged.neoforge.registries.DataPackRegistriesHooks";
+	static final String HOOKS = "net.minecraftforge.registries.DataPackRegistriesHooks";
 
 	/**
 	 * A Mixin-merged injector method: {@code handler$cgo000$wover-core$wover_init}. Mixin names the merged method

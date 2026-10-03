@@ -27,22 +27,29 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 /**
- * Reproduces {@code run/build-patched-forge.sh} in pure Java: produce the traditional-MinecraftForge-patched,
- * Mojmap-named Minecraft game jar Forbric loads under Knot. Pipeline:
+ * Reproduces MinecraftForge's own 1.20.1 install profile in pure Java: produce the Forge-patched, SRG-named
+ * Minecraft game jar (Mojang class names + SRG member names) that Forbric then remaps onto intermediary.
+ *
+ * <p>The pipeline is Forge's, not the old 26.2 dev script's: 1.20.1 does not use {@code mergetool}; it uses
+ * {@code installertools MCP_DATA/DOWNLOAD_MOJMAPS/MERGE_MAPPING}, {@code jarsplitter} and
+ * {@code ForgeAutoRenamingTool}, then {@code binarypatcher}. The binarypatch is applied to the <b>SRG-renamed</b>
+ * jar, which is why doing it to the raw obf jar (the 26.2 shape) fails its checksum. Verified against
+ * {@code forge-1.20.1-47.4.0-installer.jar}'s {@code install_profile.json} (client side).
  * <ol>
- *   <li>{@code installertools BUNDLER_EXTRACT} the Mojang server jar; client jar is the user's own install.</li>
- *   <li>{@code mergetool --merge ... --ann API} (Forge binpatches target the {@code @OnlyIn}-annotated merge).</li>
- *   <li>{@code binarypatcher --apply joined.lzma} (patches + ATs extracted from the Forge {@code -userdev} jar).</li>
- *   <li>overlay the patched classes onto the clean merge + strip the Mojang jar signature.</li>
- *   <li>apply Forge's access transformers via Forge's own {@code AccessTransformerEngine}.</li>
+ *   <li>{@code installertools BUNDLER_EXTRACT} the Mojang server jar (for the common mappings).</li>
+ *   <li>{@code MCP_DATA} (mcp_config) and {@code DOWNLOAD_MOJMAPS}, joined by {@code MERGE_MAPPING}.</li>
+ *   <li>{@code jarsplitter} (client) then {@code ForgeAutoRenamingTool} → SRG-named common Minecraft.</li>
+ *   <li>{@code binarypatcher --apply joined.lzma}.</li>
+ *   <li>apply Forge's access transformers; inject the flat-loader {@code self()} shim.</li>
  * </ol>
  * The result embeds Mojang code, so it is built here and never redistributed.
  */
 final class PatchedMcBuilder {
 
-	// Tool coordinates the userdev config.json does NOT carry (the dev script hard-pins these versions).
-	private static final String MERGETOOL = "net.minecraftforge:mergetool:1.2.5:fatjar";
-	private static final String INSTALLERTOOLS = "net.minecraftforge:installertools:1.3.2:fatjar";
+	// Forge 1.20.1's install-profile tool coordinates (the userdev config carries binarypatcher itself).
+	private static final String INSTALLERTOOLS = "net.minecraftforge:installertools:1.4.1:fatjar";
+	private static final String JARSPLITTER = "net.minecraftforge:jarsplitter:1.1.4";
+	private static final String FORGE_AUTO_RENAMING = "net.minecraftforge:ForgeAutoRenamingTool:0.1.22:all";
 	private static final String LOG4J_API = "org.apache.logging.log4j:log4j-api:2.24.3";
 	private static final String LOG4J_CORE = "org.apache.logging.log4j:log4j-core:2.24.3";
 	private static final String[] ASM_ARTIFACTS = {"asm", "asm-tree", "asm-commons", "asm-util", "asm-analysis"};
@@ -77,9 +84,12 @@ final class PatchedMcBuilder {
 
 		// 1) tools
 		log.accept("[patched] fetching tools + Forge userdev");
-		Path mergetool = dl(MERGETOOL);
 		Path installertools = dl(INSTALLERTOOLS);
 		Path binarypatcher = dl(cfg.binpatcherCoordinate);
+		Path jarsplitter = dl(JARSPLITTER);
+		Path joptSimple = dl("net.sf.jopt-simple:jopt-simple:5.0.4");
+		Path srgutils = dl("net.minecraftforge:srgutils:0.4.3");
+		Path forgeAutoRenaming = dl(FORGE_AUTO_RENAMING);
 		String atCoord = findLib(cfg, "net.minecraftforge", "accesstransformers", "net.minecraftforge:accesstransformers:8.2.2");
 		String asmVersion = asmVersion(cfg);
 		Path atJar = dl(atCoord);
@@ -88,6 +98,9 @@ final class PatchedMcBuilder {
 		for (String a : ASM_ARTIFACTS) engineCp.add(dlCentral("org.ow2.asm:" + a + ":" + asmVersion));
 		engineCp.add(dlCentral(LOG4J_API));
 		engineCp.add(dlCentral(LOG4J_CORE));
+		// The AT parser's ANTLR runtime and forgespi ride in the Forge carrier, so reuse it instead of pinning
+		// each of Forge's runtime libraries by hand.
+		if (forgeRuntimeJar != null && Files.isRegularFile(forgeRuntimeJar)) engineCp.add(forgeRuntimeJar);
 
 		// 2) client jar from the user's install
 		Path clientJar = mcDir.resolve("versions").resolve(fa.mcVersion).resolve(fa.mcVersion + ".jar");
@@ -100,35 +113,50 @@ final class PatchedMcBuilder {
 		Path serverJar = dlDir.resolve("server.jar");
 		downloadServer(serverJar);
 
-		// 4) BUNDLER_EXTRACT + merge (--ann API)
-		Path serverMain = workDir.resolve("server-main.jar");
-		tool.runJar(installertools, List.of("--task", "BUNDLER_EXTRACT",
-				"--input", serverJar.toString(), "--output", serverMain.toString(), "--jar-only"),
-				"installertools BUNDLER_EXTRACT");
-		Path clean = workDir.resolve("clean.jar");
-		tool.runJar(mergetool, List.of("--merge", "--client", clientJar.toString(),
-				"--server", serverMain.toString(), "--output", clean.toString(),
-				"--keep-data", "--keep-meta", "--ann", "API"),
-				"mergetool --merge --ann API");
+		// 4) mappings: MCP_DATA (obf→srg) + DOWNLOAD_MOJMAPS (named→obf) → MERGE_MAPPING (obf→srg, Mojmap classes)
+		Path mcpConfig = downloadMcpConfig(cfg);
+		Path mappings = workDir.resolve("joined.tsrg");
+		tool.runJar(installertools, List.of("--task", "MCP_DATA", "--input", mcpConfig.toString(),
+				"--output", mappings.toString(), "--key", "mappings"), "installertools MCP_DATA");
+		Path mojmaps = workDir.resolve("client_mappings.tsrg");
+		tool.runJar(installertools, List.of("--task", "DOWNLOAD_MOJMAPS", "--version", fa.mcVersion,
+				"--side", "client", "--output", mojmaps.toString()), "installertools DOWNLOAD_MOJMAPS");
+		Path mergedMappings = workDir.resolve("merged_mappings.tsrg");
+		tool.runJar(installertools, List.of("--task", "MERGE_MAPPING", "--left", mappings.toString(),
+				"--right", mojmaps.toString(), "--output", mergedMappings.toString(), "--classes", "--reverse-right"),
+				"installertools MERGE_MAPPING");
 
-		// 5) extract binpatches + ATs from the userdev jar
-		Zips.extractEntries(userdevJar, workDir, cfg.binpatchesEntry, cfg.ats.get(0));
-		Path joinedLzma = workDir.resolve(cfg.binpatchesEntry);
+		// 5) jarsplitter (client) → slim common jar, then rename to SRG
+		Path slim = workDir.resolve("mc-slim.jar");
+		Path extra = workDir.resolve("mc-extra.jar");
+		// jarsplitter is not a fat jar: it needs jopt-simple + srgutils beside it.
+		tool.runClasspath(List.of(jarsplitter, joptSimple, srgutils), "net.minecraftforge.jarsplitter.ConsoleTool",
+				List.of("--input", clientJar.toString(), "--slim", slim.toString(),
+						"--extra", extra.toString(), "--srg", mergedMappings.toString()), "jarsplitter");
+		Path srg = workDir.resolve("mc-srg.jar");
+		tool.runJar(forgeAutoRenaming, List.of("--input", slim.toString(), "--output", srg.toString(),
+				"--names", mergedMappings.toString(), "--ann-fix", "--ids-fix", "--src-fix", "--record-fix"),
+				"ForgeAutoRenamingTool");
+
+		// 6) extract the CLIENT binpatch from Forge's installer + ATs from the userdev jar, then binarypatch.
+		//    The installer's data/client.lzma is generated against exactly the client slim SRG jar built above;
+		//    the userdev's joined.lzma is the ForgeGradle joined variant and does not match these checksums.
+		Zips.extractEntries(userdevJar, workDir, cfg.ats.get(0));
 		Path atCfg = workDir.resolve(cfg.ats.get(0));
-
-		// 6) binarypatcher --apply
-		Path patchedSubset = workDir.resolve("patched-subset.jar");
-		tool.runJar(binarypatcher, binpatcherArgs(cfg, clean, patchedSubset, joinedLzma),
-				"binarypatcher --apply " + cfg.binpatchesEntry);
-
-		// 7) overlay patched classes onto the clean merge + strip signatures
-		log.accept("[patched] overlay patched classes onto clean + strip signatures");
+		Path installerJar = dl("net.minecraftforge:forge:" + fa.forgeVersion + ":installer");
+		Zips.extractEntries(installerJar, workDir, "data/client.lzma");
+		Path clientLzma = workDir.resolve("data/client.lzma");
 		Path patchedFull = workDir.resolve("patched-full.jar");
-		overlay(clean, patchedSubset, patchedFull);
+		tool.runJar(binarypatcher, binpatcherArgs(cfg, srg, patchedFull, clientLzma),
+				"binarypatcher --apply data/client.lzma");
+
+		// 7) binarypatcher writes only the patched classes; overlay them onto the full SRG jar
+		Path patchedComplete = workDir.resolve("patched-complete.jar");
+		overlay(srg, patchedFull, patchedComplete);
 
 		// 8) apply access transformers
 		Path patchedAt = workDir.resolve("patched-at.jar");
-		tool.applyAccessTransformers(engineCp, atCfg, patchedFull, patchedAt);
+		tool.applyAccessTransformers(engineCp, atCfg, patchedComplete, patchedAt);
 
 		// 9) inject a concrete covariant self() into MC classes implementing a public-self() Forge interface
 		//    (IForgeLivingEntity/LivingEntity) — Forge's public interface default does not resolve on subclasses
@@ -136,6 +164,14 @@ final class PatchedMcBuilder {
 		Files.createDirectories(outJar.getParent());
 		int injected = tool.injectCovariantSelf(engineCp, forgeRuntimeJar, patchedAt, outJar);
 		log.accept("[patched] injected concrete self() into " + injected + " class(es)");
+		// jarsplitter put the client's assets/lang/data in the extra jar; the game needs them (Language.loadDefault
+		// NPEs without en_us.json). The AT/self steps rewrite the jar and drop non-class entries, so merge LAST.
+		if (Files.isRegularFile(extra)) {
+			java.util.LinkedHashMap<String, byte[]> merged = Zips.readAll(outJar);
+			Zips.readAll(extra).forEach(merged::putIfAbsent);
+			Zips.writeJar(outJar, merged);
+			log.accept("[patched] merged the client resources (" + Zips.readAll(extra).size() + " entries)");
+		}
 
 		String sha1 = Util.sha1(outJar);
 		long size = Files.size(outJar);
@@ -185,6 +221,19 @@ final class PatchedMcBuilder {
 		log.accept("[patched] downloading " + fa.mcVersion + " server jar …");
 		http.downloadToFile(url, dest);
 		ForgeTool.verifySha1(dest, sha1, fa.mcVersion + " server.jar");
+	}
+
+	/** Download MCPConfig's {@code @zip} artifact (its {@code config/joined.tsrg} is the obf→srg source). */
+	private Path downloadMcpConfig(ForgeArtifacts.UserdevConfig cfg) throws IOException {
+		if (cfg.mcpCoordinate == null) {
+			throw new IOException("the Forge userdev config.json carries no 'mcp' coordinate");
+		}
+		String[] parts = cfg.mcpCoordinate.split(":");
+		String rel = parts[0].replace('.', '/') + "/" + parts[1] + "/" + parts[2] + "/"
+				+ parts[1] + "-" + parts[2] + ".zip";
+		Path dest = dlDir.resolve(parts[1] + "-" + parts[2] + ".zip");
+		http.ensureWithFallback(ForgeArtifacts.FORGE_MVN + "/" + rel, ForgeArtifacts.CENTRAL + "/" + rel, dest);
+		return dest;
 	}
 
 	/** Overlay patched classes onto the clean merge, strip signatures, keep only the manifest main section. */

@@ -82,7 +82,7 @@ public final class NestedCandidatePlan {
 		while (!pending.isEmpty()) {
 			Path path = pending.removeFirst(); if (!visited.add(path)) continue;
 			var node = inventory.nodes().get(path); if (node == null) continue;
-			if (node.claim() != null && !node.claim().modIds().isEmpty()) return node.claim().modIds().getFirst();
+			if (node.claim() != null && !node.claim().modIds().isEmpty()) return node.claim().modIds().get(0);
 			for (var edge : inventory.edges()) if (edge.child().equals(path)) pending.add(edge.parent());
 		}
 		return "forbric";

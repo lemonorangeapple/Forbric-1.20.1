@@ -20,10 +20,10 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
-import net.neoforged.neoforgespi.language.IConfigurable;
-import net.neoforged.neoforgespi.language.IModFileInfo;
-import net.neoforged.neoforgespi.language.IModInfo;
-import net.neoforged.neoforgespi.locating.IModFile;
+import net.minecraftforge.forgespi.language.IConfigurable;
+import net.minecraftforge.forgespi.language.IModFileInfo;
+import net.minecraftforge.forgespi.language.IModInfo;
+import net.minecraftforge.forgespi.locating.IModFile;
 
 /**
  * The {@code IModFileInfo} a kernel-constructed mod reports as its owning file.
@@ -100,7 +100,7 @@ public final class KernelModFileInfo implements IModFileInfo {
 	 */
 	@Override
 	public String versionString() {
-		return getMods().getFirst().getVersion().toString();
+		return getMods().get(0).getVersion().toString();
 	}
 
 	/** Empty, as before. The kernel constructs mods itself and asks FML for no language loader. */
@@ -127,10 +127,15 @@ public final class KernelModFileInfo implements IModFileInfo {
 		return false;
 	}
 
-	/** False, as before. */
+	/**
+	 * A valid Java module name for this mod file (1.20.1 exposes it on {@code IModFileInfo}; the kernel names every
+	 * published mod {@code forbricmod.<id>} so Forge's module lookups never collide).
+	 */
 	@Override
-	public boolean showAsDataPack() {
-		return false;
+	public String moduleName() {
+		String seg = modId == null || modId.isEmpty() ? "mod" : modId.replaceAll("[^A-Za-z0-9_]", "_");
+		if (Character.isDigit(seg.charAt(0))) seg = "_" + seg;
+		return "forbricmod." + seg;
 	}
 
 	@Override

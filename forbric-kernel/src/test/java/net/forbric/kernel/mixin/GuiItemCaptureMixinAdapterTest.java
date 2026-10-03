@@ -22,9 +22,9 @@ class GuiItemCaptureMixinAdapterTest {
         ClassNode mixin = mixin(), target = read(Path.of(System.getProperty("forbric.stagedRoot", "../forbric-loader/run"), "merged-base/patched-mc-merged-26.2.jar"), "net/minecraft/client/gui/GuiGraphicsExtractor");
         assertEquals(1, GuiItemCaptureMixinAdapter.adapt(mixin, name -> target));
         MethodNode capture = mixin.methods.stream().filter(m -> m.name.equals("itemglintrelight$captureGuiItem")).findFirst().orElseThrow();
-        assertEquals("INVOKE", MixinFit.value(MixinFit.atNodes(MixinFit.injectorOf(capture)).getFirst(), "value"));
+        assertEquals("INVOKE", MixinFit.value(MixinFit.atNodes(MixinFit.injectorOf(capture)).get(0), "value"));
         MethodNode tooltip = mixin.methods.stream().filter(m -> m.name.equals("itemglintrelight$tooltipScheduled")).findFirst().orElseThrow();
-        assertEquals("HEAD", MixinFit.value(MixinFit.atNodes(MixinFit.injectorOf(tooltip)).getFirst(), "value"));
+        assertEquals("HEAD", MixinFit.value(MixinFit.atNodes(MixinFit.injectorOf(tooltip)).get(0), "value"));
         assertEquals(0, GuiItemCaptureMixinAdapter.adapt(mixin, name -> target));
         System.setProperty(GuiItemCaptureMixinAdapter.PROPERTY, "off");
         assertEquals(0, GuiItemCaptureMixinAdapter.adapt(mixin(), name -> target));

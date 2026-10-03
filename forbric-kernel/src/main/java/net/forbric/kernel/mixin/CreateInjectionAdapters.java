@@ -26,8 +26,8 @@ public final class CreateInjectionAdapters {
 	}
 	private static int modelParser(ClassNode mixin,Function<String,ClassNode> targets){
 		MethodNode handler=named(mixin,"deserialize");ClassNode target=targets.apply("net/minecraft/client/resources/model/ModelManager");MethodNode host=target==null?null:named(target,"lambda$loadBlockModels$2");if(handler==null||host==null||MixinFit.injectorOf(handler)==null)return 0;
-		String live="Lnet/neoforged/neoforge/client/model/UnbakedModelParser;parse(Ljava/io/Reader;)Lnet/minecraft/client/resources/model/UnbakedModel;";if(CarpetMixinAdapter.count(host,live)!=1)return 0;
-		AnnotationNode at=MixinFit.atNodes(MixinFit.injectorOf(handler)).getFirst();if(live.equals(MixinFit.value(at,"target")))return 0;CarpetMixinAdapter.set(at,"target",live);return 1;
+		String live="Lnet/minecraftforge/client/model/UnbakedModelParser;parse(Ljava/io/Reader;)Lnet/minecraft/client/resources/model/UnbakedModel;";if(CarpetMixinAdapter.count(host,live)!=1)return 0;
+		AnnotationNode at=MixinFit.atNodes(MixinFit.injectorOf(handler)).get(0);if(live.equals(MixinFit.value(at,"target")))return 0;CarpetMixinAdapter.set(at,"target",live);return 1;
 	}
 	private static int renameOperation(ClassNode mixin,Function<String,ClassNode> targets,String name,String target,String host,String renamed) {
 		MethodNode handler=named(mixin,name);ClassNode owner=targets.apply(target);
@@ -35,7 +35,7 @@ public final class CreateInjectionAdapters {
 		List<MethodInsnNode> calls=new ArrayList<>();
 		for(MethodNode method:owner.methods)if(method.name.equals(host))for(var i:method.instructions)if(i instanceof MethodInsnNode call&&call.owner.equals("net/minecraft/world/level/block/entity/BlockEntity")&&call.name.equals(renamed))calls.add(call);
 		if(calls.size()!=1)return 0;
-		return MixinWrapOperationShim.adaptExplicit(mixin,handler,calls.getFirst());
+		return MixinWrapOperationShim.adaptExplicit(mixin,handler,calls.get(0));
 	}
 	private static int fluid(ClassNode mixin,Function<String,ClassNode> targets) {
 		ClassNode target=targets.apply("net/minecraft/world/entity/EntityFluidInteraction");
@@ -50,20 +50,20 @@ public final class CreateInjectionAdapters {
 	private static int models(ClassNode mixin,Function<String,ClassNode> targets) {
 		MethodNode handler=named(mixin,"collect");ClassNode target=targets.apply("net/minecraft/client/resources/model/ModelManager");
 		if(handler==null||target==null||handler.name.endsWith("$forbricOriginal")||MixinFit.injectorOf(handler)==null)return 0;
-		String extra="Lnet/neoforged/neoforge/client/model/standalone/StandaloneModelLoader$LoadedModels;";
+		String extra="Lnet/minecraftforge/client/model/standalone/StandaloneModelLoader$LoadedModels;";
 		List<MethodNode> hosts=target.methods.stream().filter(m->m.name.equals("discoverModelDependencies")&&m.desc.contains(extra)).toList();
-		if(hosts.size()!=1||CarpetMixinAdapter.count(hosts.getFirst(),"Lnet/minecraft/client/resources/model/ModelManager$ResolvedModels;<init>(Lnet/minecraft/client/resources/model/ResolvedModel;Ljava/util/Map;)V")!=1)return 0;
+		if(hosts.size()!=1||CarpetMixinAdapter.count(hosts.get(0),"Lnet/minecraft/client/resources/model/ModelManager$ResolvedModels;<init>(Lnet/minecraft/client/resources/model/ResolvedModel;Ljava/util/Map;)V")!=1)return 0;
 		Type[] old=Type.getArgumentTypes(handler.desc);if(old.length!=5)return 0;
 		List<Type> params=new ArrayList<>(List.of(old));params.add(3,Type.getType(extra));
-		MethodNode outer=delegate(mixin,handler,params,3);CarpetMixinAdapter.set(MixinFit.injectorOf(outer),"method",List.of(hosts.getFirst().name+hosts.getFirst().desc));
+		MethodNode outer=delegate(mixin,handler,params,3);CarpetMixinAdapter.set(MixinFit.injectorOf(outer),"method",List.of(hosts.get(0).name+hosts.get(0).desc));
 		return 1;
 	}
 	private static int section(ClassNode mixin,Function<String,ClassNode> targets) {
 		MethodNode handler=named(mixin,"onEnteringSection");ClassNode target=targets.apply("net/minecraft/world/level/entity/PersistentEntitySectionManager$Callback");
 		MethodNode host=target==null?null:named(target,"onMove");if(handler==null||host==null||handler.invisibleParameterAnnotations==null)return 0;
 		int slot=-1;for(var i:host.instructions)if(i instanceof FieldInsnNode f&&f.name.equals("currentSectionKey")&&f.getOpcode()==Opcodes.GETFIELD){var next=i.getNext();while(next!=null&&next.getOpcode()<0)next=next.getNext();if(next instanceof VarInsnNode v&&v.getOpcode()==Opcodes.LSTORE){if(slot!=-1)return 0;slot=v.var;}}
-		if(slot<0)return 0;List<AnnotationNode> a=handler.invisibleParameterAnnotations[1];if(a==null||a.size()!=1||!a.getFirst().desc.endsWith("/Local;"))return 0;
-		if(Integer.valueOf(slot).equals(MixinFit.value(a.getFirst(),"index")))return 0;CarpetMixinAdapter.set(a.getFirst(),"index",slot);return 1;
+		if(slot<0)return 0;List<AnnotationNode> a=handler.invisibleParameterAnnotations[1];if(a==null||a.size()!=1||!a.get(0).desc.endsWith("/Local;"))return 0;
+		if(Integer.valueOf(slot).equals(MixinFit.value(a.get(0),"index")))return 0;CarpetMixinAdapter.set(a.get(0),"index",slot);return 1;
 	}
 	private static MethodNode delegate(ClassNode mixin,MethodNode handler,List<Type> params,int inserted) {
 		AnnotationNode annotation=MixinFit.injectorOf(handler);Type[] old=Type.getArgumentTypes(handler.desc);boolean stat=(handler.access&Opcodes.ACC_STATIC)!=0;
@@ -79,7 +79,7 @@ public final class CreateInjectionAdapters {
 		String owner="net/forbric/kernel/runtime/KernelForgePipRenderers";
 		int calls=0;for(MethodNode method:target.methods)if(method.name.equals("<init>"))calls+=CarpetMixinAdapter.count(method,"L"+owner+";build(Ljava/util/List;)Ljava/util/Map;");
 		if(calls!=1)return 0;AnnotationNode annotation=MixinFit.injectorOf(handler);if(annotation==null)return 0;
-		CarpetMixinAdapter.set(MixinFit.atNodes(annotation).getFirst(),"target","L"+owner+";build(Ljava/util/List;)Ljava/util/Map;");
+		CarpetMixinAdapter.set(MixinFit.atNodes(annotation).get(0),"target","L"+owner+";build(Ljava/util/List;)Ljava/util/Map;");
 		MethodNode outer=new MethodNode(Opcodes.ACC_PRIVATE,handler.name,"(Ljava/util/List;L"+OP+";)Ljava/util/Map;",null,null);outer.visibleAnnotations=new ArrayList<>(List.of(annotation));
 		handler.name+="$forbricOriginal";removeInjector(handler,annotation);
 		MethodNode builder=new MethodNode(Opcodes.ACC_PRIVATE|Opcodes.ACC_STATIC,"forbric$createRendererBuilder","(Ljava/util/Map;[Ljava/lang/Object;)Ljava/lang/Object;",null,null);

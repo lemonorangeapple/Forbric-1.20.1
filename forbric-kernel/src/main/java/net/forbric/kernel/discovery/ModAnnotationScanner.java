@@ -40,7 +40,7 @@ import net.forbric.api.Ecosystem;
  * classes; all are returned, in deterministic (class-name) order.
  *
  * <p>The {@code @Mod} annotation is matched by its bytecode descriptor (no compile-time dependency on the
- * NeoForge class) — the real {@code net.neoforged.fml.common.Mod} comes from the runtime-supplied NeoForge jar.
+ * NeoForge class) — the real {@code net.minecraftforge.fml.common.Mod} comes from the runtime-supplied NeoForge jar.
  */
 public final class ModAnnotationScanner {
 	/**
@@ -95,12 +95,11 @@ public final class ModAnnotationScanner {
 
 	/** Traditional MinecraftForge {@code @Mod} descriptor (the primary target). */
 	public static final String MOD_DESC_MINECRAFTFORGE = "Lnet/minecraftforge/fml/common/Mod;";
-	/** NeoForge {@code @Mod} descriptor (the parked NeoForge path). */
+	/** NeoForge {@code @Mod} descriptor. NeoForge is dropped on 1.20.1, so nothing matches it. */
 	public static final String MOD_DESC_NEOFORGE = "Lnet/neoforged/fml/common/Mod;";
-	/** Both Forge-family {@code @Mod} annotations share the same shape ({@code String value()}); recognise either. */
+	/** The one live Forge-family {@code @Mod} annotation ({@code String value()}). */
 	private static final java.util.Map<String, Ecosystem> MOD_DESCRIPTORS = java.util.Map.of(
-			MOD_DESC_MINECRAFTFORGE, Ecosystem.FORGE,
-			MOD_DESC_NEOFORGE, Ecosystem.NEOFORGE);
+			MOD_DESC_MINECRAFTFORGE, Ecosystem.FORGE);
 
 	private ModAnnotationScanner() {
 	}

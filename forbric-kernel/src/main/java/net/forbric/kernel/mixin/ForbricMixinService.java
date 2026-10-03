@@ -442,6 +442,22 @@ public final class ForbricMixinService
 		InputStream in = loader().getGameResourceAsStream(name);
 		if (in == null) return null;
 
+		// A Fabric mod's refmap maps its compile-time (yarn) names to Intermediary, and Mixin applies it at runtime.
+		// This game runs under Mojang's names, so those values must be moved on to named or every refmap-resolved
+		// @Inject/@Accessor targets an Intermediary member that does not exist.
+		if (name.endsWith("refmap.json") && !"off".equalsIgnoreCase(System.getProperty("forbric.mixinRefmaps", "on"))) {
+			try (InputStream source = in) {
+				String json = new String(source.readAllBytes(), StandardCharsets.UTF_8);
+				String rewritten = net.forbric.kernel.transform.IntermediaryRemapTransformer
+						.rewriteReferenceNames(json);
+				if (!rewritten.equals(json)) return new java.io.ByteArrayInputStream(rewritten.getBytes(StandardCharsets.UTF_8));
+				return new java.io.ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8));
+			} catch (java.io.IOException unreadable) {
+				ForbricLog.warn("[Forbric/Mixin] could not rewrite the refmap %s: %s", name, unreadable);
+				return loader().getGameResourceAsStream(name);
+			}
+		}
+
 		boolean relax = isRelaxedConfig(name);
 		List<String> named = suppressedMixinsFor(name);
 		List<String> drop = new ArrayList<>(named);

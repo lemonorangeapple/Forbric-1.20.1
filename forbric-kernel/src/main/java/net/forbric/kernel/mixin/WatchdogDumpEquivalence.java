@@ -9,7 +9,7 @@ import org.objectweb.asm.tree.MethodNode;
 final class WatchdogDumpEquivalence {
     static final String MIXIN = "net.fabricmc.fabric.mixin.crash.report.info.ServerWatchdogMixin";
     static final String TARGET = "net.minecraft.server.dedicated.ServerWatchdog";
-    static final String HELPER = "net.neoforged.neoforge.logging.ThreadInfoUtil";
+    static final String HELPER = "net.minecraftforge.logging.ThreadInfoUtil";
     static final String HANDLER = "printEntireThreadDump", DESC = "(Ljava/lang/Object;)Ljava/lang/Object;";
     private static final String HANDLER_HASH = "6d0d3d986cc70788588709d5e2fc4cf663c70891f277794224934953a04a8739";
     private static final String HELPER_HASH = "d8d798b31b1186ce55df926f235165e79dec603ce684b44cdaaffb313ee7c142";

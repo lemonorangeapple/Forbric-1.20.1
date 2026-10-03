@@ -10,7 +10,7 @@ import net.forbric.kernel.util.ForbricLog;
 /** Keeps NeoForge's contextual model geometry when Fabric's renderer emits an otherwise native model. */
 public final class FabricModelContextTransformer implements ClassTransformer {
 	static final String TARGET = "net/fabricmc/fabric/api/client/renderer/v1/model/FabricBlockStateModel";
-	static final String EXTENSION = "net/neoforged/neoforge/client/extensions/BlockStateModelExtension";
+	static final String EXTENSION = "net/minecraftforge/client/extensions/BlockStateModelExtension";
 	static final String MODEL = "net/minecraft/client/renderer/block/dispatch/BlockStateModel";
 	static final String CONTEXT = "Lnet/minecraft/client/renderer/block/BlockAndTintGetter;Lnet/minecraft/core/BlockPos;"
 			+ "Lnet/minecraft/world/level/block/state/BlockState;";

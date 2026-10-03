@@ -23,18 +23,18 @@ public final class CreateKeyboardMixinAdapter {
 		MethodNode released = CarpetMixinAdapter.selector(mixin, "onKeyReleased" + HANDLER);
 		MethodNode pressed = CarpetMixinAdapter.selector(mixin, "onKey" + HANDLER);
 		if (host == null || released == null || pressed == null) return 0;
-		String live = "Lnet/neoforged/neoforge/client/ClientHooks;onKeyInput(" + EVENT + "I)V";
+		String live = "Lnet/minecraftforge/client/ClientHooks;onKeyInput(" + EVENT + "I)V";
 		if (CarpetMixinAdapter.count(host, live) != 1) return 0;
 		AnnotationNode release = MixinFit.injectorOf(released), press = MixinFit.injectorOf(pressed);
 		if (!CarpetMixinAdapter.selects(release, HOST) || !CarpetMixinAdapter.selects(press, HOST)) return 0;
 		List<AnnotationNode> ra = MixinFit.atNodes(release), pa = MixinFit.atNodes(press);
-		if (ra.size() != 1 || pa.size() != 1 || !"RETURN".equals(MixinFit.value(ra.getFirst(), "value"))
-				|| !Integer.valueOf(5).equals(MixinFit.value(ra.getFirst(), "ordinal"))
-				|| !"TAIL".equals(MixinFit.value(pa.getFirst(), "value"))) return 0;
+		if (ra.size() != 1 || pa.size() != 1 || !"RETURN".equals(MixinFit.value(ra.get(0), "value"))
+				|| !Integer.valueOf(5).equals(MixinFit.value(ra.get(0), "ordinal"))
+				|| !"TAIL".equals(MixinFit.value(pa.get(0), "value"))) return 0;
 		if (!originalBody(released, false) || !originalBody(pressed, true)) return 0;
-		CarpetMixinAdapter.set(ra.getFirst(), "value", "INVOKE");
-		CarpetMixinAdapter.set(ra.getFirst(), "target", live);
-		CarpetMixinAdapter.set(ra.getFirst(), "ordinal", 0);
+		CarpetMixinAdapter.set(ra.get(0), "value", "INVOKE");
+		CarpetMixinAdapter.set(ra.get(0), "target", live);
+		CarpetMixinAdapter.set(ra.get(0), "ordinal", 0);
 		guardAction(released, Opcodes.IFNE); guardAction(pressed, Opcodes.IFEQ);
 		return 2;
 	}

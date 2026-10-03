@@ -40,9 +40,9 @@ class CompatibilityFindingsTest {
 		CompatibilityFindings.record(finding(CompatibilityFinding.Confidence.SUSPECTED, "preflight"));
 		ModCatalog.publish(List.of(entry()));
 		assertEquals(1, CompatibilityFindings.confirmedRequired().size());
-		assertEquals(List.of("preflight", "actual apply failed"), CompatibilityFindings.all().getFirst().evidence());
-		assertEquals(ModCatalog.Status.DEGRADED, ModCatalog.all().getFirst().status());
-		assertEquals("item result was lost", ModCatalog.all().getFirst().statusDetail());
+		assertEquals(List.of("preflight", "actual apply failed"), CompatibilityFindings.all().get(0).evidence());
+		assertEquals(ModCatalog.Status.DEGRADED, ModCatalog.all().get(0).status());
+		assertEquals("item result was lost", ModCatalog.all().get(0).statusDetail());
 	}
 
 	@Test
@@ -71,10 +71,10 @@ class CompatibilityFindingsTest {
 		CompatibilityFindings.record(finding(CompatibilityFinding.Confidence.CONFIRMED, "apply"));
 		CompatibilityFindings.resolve("contract:item-use", "demo", "replacement passed its behavior test");
 		assertTrue(ModCatalog.failures().isEmpty());
-		assertEquals(CompatibilityFinding.Confidence.RESOLVED, CompatibilityFindings.all().getFirst().confidence());
+		assertEquals(CompatibilityFinding.Confidence.RESOLVED, CompatibilityFindings.all().get(0).confidence());
 		ModCatalog.mark("demo", ModCatalog.Status.FAILED, "constructor threw");
-		assertEquals(ModCatalog.Status.FAILED, ModCatalog.failures().getFirst().status());
-		assertEquals("constructor threw", ModCatalog.failures().getFirst().statusDetail());
+		assertEquals(ModCatalog.Status.FAILED, ModCatalog.failures().get(0).status());
+		assertEquals("constructor threw", ModCatalog.failures().get(0).statusDetail());
 	}
 
 	@Test
@@ -82,7 +82,7 @@ class CompatibilityFindingsTest {
 		CompatibilityFindings.record(finding(CompatibilityFinding.Confidence.CONFIRMED, "apply"));
 		CompatibilityFindings.resolve("contract:item-use", "demo", "replacement proved");
 		CompatibilityFindings.record(finding(CompatibilityFinding.Confidence.SUSPECTED, "preflight"));
-		assertEquals(CompatibilityFinding.Confidence.RESOLVED, CompatibilityFindings.all().getFirst().confidence());
+		assertEquals(CompatibilityFinding.Confidence.RESOLVED, CompatibilityFindings.all().get(0).confidence());
 		CompatibilityFindings.record(finding(CompatibilityFinding.Confidence.CONFIRMED, "new runtime failure"));
 		assertEquals(1, CompatibilityFindings.confirmedRequired().size());
 	}
@@ -98,7 +98,7 @@ class CompatibilityFindingsTest {
 		assertTrue(((List<?>) parsed.get("findings")).isEmpty());
 		List<?> legacy = parsed.get("catalogFailures");
 		assertEquals(1, legacy.size(), "zero confirmed findings is not proof that every mod worked");
-		var row = (com.electronwill.nightconfig.core.UnmodifiableConfig) legacy.getFirst();
+		var row = (com.electronwill.nightconfig.core.UnmodifiableConfig) legacy.get(0);
 		assertEquals("UNCLASSIFIED", row.get("classification"));
 		assertEquals("DEGRADED", row.get("status"));
 		assertTrue(!row.contains("required"), "legacy prose must not be converted into invented necessity");
@@ -110,14 +110,14 @@ class CompatibilityFindingsTest {
 		ModCatalog.mark("demo", ModCatalog.Status.FAILED, "its @Mod constructor threw");
 		assertTrue(CompatibilityFindings.all().isEmpty(), "mark must not call back into the evidence catalogue");
 		CompatibilityFindings.observeInitializationFailures();
-		var failure = CompatibilityFindings.confirmedRequired().getFirst();
+		var failure = CompatibilityFindings.confirmedRequired().get(0);
 		assertEquals("initialization:constructor", failure.id());
 		assertEquals("KernelModLoader @Mod construction", failure.source());
 		assertTrue(failure.evidence().contains("ModCatalog.Status.FAILED"));
 		long revision = CompatibilityFindings.revision();
 		CompatibilityFindings.observeInitializationFailures();
 		assertEquals(revision, CompatibilityFindings.revision());
-		assertEquals("its @Mod constructor threw", ModCatalog.all().getFirst().statusDetail());
+		assertEquals("its @Mod constructor threw", ModCatalog.all().get(0).statusDetail());
 		var report = com.electronwill.nightconfig.json.JsonFormat.fancyInstance().createParser().parse(new StringReader(CompatibilityFindings.toJson()));
 		assertTrue(((List<?>) report.get("catalogFailures")).isEmpty(), "the typed observed failure is no longer unclassified");
 	}
@@ -135,7 +135,7 @@ class CompatibilityFindingsTest {
 		CompatibilityFindings.resolve("initialization:entrypoint:main", "demo", "an unrelated caller asserted recovery");
 		CompatibilityFindings.observeInitializationFailures();
 		assertEquals(2, CompatibilityFindings.confirmedRequired().size(), "the raw FAILED state is still proof that initialization did not complete");
-		assertEquals("its main entrypoint threw; its client entrypoint threw", ModCatalog.all().getFirst().statusDetail());
+		assertEquals("its main entrypoint threw; its client entrypoint threw", ModCatalog.all().get(0).statusDetail());
 	}
 
 	@Test
@@ -207,7 +207,7 @@ class CompatibilityFindingsTest {
 				.parse(new StringReader(CompatibilityFindings.toJson()));
 		List<?> legacy = parsed.get("catalogFailures");
 		assertEquals(1, legacy.size(), "the optional unclassified reason must remain visible");
-		assertTrue(((com.electronwill.nightconfig.core.UnmodifiableConfig) legacy.getFirst())
+		assertTrue(((com.electronwill.nightconfig.core.UnmodifiableConfig) legacy.get(0))
 				.<String>get("detail").contains("optional configuration"));
 	}
 }

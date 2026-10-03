@@ -124,7 +124,7 @@ public final class SnippetConstructorFunnel implements ClassTransformer {
 			boolean ok = true;
 			int slot = 0;    // next local slot an aload/iload must read
 			int loads = 0;
-			for (AbstractInsnNode insn = ctor.instructions.getFirst(); insn != null && ok; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = ctor.instructions.get(0); insn != null && ok; insn = insn.getNext()) {
 				int op = insn.getOpcode();
 				if (op < 0) continue;
 				if (insn instanceof VarInsnNode var && supply == null && delegate == null) {
@@ -208,7 +208,7 @@ public final class SnippetConstructorFunnel implements ClassTransformer {
 		MethodInsnNode call = null;
 		TypeInsnNode construction = null;
 		int calls = 0;
-		for (AbstractInsnNode insn = build.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = build.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof MethodInsnNode c && RUNTIME.equals(c.owner)) return classBytes;    // already routed
 			if (insn instanceof TypeInsnNode t && t.getOpcode() == Opcodes.NEW && SNIPPET_INTERNAL.equals(t.desc)) construction = t;
 			if (insn instanceof MethodInsnNode c && c.getOpcode() == Opcodes.INVOKESPECIAL && "<init>".equals(c.name)

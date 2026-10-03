@@ -100,8 +100,8 @@ import net.forbric.kernel.util.ForbricLog;
 final class LaunchInputCheck {
 	static final String SWITCH = "forbric.launchInputCheck";
 
-	/** The two families the merged base is built from, in the order a problem list names them. */
-	static final List<Ecosystem> FAMILIES = List.of(Ecosystem.NEOFORGE, Ecosystem.FORGE);
+	/** 1.20.1 is Fabric + traditional MinecraftForge; there is no NeoForge carrier. */
+	static final List<Ecosystem> FAMILIES = List.of(Ecosystem.FORGE);
 
 	/**
 	 * The class both families patch an extension interface onto ({@code IBlockExtension}, {@code IForgeBlock}), so its
@@ -136,7 +136,7 @@ final class LaunchInputCheck {
 
 	/** The package root a family's extension interfaces on {@code Block} live under. */
 	private static String root(Ecosystem family) {
-		return family == Ecosystem.NEOFORGE ? "net/neoforged/" : "net/minecraftforge/";
+		return family == Ecosystem.NEOFORGE ? "net/minecraftforge/" : "net/minecraftforge/";
 	}
 
 	/**
@@ -223,9 +223,8 @@ final class LaunchInputCheck {
 				problems.add("runtime jar " + jar.getFileName() + " " + String.join("; and ", partial) + " ("
 						+ described(jar) + ")");
 			} else {
-				problems.add("runtime jar " + jar.getFileName() + " contains neither NeoForge nor MinecraftForge: none of "
-						+ markers(Ecosystem.NEOFORGE) + " and none of " + markers(Ecosystem.FORGE) + " ("
-						+ described(jar) + ")");
+				problems.add("runtime jar " + jar.getFileName() + " contains no MinecraftForge: none of "
+						+ markers(Ecosystem.FORGE) + " (" + described(jar) + ")");
 			}
 		}
 
@@ -265,8 +264,8 @@ final class LaunchInputCheck {
 		}
 		if (patched.size() == FAMILIES.size()) return null;
 		if (patched.isEmpty()) {
-			return name + " is plain Minecraft, not Forbric's merged game: its Block carries neither NeoForge's nor "
-					+ "MinecraftForge's changes (" + described(jar) + ")";
+			return name + " is plain Minecraft, not Forbric's Forge-patched game: its Block carries no "
+					+ "MinecraftForge changes (" + described(jar) + ")";
 		}
 		Ecosystem missing = FAMILIES.stream().filter(f -> !patched.contains(f)).findFirst().orElseThrow();
 		return name + " carries only " + patched.get(0).displayName() + "'s changes and not " + missing.displayName()

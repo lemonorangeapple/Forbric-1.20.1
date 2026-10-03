@@ -36,7 +36,7 @@ class KernelClientHookMixinAnchorsTest {
     @Test void fancyMenusOriginalInitializerFollowsTheLiveRelayWithoutChangingItsShift() throws Exception {
         ClassNode mixin = mixin(), target = game(true);
         MethodNode handler = mixin.methods.stream().filter(m -> m.name.startsWith("after_initClientHooks")).findFirst().orElseThrow();
-        AnnotationNode at = MixinFit.atNodes(MixinFit.injectorOf(handler)).getFirst();
+        AnnotationNode at = MixinFit.atNodes(MixinFit.injectorOf(handler)).get(0);
         Object shift = MixinFit.value(at, "shift");
         assertEquals(1, KernelClientHookMixinAnchors.adapt(mixin, name -> target));
         assertTrue(String.valueOf(MixinFit.value(at, "target")).startsWith("Lnet/forbric/kernel/runtime/KernelForgeClientInit;"));

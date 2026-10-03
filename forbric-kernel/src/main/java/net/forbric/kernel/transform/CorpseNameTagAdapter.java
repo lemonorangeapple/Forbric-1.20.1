@@ -15,7 +15,7 @@ import org.objectweb.asm.tree.*;
 public final class CorpseNameTagAdapter implements ClassTransformer {
     public static final String PROPERTY = "forbric.corpseNameTag";
     public static final String TARGET = "de/maxhenkel/corpse/entities/DummyPlayer";
-    public static final String NATIVE = "net/neoforged/neoforge/common/NeoForgeMod";
+    public static final String NATIVE = "net/minecraftforge/common/NeoForgeMod";
     public static final String ATTRIBUTES = "net/minecraft/world/entity/ai/attributes/Attributes";
     public static final String HOLDER = "Lnet/minecraft/core/Holder;";
     public static final String CONSTRUCTOR = "(Lnet/minecraft/client/multiplayer/ClientLevel;Lcom/mojang/authlib/GameProfile;Ljava/util/EnumMap;B)V";

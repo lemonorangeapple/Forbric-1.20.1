@@ -31,7 +31,7 @@ public final class SpawnerFinalizeInjector implements ClassTransformer {
 	private static boolean enabled() { return !"off".equalsIgnoreCase(System.getProperty(PROPERTY, "on")); }
 	static final String TARGET = "net.minecraft.world.level.BaseSpawner";
 	static final String HOST_DESC = "(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;)V";
-	static final String NEO = "net/neoforged/neoforge/event/EventHooks";
+	static final String NEO = "net/minecraftforge/event/EventHooks";
 	static final String RUNTIME = "net/forbric/kernel/runtime/KernelSpawnerFinalize";
 	static final String FORGE = "net/minecraftforge/event/ForgeEventFactory";
 	static final String FORGE_HOOK = "onFinalizeSpawnSpawner";
@@ -42,8 +42,8 @@ public final class SpawnerFinalizeInjector implements ClassTransformer {
 	static final String INPUT = "Lnet/minecraft/world/level/storage/ValueInput;";
 	static final String OLD_DESC = "(Lnet/minecraft/world/entity/Mob;Lnet/minecraft/world/level/ServerLevelAccessor;"
 			+ "Lnet/minecraft/world/DifficultyInstance;Lnet/minecraft/world/entity/EntitySpawnReason;"
-			+ "Lnet/minecraft/world/entity/SpawnGroupData;Lnet/neoforged/neoforge/common/extensions/IOwnedSpawner;Z)"
-			+ "Lnet/neoforged/neoforge/event/entity/living/FinalizeSpawnEvent;";
+			+ "Lnet/minecraft/world/entity/SpawnGroupData;Lnet/minecraftforge/common/extensions/IOwnedSpawner;Z)"
+			+ "Lnet/minecraftforge/event/entity/living/FinalizeSpawnEvent;";
 	static final String NEW_DESC = OLD_DESC.replace(")", INPUT + ")");
 	static final String CREATE_DESC = "(Lnet/minecraft/util/ProblemReporter;Lnet/minecraft/core/HolderLookup$Provider;"
 			+ "Lnet/minecraft/nbt/CompoundTag;)" + INPUT;
@@ -64,7 +64,7 @@ public final class SpawnerFinalizeInjector implements ClassTransformer {
 		if (!TARGET.replace('.', '/').equals(node.name)) return bytes;
 		List<MethodNode> methods = node.methods.stream().filter(m -> m.name.equals("serverTick") && m.desc.equals(HOST_DESC)).toList();
 		if (methods.size() != 1) return declined(bytes, "serverTick declaration is missing or ambiguous");
-		MethodNode host = methods.getFirst();
+		MethodNode host = methods.get(0);
 		if ((host.access & (Opcodes.ACC_STATIC | Opcodes.ACC_ABSTRACT | Opcodes.ACC_NATIVE)) != 0) return declined(bytes, "serverTick is not a concrete instance method");
 		if (carriesForgeFinalize(host)) return standDown(bytes);
 		MethodInsnNode target = null;

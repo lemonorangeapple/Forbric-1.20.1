@@ -11,7 +11,7 @@ public final class FabricItemContractTransformer implements ClassTransformer {
  public static final String API="net/fabricmc/fabric/api/item/v1/FabricItem";
  public static final String HELPER="net/minecraft/world/item/enchantment/EnchantmentHelper";
  public static final String STACK="net/minecraft/world/item/ItemStack", HOLDER="Lnet/minecraft/core/Holder;";
- public static final String NATIVE="net/neoforged/neoforge/common/extensions/IItemStackExtension";
+ public static final String NATIVE="net/minecraftforge/common/extensions/IItemStackExtension";
  public static final String PRIMARY_HELPER="forbric$primaryEnchantment";
  public static final String PRIMARY_DESC="(L"+STACK+";"+HOLDER+")Z";
  private final Predicate<String> present;
@@ -54,7 +54,7 @@ public final class FabricItemContractTransformer implements ClassTransformer {
     &&dynamic.bsmArgs[2].equals(Type.getMethodType("("+HOLDER+")Z"))&&dynamic.desc.equals("(L"+STACK+";)Ljava/util/function/Predicate;"))
    for(Object arg:dynamic.bsmArgs)if(arg instanceof Handle handle&&handle.getTag()==Opcodes.H_INVOKEINTERFACE&&handle.getOwner().equals(NATIVE)&&handle.getName().equals("isPrimaryItemFor")&&handle.getDesc().equals("("+HOLDER+")Z"))sites.add(dynamic);
   if(sites.size()!=1)return false;
-  InvokeDynamicInsnNode site=sites.getFirst();for(int i=0;i<site.bsmArgs.length;i++)if(site.bsmArgs[i] instanceof Handle h&&h.getOwner().equals(NATIVE)&&h.getName().equals("isPrimaryItemFor"))site.bsmArgs[i]=new Handle(Opcodes.H_INVOKESTATIC,HELPER,PRIMARY_HELPER,PRIMARY_DESC,false);
+  InvokeDynamicInsnNode site=sites.get(0);for(int i=0;i<site.bsmArgs.length;i++)if(site.bsmArgs[i] instanceof Handle h&&h.getOwner().equals(NATIVE)&&h.getName().equals("isPrimaryItemFor"))site.bsmArgs[i]=new Handle(Opcodes.H_INVOKESTATIC,HELPER,PRIMARY_HELPER,PRIMARY_DESC,false);
   MethodNode bridge=new MethodNode(Opcodes.ACC_PRIVATE|Opcodes.ACC_STATIC|Opcodes.ACC_SYNTHETIC,PRIMARY_HELPER,PRIMARY_DESC,null,null);
   bridge.instructions.add(new VarInsnNode(Opcodes.ALOAD,0));bridge.instructions.add(new VarInsnNode(Opcodes.ALOAD,1));bridge.instructions.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE,NATIVE,"isPrimaryItemFor","("+HOLDER+")Z",true));bridge.instructions.add(new InsnNode(Opcodes.IRETURN));bridge.maxStack=2;bridge.maxLocals=2;node.methods.add(bridge);return true;
  }

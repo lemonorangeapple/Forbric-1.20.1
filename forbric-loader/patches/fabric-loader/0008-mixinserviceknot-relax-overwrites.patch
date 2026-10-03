@@ -1,8 +1,8 @@
 diff --git a/src/main/java/net/fabricmc/loader/impl/launch/knot/MixinServiceKnot.java b/src/main/java/net/fabricmc/loader/impl/launch/knot/MixinServiceKnot.java
-index 06b60ff..3b2ff8c 100644
+index f565b1a..3762c78 100644
 --- a/src/main/java/net/fabricmc/loader/impl/launch/knot/MixinServiceKnot.java
 +++ b/src/main/java/net/fabricmc/loader/impl/launch/knot/MixinServiceKnot.java
-@@ -206,7 +206,91 @@ public class MixinServiceKnot implements IMixinService, IClassProvider, IClassBy
+@@ -188,7 +188,91 @@ public class MixinServiceKnot implements IMixinService, IClassProvider, IClassBy
  
  	@Override
  	public InputStream getResourceAsStream(String name) {

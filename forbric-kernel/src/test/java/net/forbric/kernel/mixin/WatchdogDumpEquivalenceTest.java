@@ -49,7 +49,7 @@ class WatchdogDumpEquivalenceTest {
   Path fabric=temporary.resolve("crash-info.jar");try(ZipFile z=new ZipFile(TestFixtures.fabricApi().toFile())){var entry=z.stream().filter(e->e.getName().startsWith("META-INF/jars/fabric-crash-report-info-v1-")).findFirst().orElseThrow();Files.write(fabric,z.getInputStream(entry).readAllBytes());}
   try(URLClassLoader loader=new URLClassLoader(new URL[]{neo().toUri().toURL(),fabric.toUri().toURL()},ClassLoader.getPlatformClassLoader())){
    var nativeRender=loader.loadClass(WatchdogDumpEquivalence.HELPER).getMethod("getEntireStacktrace",ThreadInfo.class);var fabricRender=loader.loadClass("net.fabricmc.fabric.impl.crash.report.info.ThreadPrinting").getMethod("fullThreadInfoToString",ThreadInfo.class);
-   deep(30,()->{ThreadInfo info=ManagementFactory.getThreadMXBean().getThreadInfo(Thread.currentThread().threadId(),1000);try{
+   deep(30,()->{ThreadInfo info=ManagementFactory.getThreadMXBean().getThreadInfo(Thread.currentThread().getId(),1000);try{
     String nativeText=(String)nativeRender.invoke(null,info),fabricText=(String)fabricRender.invoke(null,info);assertTrue(info.getStackTrace().length>30);
     for(StackTraceElement frame:info.getStackTrace()){assertTrue(nativeText.contains(frame.toString()),frame.toString());assertTrue(fabricText.contains(frame.toString()),frame.toString());}
     assertTrue(nativeText.split("\\.deep\\(",-1).length>30);assertTrue(fabricText.split("\\.deep\\(",-1).length>30);assertTrue(info.toString().split("\\.deep\\(",-1).length<30);

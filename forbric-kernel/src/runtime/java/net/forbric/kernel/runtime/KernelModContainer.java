@@ -16,9 +16,9 @@
 
 package net.forbric.kernel.runtime;
 
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.ModContainer;
-import net.neoforged.neoforgespi.language.IModInfo;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.ModContainer;
+import net.minecraftforge.forgespi.language.IModInfo;
 
 /**
  * A concrete {@code ModContainer} over a kernel-owned event bus.
@@ -42,8 +42,19 @@ public final class KernelModContainer extends ModContainer {
 		this.bus = bus;
 	}
 
-	@Override
+	/** Not an override on 1.20.1's {@code ModContainer} (that is a NeoForge method); kept for kernel callers. */
 	public IEventBus getEventBus() {
 		return bus;
+	}
+
+	@Override
+	public boolean matches(Object mod) {
+		return mod == this || mod == bus;
+	}
+
+	@Override
+	public Object getMod() {
+		// The kernel constructs mods itself; the container is an identity, not the mod instance holder.
+		return null;
 	}
 }

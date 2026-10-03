@@ -57,11 +57,11 @@ class MergedBaseForgeFluidModelsTest {
 	@Test
 	void theModelFunnelSitsRightAfterTheLookupsStoreAndReloadsTheSameSlot() throws Exception {
 		MethodNode before = tesselate(parse(bytesOf(RENDERER)));
-		int slot = ((VarInsnNode) nextReal(lookups(before).getFirst())).var;
+		int slot = ((VarInsnNode) nextReal(lookups(before).get(0))).var;
 		MethodNode after = tesselate(parse(transform(bytesOf(RENDERER))));
 		List<MethodInsnNode> funnels = calls(after, "model");
 		assertEquals(1, funnels.size());
-		MethodInsnNode funnel = funnels.getFirst();
+		MethodInsnNode funnel = funnels.get(0);
 		assertEquals(Opcodes.INVOKESTATIC, funnel.getOpcode());
 		AbstractInsnNode pos = previousReal(funnel), level = previousReal(pos), state = previousReal(level), model = previousReal(state);
 		assertEquals(List.of(slot, 5, 1, 2), List.of(((VarInsnNode) model).var, ((VarInsnNode) state).var,
@@ -79,9 +79,9 @@ class MergedBaseForgeFluidModelsTest {
 		MethodNode after = tesselate(parse(transform(bytesOf(RENDERER))));
 		List<MethodInsnNode> tints = calls(after, "tintColor");
 		assertEquals(1, tints.size());
-		assertEquals("(Lnet/minecraft/world/level/material/FluidState;)I", tints.getFirst().desc);
-		assertTrue(previousReal(tints.getFirst()) instanceof VarInsnNode load && load.var == 5, "ALOAD 5 feeds it");
-		assertTrue(nextReal(tints.getFirst()) instanceof VarInsnNode store && store.getOpcode() == Opcodes.ISTORE,
+		assertEquals("(Lnet/minecraft/world/level/material/FluidState;)I", tints.get(0).desc);
+		assertTrue(previousReal(tints.get(0)) instanceof VarInsnNode load && load.var == 5, "ALOAD 5 feeds it");
+		assertTrue(nextReal(tints.get(0)) instanceof VarInsnNode store && store.getOpcode() == Opcodes.ISTORE,
 				"the int lands where -1 used to");
 		assertTrue(tintArm(after) == null, "no ICONST_M1 arm may survive after fluidTintSource()");
 	}

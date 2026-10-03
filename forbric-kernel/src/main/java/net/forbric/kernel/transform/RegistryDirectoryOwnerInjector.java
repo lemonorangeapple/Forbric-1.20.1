@@ -108,7 +108,7 @@ public final class RegistryDirectoryOwnerInjector implements ClassTransformer {
 		}
 
 		List<AbstractInsnNode> returns = new ArrayList<>();
-		for (AbstractInsnNode insn = body.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = body.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof MethodInsnNode call && HOOK_OWNER.equals(call.owner)) return classBytes; // done
 			if (insn.getOpcode() == Opcodes.ARETURN) returns.add(insn);
 		}

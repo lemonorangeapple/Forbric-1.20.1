@@ -26,12 +26,12 @@ import org.objectweb.asm.tree.*;
  * <p>Inert unless {@code -Dforbric.eventChainAudit=<report.json>}: a diagnostic for gates, never on in play.
  */
 public final class EventChainAuditInjector implements ClassTransformer {
-	static final String NEO_BUS = "net.neoforged.bus.EventBus";
+	static final String NEO_BUS = "net.minecraftforge.bus.EventBus";
 	static final String FORGE_CANCELLABLE = "net.minecraftforge.eventbus.internal.CancellableEventBusImpl";
 	static final String FORGE_PLAIN = "net.minecraftforge.eventbus.internal.EventBusImpl";
 	static final String NEO_EVENT_TYPE = ForeignType.EVENT.internal(Ecosystem.NEOFORGE), FORGE_EVENT_TYPE = ForeignType.EVENT.internal(Ecosystem.FORGE);
 	static final String NEO_EVENT = "L" + NEO_EVENT_TYPE + ";";
-	static final String NEO_POST = "(" + NEO_EVENT + "[Lnet/neoforged/bus/api/EventListener;)" + NEO_EVENT;
+	static final String NEO_POST = "(" + NEO_EVENT + "[Lnet/minecraftforge/eventbus/api/EventListener;)" + NEO_EVENT;
 	static final String FORGE_EVENT = "L" + FORGE_EVENT_TYPE + ";";
 	static final String FORGE_POST = "(" + FORGE_EVENT + ")Z";
 	static final String FORGE_FIRE = "(" + FORGE_EVENT + ")" + FORGE_EVENT;
@@ -87,7 +87,7 @@ public final class EventChainAuditInjector implements ClassTransformer {
 	private static void markListeners(MethodNode post) {
 		MethodInsnNode invoke = null; int count = 0;
 		for (AbstractInsnNode instruction : post.instructions)
-			if (instruction instanceof MethodInsnNode call && call.owner.equals("net/neoforged/bus/api/EventListener") && call.name.equals("invoke")) { invoke = call; count++; }
+			if (instruction instanceof MethodInsnNode call && call.owner.equals("net/minecraftforge/eventbus/api/EventListener") && call.name.equals("invoke")) { invoke = call; count++; }
 		if (count != 1) { ForbricLog.warn("[Forbric/EventChain] NeoForge's dispatch loop has %d listener calls; listeners are not told apart", count); return; }
 		AbstractInsnNode event = invoke.getPrevious(), load = event == null ? null : event.getPrevious(), index = load == null ? null : load.getPrevious();
 		if (!(event instanceof VarInsnNode e && e.getOpcode() == Opcodes.ALOAD) || load == null || load.getOpcode() != Opcodes.AALOAD
@@ -104,7 +104,7 @@ public final class EventChainAuditInjector implements ClassTransformer {
 
 	private static MethodNode find(ClassNode node, String name, String desc) {
 		List<MethodNode> matches = node.methods.stream().filter(m -> m.name.equals(name) && m.desc.equals(desc)).toList();
-		return matches.size() == 1 ? matches.getFirst() : null;
+		return matches.size() == 1 ? matches.get(0) : null;
 	}
 
 	/** Keeps the original body under a private name; returns its ORIGINAL access and signature under the new name. */
@@ -131,7 +131,7 @@ public final class EventChainAuditInjector implements ClassTransformer {
 		code.add(new VarInsnNode(Opcodes.ALOAD, 3)); code.add(new InsnNode(Opcodes.ARETURN));
 		code.add(end);
 		code.add(handler);
-		code.add(new FrameNode(Opcodes.F_FULL, 3, new Object[] {owner, NEO_EVENT_TYPE, "[Lnet/neoforged/bus/api/EventListener;"},
+		code.add(new FrameNode(Opcodes.F_FULL, 3, new Object[] {owner, NEO_EVENT_TYPE, "[Lnet/minecraftforge/eventbus/api/EventListener;"},
 				1, new Object[] {"java/lang/Throwable"}));
 		code.add(new VarInsnNode(Opcodes.ASTORE, 3));
 		code.add(new VarInsnNode(Opcodes.ALOAD, 1)); code.add(new VarInsnNode(Opcodes.ALOAD, 3));

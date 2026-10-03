@@ -11,7 +11,7 @@ import org.objectweb.asm.tree.*;
 public final class KernelClientHookMixinAnchors {
     public static final String PROPERTY = "forbric.clientHookMixinAnchors";
     private static final String CLIENT = "net/minecraft/client/Minecraft";
-    private static final String NATIVE = "net/neoforged/neoforge/client/ClientHooks";
+    private static final String NATIVE = "net/minecraftforge/client/ClientHooks";
     private static final String RELAY = "net/forbric/kernel/runtime/KernelForgeClientInit";
     private static final Map<String, String> CALLS = Map.of(
             "initClientHooks", "(Lnet/minecraft/client/Minecraft;Lnet/minecraft/server/packs/resources/ReloadableResourceManager;)V",
@@ -27,11 +27,11 @@ public final class KernelClientHookMixinAnchors {
             if (injector == null || !injector.desc.equals("Lorg/spongepowered/asm/mixin/injection/Inject;")
                     || MixinFit.value(injector, "slice") != null) continue;
             List<String> selectors = MixinFit.stringList(MixinFit.value(injector, "method"));
-            if (selectors.size() != 1 || !selectors.getFirst().startsWith("<init>")) continue;
+            if (selectors.size() != 1 || !selectors.get(0).startsWith("<init>")) continue;
             List<MethodNode> constructors = target.methods.stream().filter(m -> m.name.equals("<init>")
-                    && (selectors.getFirst().equals("<init>") || selectors.getFirst().equals(m.name + m.desc))).toList();
+                    && (selectors.get(0).equals("<init>") || selectors.get(0).equals(m.name + m.desc))).toList();
             if (constructors.size() != 1) continue;
-            MethodNode constructor = constructors.getFirst();
+            MethodNode constructor = constructors.get(0);
             Type[] arguments = Type.getArgumentTypes(handler.desc), nativeArguments = Type.getArgumentTypes(constructor.desc);
             if (arguments.length != nativeArguments.length + 1 || !arguments[arguments.length - 1].getDescriptor().equals(MixinRetarget.CALLBACK_INFO)) continue;
             boolean same = true; for (int i = 0; i < nativeArguments.length; i++) same &= arguments[i].equals(nativeArguments[i]);

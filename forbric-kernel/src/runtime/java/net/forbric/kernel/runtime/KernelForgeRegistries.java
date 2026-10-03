@@ -31,7 +31,7 @@ import net.forbric.kernel.util.Reflect;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraftforge.eventbus.api.bus.BusGroup;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.ForgeRegistry;
 import net.minecraftforge.registries.RegisterEvent;
 import net.minecraftforge.registries.RegistryManager;
@@ -157,7 +157,7 @@ public final class KernelForgeRegistries {
 		@SuppressWarnings("unchecked")
 		ResourceKey<? extends Registry<?>> key = (ResourceKey<? extends Registry<?>>) target[0];
 		RegisterEvent event = EVENT_CTOR.newInstance(key, (ForgeRegistry<?>) target[2], (Registry<?>) target[1]);
-		RegisterEvent.getBus((BusGroup) busGroup).post(event);
+		((IEventBus) busGroup).post(event);
 	}
 
 	/**

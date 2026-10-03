@@ -171,7 +171,7 @@ public final class JointCandidateSelector {
 		for (DuplicateModArbiter.Claim claim : claims) if (selected.contains(path(claim))) for (String id : claim.modIds()) covered.add(key(id));
 		for (var entry : domains.entrySet()) {
 			if (covered.contains(entry.getKey())) continue;
-			DuplicateModArbiter.Claim claim = entry.getValue().getFirst(); selected.add(path(claim));
+			DuplicateModArbiter.Claim claim = entry.getValue().get(0); selected.add(path(claim));
 			for (String id : claim.modIds()) covered.add(key(id));
 		}
 		return selected;

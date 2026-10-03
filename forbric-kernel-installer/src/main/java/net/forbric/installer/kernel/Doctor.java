@@ -127,7 +127,7 @@ final class Doctor {
 			}
 		}
 		for (String coordinate : new String[] {
-				"net.forbric:patched-mc-merged", "net.forbric:forge-runtime", "net.forbric:neoforge-runtime"}) {
+				"net.forbric:patched-mc-merged", "net.forbric:forge-runtime"}) {
 			artifacts.put(coordinate, located.containsKey(coordinate));
 		}
 		log.accept("");

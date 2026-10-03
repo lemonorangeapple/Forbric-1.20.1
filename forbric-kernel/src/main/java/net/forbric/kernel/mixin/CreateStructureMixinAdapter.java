@@ -26,9 +26,9 @@ public final class CreateStructureMixinAdapter {
 		AnnotationNode a = MixinFit.injectorOf(set), b = MixinFit.injectorOf(iterate), c = MixinFit.injectorOf(clear);
 		if (a == null || !CarpetMixinAdapter.selects(b, OLD) || !CarpetMixinAdapter.selects(c, OLD)) return 0;
 		List<AnnotationNode> points = MixinFit.atNodes(a);
-		if (points.size() != 1 || !("L" + TARGET + ";" + OLD).equals(MixinFit.value(points.getFirst(), "target"))) return 0;
+		if (points.size() != 1 || !("L" + TARGET + ";" + OLD).equals(MixinFit.value(points.get(0), "target"))) return 0;
 		// Only selectors change: Level remains the first argument, so the iterator's args-only local is unchanged.
-		CarpetMixinAdapter.set(points.getFirst(), "target", "L" + TARGET + ";" + LIVE);
+		CarpetMixinAdapter.set(points.get(0), "target", "L" + TARGET + ";" + LIVE);
 		CarpetMixinAdapter.set(b, "method", List.of(LIVE));
 		CarpetMixinAdapter.set(c, "method", List.of(LIVE));
 		return 3;

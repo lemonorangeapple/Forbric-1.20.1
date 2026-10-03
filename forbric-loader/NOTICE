@@ -15,7 +15,7 @@ Version 2.0.
 
 THIS REPOSITORY CONTAINS NO FABRIC LOADER SOURCE CODE. The substrate is a
 separate checkout of the upstream repository above, at the release pinned as
-`fabric_loader_ref` in forbric-loader/gradle.properties (0.19.3): bootstrap.sh
+`forbric.fabric.loader` in the repository-root VERSIONS.properties (0.16.10): bootstrap.sh
 fetches it into a sibling directory, and forbric-loader/build.gradle compiles
 its source roots alongside Forbric's own. Nothing here is therefore a file
 "derived from Fabric Loader", and no file in this repository carries a FabricMC

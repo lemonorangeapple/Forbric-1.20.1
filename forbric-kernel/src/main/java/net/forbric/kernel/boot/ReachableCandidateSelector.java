@@ -86,7 +86,7 @@ final class ReachableCandidateSelector {
 				// another build of the same mod (a top-level copy, another ecosystem's platform artifact, a
 				// Fabric JiJ child that carries no JarJar metadata at all) by the version that build declares.
 				Set<String> versions = sameArtifact.containsKey(candidate) ? sameArtifact.get(candidate)
-						: Set.of(modVersion(candidate, graph.nodes().get(edge.child()).claim().modIds().getFirst()));
+						: Set.of(modVersion(candidate, graph.nodes().get(edge.child()).claim().modIds().get(0)));
 				boolean all = !open && versions.stream().allMatch(v -> VersionPredicate.matchesStrictly(translated, v));
 				boolean any = open || versions.stream().anyMatch(v -> VersionPredicate.matches(translated, v));
 				if (all) providers.add(candidate); else if (any) unknown.add(candidate);
@@ -241,7 +241,7 @@ final class ReachableCandidateSelector {
 		if (literals.isEmpty()) return;
 		VecInt attempt = copy(assumptions); for (int literal : literals) attempt.push(literal);
 		if (satisfiable(solver, attempt)) { for (int literal : literals) assumptions.push(literal); return; }
-		if (literals.size() == 1) { relaxed.add(literals.getFirst()); assumptions.push(-literals.getFirst()); return; }
+		if (literals.size() == 1) { relaxed.add(literals.get(0)); assumptions.push(-literals.get(0)); return; }
 		int half = literals.size() / 2;
 		accept(solver, assumptions, literals.subList(0, half), relaxed);
 		accept(solver, assumptions, literals.subList(half, literals.size()), relaxed);
@@ -367,7 +367,7 @@ final class ReachableCandidateSelector {
 		var child = graph.nodes().get(edge.child()).claim();
 		if (child == null || child.modIds().isEmpty()) return providers;
 		Set<String> needed = new HashSet<>(); for (String id : child.modIds()) needed.add(JointCandidateSelector.key(id));
-		for (Path candidate : identities.getOrDefault(JointCandidateSelector.key(child.modIds().getFirst()), List.of())) {
+		for (Path candidate : identities.getOrDefault(JointCandidateSelector.key(child.modIds().get(0)), List.of())) {
 			var claim = graph.nodes().get(candidate).claim();
 			if (claim.modIds().stream().map(JointCandidateSelector::key).collect(java.util.stream.Collectors.toSet()).containsAll(needed)) providers.add(candidate);
 		}
@@ -390,7 +390,7 @@ final class ReachableCandidateSelector {
 		for (String id : rootIds) {
 			List<Path> candidates = new ArrayList<>(identities.get(id)); candidates.sort(candidateOrder(true, id));
 			Path choice = candidates.stream().filter(p -> graph.nodes().get(p).root())
-					.filter(p -> !overrides.containsKey(id) || family(p) == overrides.get(id)).findFirst().orElse(candidates.getFirst());
+					.filter(p -> !overrides.containsKey(id) || family(p) == overrides.get(id)).findFirst().orElse(candidates.get(0));
 			selected.add(choice);
 		}
 		for (var pin : overrides.entrySet()) {

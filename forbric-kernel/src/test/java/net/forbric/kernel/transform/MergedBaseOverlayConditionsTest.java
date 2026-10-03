@@ -53,7 +53,7 @@ class MergedBaseOverlayConditionsTest {
 		ClassNode node = parse(out);
 		MethodNode method = find(node, ForbricMergedBaseCompatTransformer.LIST_CODEC_FOR_PACK_TYPE, ForbricMergedBaseCompatTransformer.LIST_CODEC_DESC);
 		int wraps = 0;
-		for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (!(insn instanceof MethodInsnNode call) || !ForbricMergedBaseCompatTransformer.KERNEL_NEO_CONDITIONS_CLASS.equals(call.owner)) continue;
 			wraps++;
 			assertEquals("forOverlayEntries", call.name);
@@ -84,7 +84,7 @@ class MergedBaseOverlayConditionsTest {
 		for (MethodNode m : section.methods) {
 			if ("forPackType".equals(m.name)) vanilla = true;
 			if ("forPackTypeNeoForge".equals(m.name)) neo = true;
-			for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn instanceof MethodInsnNode call && ForbricMergedBaseCompatTransformer.OVERLAY_ENTRY.equals(call.owner)
 						&& ForbricMergedBaseCompatTransformer.LIST_CODEC_FOR_PACK_TYPE.equals(call.name)) funnel = true;
 				// Both MetadataSectionTypes (the vanilla `overlays` and the `neoforge:overlays` one) are built in

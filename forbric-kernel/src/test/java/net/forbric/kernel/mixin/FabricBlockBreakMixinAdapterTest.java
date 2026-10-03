@@ -115,10 +115,10 @@ class FabricBlockBreakMixinAdapterTest {
 		assertEquals(FabricBlockBreakMixinAdapter.MODIFY_EXPRESSION_VALUE, modify.desc);
 		assertEquals(List.of("destroyBlock"), MixinFit.stringList(MixinFit.value(modify, "method")));
 		assertEquals("L" + FabricBlockBreakMixinAdapter.TARGET + ";removeBlock" + FabricBlockBreakMixinAdapter.REMOVE_BLOCK_DESC,
-				MixinFit.value(MixinFit.atNodes(modify).getFirst(), "target"));
-		assertEquals(Boolean.TRUE, MixinFit.value(outer.invisibleParameterAnnotations[1].getFirst(), "argsOnly"));
-		assertEquals(List.of("blockEntity"), MixinFit.stringList(MixinFit.value(outer.invisibleParameterAnnotations[2].getFirst(), "name")));
-		assertEquals(List.of("adjustedState"), MixinFit.stringList(MixinFit.value(outer.invisibleParameterAnnotations[3].getFirst(), "name")));
+				MixinFit.value(MixinFit.atNodes(modify).get(0), "target"));
+		assertEquals(Boolean.TRUE, MixinFit.value(outer.invisibleParameterAnnotations[1].get(0), "argsOnly"));
+		assertEquals(List.of("blockEntity"), MixinFit.stringList(MixinFit.value(outer.invisibleParameterAnnotations[2].get(0), "name")));
+		assertEquals(List.of("adjustedState"), MixinFit.stringList(MixinFit.value(outer.invisibleParameterAnnotations[3].get(0), "name")));
 		assertNull(MixinFit.injectorOf(method(mixin, "onBlockBroken" + MixinHandlerShim.INNER_SUFFIX)), "fabric-api's own handler is only called");
 		List<AbstractInsnNode> real = java.util.Arrays.stream(outer.instructions.toArray()).filter(i -> i.getOpcode() >= 0).toList();
 		assertTrue(real.get(0) instanceof VarInsnNode load && load.getOpcode() == Opcodes.ILOAD && load.var == 1, "the removal result first");

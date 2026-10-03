@@ -289,8 +289,6 @@ public final class KernelLifecycle {
 	 */
 	private static void rebuildNeoForgeBlockStateIds(ClassLoader cl) {
 		contentCall(cl, "rebuildBlockStateIds", "rebuild the NeoForge blockstate→id map");
-		// The pot half of the same bake callback: NeoForge's flower pot table, which every pot lookup reads.
-		contentCall(cl, "rebuildFlowerPotTable", "fill NeoForge's flower pot table");
 		// Same moment, same reason: vanilla fills every block state's cache in Bootstrap, before any mod has
 		// registered a block, and the kernel drives registration itself.
 		contentCall(cl, "initialiseBlockStateCaches", "initialise the block state caches");
@@ -319,7 +317,7 @@ public final class KernelLifecycle {
 		// ModList) it failed with "Some clientbound payloads are missing client-side handlers", correctly: the
 		// handlers live in a Dist.CLIENT @EventBusSubscriber that step 2c2 rightly skips on a server.
 		if (side.isClient()) invokeNetworkSetup(cl,
-				"net.neoforged.neoforge.client.network.registration.ClientNetworkRegistry");
+				"net.minecraftforge.client.network.registration.ClientNetworkRegistry");
 	}
 
 	/**
@@ -416,11 +414,11 @@ public final class KernelLifecycle {
 	 */
 	private static void markVanillaRegistriesSynced(ClassLoader cl) {
 		try {
-			Class<?> setupCls = Class.forName("net.neoforged.neoforge.registries.NeoForgeRegistriesSetup", false, cl);
+			Class<?> setupCls = Class.forName("net.minecraftforge.registries.NeoForgeRegistriesSetup", false, cl);
 			java.lang.reflect.Field f = setupCls.getDeclaredField("VANILLA_SYNC_REGISTRIES");
 			f.setAccessible(true);
 			java.util.Set<?> regs = (java.util.Set<?>) f.get(null);
-			Class<?> baseMapped = Class.forName("net.neoforged.neoforge.registries.BaseMappedRegistry", false, cl);
+			Class<?> baseMapped = Class.forName("net.minecraftforge.registries.BaseMappedRegistry", false, cl);
 			java.lang.reflect.Method setSync = baseMapped.getDeclaredMethod("setSync", boolean.class);
 			setSync.setAccessible(true);
 			int n = 0;
@@ -585,8 +583,8 @@ public final class KernelLifecycle {
 		// package, which a dedicated server must never be made to resolve.
 		GameEventMultiplexer.install(cl, side.isClient());
 		GameEventMultiplexer.installDataMapWatch(cl);
-		startBus(cl, "net.neoforged.neoforge.common.NeoForge", "EVENT_BUS",
-				"net.neoforged.bus.api.IEventBus", "start", "NeoForge.EVENT_BUS");
+		startBus(cl, "net.minecraftforge.common.NeoForge", "EVENT_BUS",
+				"net.minecraftforge.eventbus.api.IEventBus", "start", "NeoForge.EVENT_BUS");
 		startBus(cl, "net.minecraftforge.eventbus.api.bus.BusGroup", "DEFAULT",
 				"net.minecraftforge.eventbus.api.bus.BusGroup", "startup", "Forge BusGroup.DEFAULT");
 	}
@@ -666,13 +664,18 @@ public final class KernelLifecycle {
 			Object container = KernelModContainerFactory.create(cl, "neoforge", bus);
 			baselineBus = bus;
 			baselineContainer = container;
-			Class<?> neoForgeMod = Class.forName("net.neoforged.neoforge.common.NeoForgeMod", false, cl);
-			Class<?> iEventBus = Class.forName("net.neoforged.bus.api.IEventBus", false, cl);
-			Class<?> modContainer = Class.forName(ForeignType.MOD_CONTAINER.binary(Ecosystem.NEOFORGE), false, cl);
-			neoForgeMod.getConstructor(iEventBus, distClass, modContainer)
-					.newInstance(bus, dist, container);
-			ForbricLog.info("[Forbric/Lifecycle] constructed NeoForge baseline mod on a native bus (dist=%s)",
-					side.distName());
+			Class<?> iEventBus = Class.forName("net.minecraftforge.eventbus.api.IEventBus", false, cl);
+			Class<?> modContainer = Class.forName(ForeignType.MOD_CONTAINER.binary(Ecosystem.FORGE), false, cl);
+			// 1.20.1 has no NeoForge baseline; its absence must not abort the window before the Forge baseline runs.
+			try {
+				Class<?> neoForgeMod = Class.forName("net.minecraftforge.common.NeoForgeMod", false, cl);
+				neoForgeMod.getConstructor(iEventBus, distClass, modContainer)
+						.newInstance(bus, dist, container);
+				ForbricLog.info("[Forbric/Lifecycle] constructed NeoForge baseline mod on a native bus (dist=%s)",
+						side.distName());
+			} catch (ClassNotFoundException | NoClassDefFoundError absent) {
+				ForbricLog.debug("[Forbric/Lifecycle] no NeoForge baseline on 1.20.1 — the Forge baseline follows");
+			}
 			Object baselineBus = bus;
 
 			// Real Forge-family @Mods, each on its own bus.
@@ -789,7 +792,7 @@ public final class KernelLifecycle {
 			// DeferredRegisters (e.g. the empty forge:fluid_type read by EntityFluidInteraction) register. The real
 			// Forge mods' buses ride along: their DeferredRegisters flush off the same event stream, and it can only
 			// be fired once NewRegistryEvent (inside) has created Forge's custom registries.
-			KernelForgeBaseline.register(cl, forgeHandles);
+			KernelForgeBaseline.register(cl, forgeHandles, side.isClient());
 			// Fabric mods' onInitialize() calls Registry.register(...) directly, so it belongs in this same unfrozen
 			// span. It runs BEFORE the bake below so the bake sees Fabric-registered content. The root registry is
 			// opened right here because NewRegistryEvent.fill() above re-froze it: a Fabric mod declaring its own
@@ -849,7 +852,7 @@ public final class KernelLifecycle {
 			// RegistryManager.revertToVanilla(), ROLLING BACK the NeoForge registries: 21 baseline entries
 			// (attribute_type, ticket_type, slot_display, entity_sub_predicate_type, …) silently disappeared.
 			// Only its tail is wanted, so call that directly.
-			if (!forgeLater) invokeStaticOn(cl, "net.neoforged.neoforge.common.CommonHooks", "modifyAttributes");
+			if (!forgeLater) invokeStaticOn(cl, "net.minecraftforge.common.CommonHooks", "modifyAttributes");
 			// The rest of postRegisterEvents' tail, in its order. Cheap calls, and each one is a whole feature that
 			// simply did not exist: without fireSpawnPlacementEvent a mod's mob has no spawn rules and never
 			// generates, without BlockEntityTypeAddBlocksEvent a mod cannot attach its blocks to a vanilla block
@@ -857,7 +860,7 @@ public final class KernelLifecycle {
 			// (CreativeModeTabRegistry.sortTabs is the kernel's sortNeoCreativeTabs, below, after the freeze.)
 			if (forgeLater) invokeStaticOn(cl, "net.forbric.kernel.runtime.KernelForgeSpawnPlacements", "holdForgeHalf");
 			invokeStaticOn(cl, "net.minecraft.world.entity.SpawnPlacements", "fireSpawnPlacementEvent");
-			postModBusEvent(cl, "net.neoforged.neoforge.event.BlockEntityTypeAddBlocksEvent");
+			postModBusEvent(cl, "net.minecraftforge.event.BlockEntityTypeAddBlocksEvent");
 			invokeStaticOn(cl, "net.minecraft.world.level.gamerules.GameRuleCategory", "registerModdedCategories");
 			// Last in postRegisterEvents: NeoForge builds its item tooltip appenders — every vanilla component line
 			// (enchantments, lore, attributes, durability, …) and every mod's. Left out of this copy of the tail,
@@ -892,11 +895,13 @@ public final class KernelLifecycle {
 			Class<?> loader = Class.forName(ForeignType.FML_MOD_LOADER.binary(Ecosystem.FORGE), false, cl);
 			Field state = loader.getDeclaredField("loadingStateValid");
 			state.setAccessible(true);
+			// In 1.20.1 this is an instance field; setting null on a non-static Field throws NPE.
+			if (!java.lang.reflect.Modifier.isStatic(state.getModifiers())) return;
 			state.setBoolean(null, ready);
 			if (ready) ForbricLog.info("[Forbric/Lifecycle] MinecraftForge event delivery enabled after container construction");
 		} catch (ClassNotFoundException absent) {
 			ForbricLog.debug("[Forbric/Lifecycle] no MinecraftForge loading state to publish");
-		} catch (ReflectiveOperationException failed) {
+		} catch (ReflectiveOperationException | RuntimeException failed) {
 			ForbricLog.warn("[Forbric/Lifecycle] could not publish MinecraftForge loading state", failed);
 		}
 	}
@@ -1016,7 +1021,7 @@ public final class KernelLifecycle {
 	 * Re-sorts NeoForge's creative-tab ORDER list so tabs registered in the kernel's window become visible.
 	 *
 	 * <p>The merged {@code CreativeModeInventoryScreen} paginates its tab strip EXCLUSIVELY from
-	 * {@code net.neoforged.neoforge.common.CreativeModeTabRegistry.getSortedCreativeModeTabs()} — not from
+	 * {@code net.minecraftforge.common.CreativeModeTabRegistry.getSortedCreativeModeTabs()} — not from
 	 * {@code CreativeModeTabs.tabs()}. That {@code SORTED_TABS} list starts empty and is only rewritten by
 	 * {@code sortTabs()}, which walks the whole {@code CREATIVE_MODE_TAB} registry. Vanilla's tabs enter the
 	 * registry during {@code Bootstrap} — BEFORE the kernel's registration window — so the sort that ran during
@@ -1108,8 +1113,8 @@ public final class KernelLifecycle {
 	 */
 	private static void registerNeoForgeClientContent(ClassLoader cl) {
 		try {
-			Class<?> clientMod = Class.forName("net.neoforged.neoforge.client.ClientNeoForgeMod", false, cl);
-			Class<?> iEventBus = Class.forName("net.neoforged.bus.api.IEventBus", false, cl);
+			Class<?> clientMod = Class.forName("net.minecraftforge.client.ClientNeoForgeMod", false, cl);
+			Class<?> iEventBus = Class.forName("net.minecraftforge.eventbus.api.IEventBus", false, cl);
 			Class<?> modContainer = Class.forName(ForeignType.MOD_CONTAINER.binary(Ecosystem.NEOFORGE), false, cl);
 			clientMod.getConstructor(iEventBus, modContainer).newInstance(baselineBus, baselineContainer);
 			ForbricLog.info("[Forbric/Lifecycle] constructed ClientNeoForgeMod on the baseline bus");
@@ -1258,11 +1263,11 @@ public final class KernelLifecycle {
 		if (!DATAPACK_REGISTRIES_DECLARED.compareAndSet(false, true)) return;
 		try {
 			Class<?> eventCls = Class.forName(
-					"net.neoforged.neoforge.registries.DataPackRegistryEvent$NewRegistry", false, cl);
-			Class<?> busCls = Class.forName("net.neoforged.bus.api.IEventBus", false, cl);
-			Class<?> baseEvent = Class.forName("net.neoforged.bus.api.Event", false, cl);
+					"net.minecraftforge.registries.DataPackRegistryEvent$NewRegistry", false, cl);
+			Class<?> busCls = Class.forName("net.minecraftforge.eventbus.api.IEventBus", false, cl);
+			Class<?> baseEvent = Class.forName("net.minecraftforge.eventbus.api.Event", false, cl);
 			Class<?> hooksCls = Class.forName(
-					"net.neoforged.neoforge.registries.DataPackRegistriesHooks", false, cl);
+					"net.minecraftforge.registries.DataPackRegistriesHooks", false, cl);
 
 			int before = ((java.util.List<?>) hooksCls.getMethod("getDataPackRegistries").invoke(null)).size();
 
@@ -1395,7 +1400,7 @@ public final class KernelLifecycle {
 			Class<?> loaderCls = Class.forName(DatapackRegistryDeclaration.LOADER, false, cl);
 			Class<?> dataCls = Class.forName("net.minecraft.resources.RegistryDataLoader$RegistryData", false, cl);
 			Class<?> wrapperCls = Class.forName(
-					"net.neoforged.neoforge.registries.DataPackRegistryEvent$DataPackRegistryData", false, cl);
+					"net.minecraftforge.registries.DataPackRegistryEvent$DataPackRegistryData", false, cl);
 			Class<?> codecCls = Class.forName("com.mojang.serialization.Codec", false, cl);
 			Method key = dataCls.getMethod("key");
 			Constructor<?> wrap = wrapperCls.getDeclaredConstructor(dataCls, codecCls);
@@ -1741,7 +1746,7 @@ public final class KernelLifecycle {
 		Method acceptEvent;
 		try {
 			Class<?> eventCls = Class.forName(eventClassName, false, cl);
-			Class<?> baseEvent = Class.forName("net.neoforged.bus.api.Event", false, cl);
+			Class<?> baseEvent = Class.forName("net.minecraftforge.eventbus.api.Event", false, cl);
 			event = eventCls.getConstructor().newInstance();
 			acceptEvent = modContainerClass(cl).getMethod("acceptEvent", baseEvent);
 		} catch (ClassNotFoundException | NoSuchMethodException absent) {
@@ -1763,7 +1768,7 @@ public final class KernelLifecycle {
 		ClassLoader cl = event.getClass().getClassLoader();
 		Method acceptEvent;
 		try {
-			acceptEvent = modContainerClass(cl).getMethod("acceptEvent", Class.forName("net.neoforged.bus.api.Event", false, cl));
+			acceptEvent = modContainerClass(cl).getMethod("acceptEvent", Class.forName("net.minecraftforge.eventbus.api.Event", false, cl));
 		} catch (ReflectiveOperationException absent) {
 			ForbricLog.warn("[Forbric/Lifecycle] no NeoForge mod container to post " + event.getClass().getName() + " through",
 					absent);
@@ -1783,8 +1788,8 @@ public final class KernelLifecycle {
 		Method phased = null;
 		Object[] phases = null;
 		try {
-			Class<?> priority = Class.forName("net.neoforged.bus.api.EventPriority", false, cl);
-			phased = modContainerClass(cl).getMethod("acceptEvent", priority, Class.forName("net.neoforged.bus.api.Event", false, cl));
+			Class<?> priority = Class.forName("net.minecraftforge.eventbus.api.EventPriority", false, cl);
+			phased = modContainerClass(cl).getMethod("acceptEvent", priority, Class.forName("net.minecraftforge.eventbus.api.Event", false, cl));
 			phases = priority.getEnumConstants();
 		} catch (ReflectiveOperationException | LinkageError single) {
 			ForbricLog.debug("[Forbric/Lifecycle] no phased acceptEvent — %s goes to each container whole", eventClassName);
@@ -1957,7 +1962,7 @@ public final class KernelLifecycle {
 		}
 	}
 
-	/** The game-side {@code net.neoforged.fml.ModContainer} class. */
+	/** The game-side {@code net.minecraftforge.fml.ModContainer} class. */
 	private static Class<?> modContainerClass(ClassLoader cl) throws ClassNotFoundException {
 		return Class.forName(ForeignType.MOD_CONTAINER.binary(Ecosystem.NEOFORGE), false, cl);
 	}
@@ -2184,7 +2189,7 @@ public final class KernelLifecycle {
 	 */
 	private static void latchRegistriesLoaded(ClassLoader cl) {
 		try {
-			Class<?> common = Class.forName("net.neoforged.neoforge.internal.CommonModLoader", false, cl);
+			Class<?> common = Class.forName("net.minecraftforge.internal.CommonModLoader", false, cl);
 			Field flag = common.getDeclaredField("registriesLoaded");
 			flag.setAccessible(true);
 			if (Boolean.TRUE.equals(flag.get(null))) return;
@@ -2710,8 +2715,23 @@ public final class KernelLifecycle {
 		}
 	}
 
+	private static final java.util.concurrent.atomic.AtomicBoolean CLIENT_NATIVE_WINDOW =
+			new java.util.concurrent.atomic.AtomicBoolean();
+
 	public static void onClientEntrypoints() {
 		ClassLoader cl = gameLoader;
+		// 1.20.1's merged base has no Forge ClientModLoader.begin, so onClientModLoading -- the window that constructs
+		// ForgeMod and fires its RegisterEvent -- never ran from Main.main. Drive it HERE, before the freeze that
+		// DefaultAttributes' <clinit> rides on, or forge:swim_speed and the rest stay unbound. Guarded so a base
+		// that DOES carry the trigger is not registered twice.
+		if (CLIENT_NATIVE_WINDOW.compareAndSet(false, true)) {
+			try {
+				driveNativeRegistration(Side.CLIENT);
+			} catch (Throwable failed) {
+				ForbricLog.warn("[Forbric/Lifecycle] the client registration window could not be driven from "
+						+ "Minecraft.<init> — Forge-family content may be missing", unwrap(failed));
+			}
+		}
 		ReopenedRegistries opened = ReopenedRegistries.NONE;
 		boolean reopened = false;
 
@@ -2779,7 +2799,7 @@ public final class KernelLifecycle {
 		forgeRegistrationEventsHeld = false;
 		invokeStaticOn(cl, "net.forbric.kernel.runtime.KernelForgeAttributes", "releaseValidation");
 		invokeStaticOn(cl, "net.forbric.kernel.runtime.KernelForgeAttributes", "fireForgeAttributeEvents");
-		invokeStaticOn(cl, "net.neoforged.neoforge.common.CommonHooks", "modifyAttributes");
+		invokeStaticOn(cl, "net.minecraftforge.common.CommonHooks", "modifyAttributes");
 		invokeStaticOn(cl, "net.forbric.kernel.runtime.KernelForgeSpawnPlacements", "postForgeHalf");
 	}
 

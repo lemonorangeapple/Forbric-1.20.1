@@ -8,7 +8,7 @@ import org.objectweb.asm.tree.*;
 
 /** Name Fabric mixin-added server listeners without removing them from NeoForge's dependency graph. */
 public final class ServerReloadListenerNamesInjector implements ClassTransformer {
-	public static final String TARGET = "net.neoforged.neoforge.event.AddServerReloadListenersEvent";
+	public static final String TARGET = "net.minecraftforge.event.AddServerReloadListenersEvent";
 	@Override public AnchorSet anchors() {
 		return AnchorSet.of(new AnchorSet.Anchor(TARGET, AnchorSet.Severity.REQUIRED,
 				"a Fabric server reload listener added by mixin aborts world loading"));
@@ -21,7 +21,7 @@ public final class ServerReloadListenerNamesInjector implements ClassTransformer
 			if (!method.name.equals("lookupName")) continue;
 			for (var instruction : method.instructions) if (instruction instanceof MethodInsnNode call
 					&& call.getOpcode() == Opcodes.INVOKESTATIC
-					&& call.owner.equals("net/neoforged/neoforge/resource/VanillaServerListeners")
+					&& call.owner.equals("net/minecraftforge/resource/VanillaServerListeners")
 					&& call.name.equals("getNameForClass")
 					&& call.desc.equals("(Ljava/lang/Class;)Lnet/minecraft/resources/Identifier;")) {
 				call.owner = "net/forbric/kernel/runtime/KernelServerReloadNames";

@@ -55,12 +55,9 @@ final class GameArtifacts {
 
 	static {
 		WANTED.put(ArtifactBuilder.MERGED, "patched-mc-merged-%s.jar");
-		// The INTEROP jar under the forge-runtime coordinate, as ArtifactBuilder stages it and as
-		// build-merged-base.sh and gate-m0 link-check it. The raw forge-runtime.jar lacks the bridge methods the
-		// merge makes necessary (an AbstractMethodError in game), and a link check cannot see a missing
-		// implementation -- so it is never picked up here, whichever directory holds it.
-		WANTED.put(ArtifactBuilder.FORGE_RUNTIME, "forge-runtime-interop.jar");
-		WANTED.put(ArtifactBuilder.NEOFORGE_RUNTIME, "neoforge-runtime.jar");
+		// The raw carrier. There is no interop patch any more: with a single Forge family there is no byte-merge
+		// whose widened interfaces forge-runtime.jar would no longer satisfy.
+		WANTED.put(ArtifactBuilder.FORGE_RUNTIME, "forge-runtime.jar");
 	}
 
 	/**
@@ -73,26 +70,10 @@ final class GameArtifacts {
 	// What only the real artifacts carry; see problem() for how these were chosen.
 	private static final String MINECRAFT_CLIENT = "net/minecraft/client/Minecraft.class";
 	private static final String FORGE_CORE = "net/minecraftforge/common/MinecraftForge.class";
-	private static final String NEO_CORE = "net/neoforged/neoforge/common/NeoForge.class";
 	private static final List<String> FORGE_LOADER = List.of(
 			"net/minecraftforge/fml/loading/FMLLoader.class",
 			"net/minecraftforge/forgespi/language/IModInfo.class");
-	private static final List<String> NEO_LOADER = List.of(
-			"net/neoforged/fml/loading/FMLLoader.class",
-			"net/neoforged/neoforgespi/language/IModInfo.class");
 	private static final byte[] FORGE_REFERENCE = "net/minecraftforge/".getBytes(StandardCharsets.US_ASCII);
-	private static final byte[] NEO_REFERENCE = "net/neoforged/".getBytes(StandardCharsets.US_ASCII);
-
-	/**
-	 * The one method {@code RuntimeInteropPatcher} adds to MinecraftForge's runtime, and so the one thing that
-	 * tells {@code forge-runtime-interop.jar} from the {@code forge-runtime.jar} it is made from: same entries,
-	 * same manifest, and in the raw jar this class has no {@code contents()} at all. The {@code .pins} stamp is no
-	 * marker — only the installer's own build directory writes one; the development scripts' {@code run/} and an
-	 * installed {@code libraries/} tree have none.
-	 */
-	private static final String INTEROP_CLASS = "net/minecraftforge/registries/NamespacedWrapper$3.class";
-	private static final String INTEROP_METHOD = "contents";
-	private static final String INTEROP_DESCRIPTOR = "()Ljava/util/Map;";
 
 	private final Path dir;
 	private final Map<String, Path> found = new LinkedHashMap<>();
@@ -134,8 +115,7 @@ final class GameArtifacts {
 			for (Path candidate : new Path[] {
 					dir.resolve(fileName),
 					dir.resolve("merged-base").resolve(fileName),
-					dir.resolve("forge-runtime").resolve(fileName),
-					dir.resolve("neoforge-runtime").resolve(fileName)}) {
+					dir.resolve("forge-runtime").resolve(fileName)}) {
 				if (Files.isRegularFile(candidate)) {
 					hit = candidate;
 					break;
@@ -196,9 +176,9 @@ final class GameArtifacts {
 		}
 		lines.add(LEAVE_EMPTY);
 		if (!missing.isEmpty()) {
-			lines.add("Developers: the directory must hold what forbric-loader/run/build-merged-base.sh and the two "
-					+ "assemble-*-runtime.sh scripts write (build-merged-base.sh also writes "
-					+ "merged-base/forge-runtime-interop.jar), or be that run/ directory itself.");
+			lines.add("Developers: the directory must hold what forbric-loader/run/build-patched-forge.sh and "
+					+ "assemble-minecraftforge-runtime.sh write (the patched game base and forge-runtime.jar), or be "
+					+ "that run/ directory itself.");
 		}
 		return new IOException(String.join("\n", lines));
 	}
@@ -246,13 +226,8 @@ final class GameArtifacts {
 			if (installer != null) return "It is " + installer + ", not " + what(coordinate, mcVersion) + ".";
 			return switch (coordinate) {
 				case ArtifactBuilder.MERGED -> mergedBaseProblem(zip, mcVersion);
-				case ArtifactBuilder.FORGE_RUNTIME -> {
-					String problem = runtimeProblem(zip, "MinecraftForge", FORGE_CORE, FORGE_LOADER,
-							new ForgeArtifacts(mcVersion, Pins.FORGE).fmlVersion);
-					yield problem != null ? problem : interopProblem(zip);
-				}
-				case ArtifactBuilder.NEOFORGE_RUNTIME -> runtimeProblem(zip, "NeoForge", NEO_CORE, NEO_LOADER,
-						Pins.NEOFORGE);
+				case ArtifactBuilder.FORGE_RUNTIME -> runtimeProblem(zip, "MinecraftForge", FORGE_CORE, FORGE_LOADER,
+						new ForgeArtifacts(mcVersion, Pins.FORGE).fmlVersion);
 				default -> throw new IllegalArgumentException("not a game artifact: " + coordinate);
 			};
 		} catch (IOException damaged) {
@@ -263,10 +238,9 @@ final class GameArtifacts {
 
 	private static String what(String coordinate, String mcVersion) {
 		return switch (coordinate) {
-			case ArtifactBuilder.MERGED -> "the merged game base (Minecraft " + mcVersion
-					+ " with both MinecraftForge's and NeoForge's patches)";
+			case ArtifactBuilder.MERGED -> "the game base (Minecraft " + mcVersion
+					+ " with MinecraftForge's patches)";
 			case ArtifactBuilder.FORGE_RUNTIME -> "the MinecraftForge runtime";
-			case ArtifactBuilder.NEOFORGE_RUNTIME -> "the NeoForge runtime";
 			default -> coordinate;
 		};
 	}
@@ -279,8 +253,6 @@ final class GameArtifacts {
 		if (!id.equals(mcVersion)) {
 			return "It is Minecraft " + id + ", but this install is for Minecraft " + mcVersion + ".";
 		}
-		boolean forge = false;
-		boolean neo = false;
 		for (Enumeration<? extends ZipEntry> entries = zip.entries(); entries.hasMoreElements(); ) {
 			ZipEntry entry = entries.nextElement();
 			String name = entry.getName();
@@ -289,15 +261,9 @@ final class GameArtifacts {
 			try (InputStream in = zip.getInputStream(entry)) {
 				bytes = in.readAllBytes();
 			}
-			forge |= contains(bytes, FORGE_REFERENCE);
-			neo |= contains(bytes, NEO_REFERENCE);
-			if (forge && neo) return null;
+			if (contains(bytes, FORGE_REFERENCE)) return null;
 		}
-		if (!forge && !neo) {
-			return "It is plain Minecraft " + mcVersion + ", not the merged game base Forbric builds from it.";
-		}
-		return "It is Minecraft " + mcVersion + " patched by " + (forge ? "MinecraftForge" : "NeoForge")
-				+ " only. The merged game base carries both MinecraftForge's and NeoForge's patches.";
+		return "It is plain Minecraft " + mcVersion + ", not the Forge-patched game base Forbric builds from it.";
 	}
 
 	private static String runtimeProblem(ZipFile zip, String family, String core, List<String> loader,
@@ -320,19 +286,6 @@ final class GameArtifacts {
 		return null;
 	}
 
-	private static String interopProblem(ZipFile zip) throws IOException {
-		ZipEntry entry = zip.getEntry(INTEROP_CLASS);
-		byte[] bytes = null;
-		if (entry != null) {
-			try (InputStream in = zip.getInputStream(entry)) {
-				bytes = in.readAllBytes();
-			}
-		}
-		if (bytes != null && declaresMethod(bytes, INTEROP_METHOD, INTEROP_DESCRIPTOR)) return null;
-		return "It is forge-runtime.jar, the MinecraftForge runtime before Forbric patches it to fit the merged "
-				+ "game base; forge-runtime-interop.jar is the patched one.";
-	}
-
 	/**
 	 * The {@code Implementation-Version} of the manifest's main section, or null. Only the main section: the
 	 * MinecraftForge runtime's manifest also carries one per bundled library ({@code AccessTransformers 8.2.2},
@@ -349,69 +302,8 @@ final class GameArtifacts {
 		}
 	}
 
-	/**
-	 * Whether a class file declares the method {@code name}{@code descriptor}, read from its own method table; a
-	 * file that does not parse as a class declares nothing. Searching the bytes for the name would also match a
-	 * class that only CALLS such a method; this installer carries no ASM, and walking the constant pool to the
-	 * method table is all that is needed.
-	 */
-	private static boolean declaresMethod(byte[] classFile, String name, String descriptor) {
-		try {
-			return methodTableHas(new DataInputStream(new ByteArrayInputStream(classFile)), name, descriptor);
-		} catch (IOException | RuntimeException malformed) {
-			return false;
-		}
-	}
-
-	private static boolean methodTableHas(DataInputStream in, String name, String descriptor) throws IOException {
-		if (in.readInt() != 0xCAFEBABE) return false;
-		in.skipNBytes(4); // minor, major
-		int count = in.readUnsignedShort();
-		String[] utf8 = new String[count];
-		for (int i = 1; i < count; i++) {
-			int tag = in.readUnsignedByte();
-			switch (tag) {
-				case 1 -> utf8[i] = in.readUTF(); // the class file's modified UTF-8 is exactly readUTF's format
-				case 7, 8, 16, 19, 20 -> in.skipNBytes(2);
-				case 15 -> in.skipNBytes(3);
-				case 3, 4, 9, 10, 11, 12, 17, 18 -> in.skipNBytes(4);
-				case 5, 6 -> { // a long or double takes two constant-pool slots
-					in.skipNBytes(8);
-					i++;
-				}
-				default -> throw new IOException("not a class file: constant-pool tag " + tag);
-			}
-		}
-		in.skipNBytes(6); // access flags, this class, super class
-		in.skipNBytes(2L * in.readUnsignedShort()); // interfaces
-		skipMembers(in); // fields
-		for (int methods = in.readUnsignedShort(); methods > 0; methods--) {
-			in.skipNBytes(2); // access flags
-			String methodName = utf8[in.readUnsignedShort()];
-			String methodDescriptor = utf8[in.readUnsignedShort()];
-			if (name.equals(methodName) && descriptor.equals(methodDescriptor)) return true;
-			skipAttributes(in);
-		}
-		return false;
-	}
-
-	private static void skipMembers(DataInputStream in) throws IOException {
-		for (int members = in.readUnsignedShort(); members > 0; members--) {
-			in.skipNBytes(6); // access flags, name, descriptor
-			skipAttributes(in);
-		}
-	}
-
-	private static void skipAttributes(DataInputStream in) throws IOException {
-		for (int attributes = in.readUnsignedShort(); attributes > 0; attributes--) {
-			in.skipNBytes(2); // name
-			in.skipNBytes(in.readInt() & 0xFFFFFFFFL);
-		}
-	}
-
 	/** A hint at what a wrong file actually is, when that is recognisable — the usual mistake is a swap. */
 	private static String looksLike(ZipFile zip, String notThis) {
-		if (!"NeoForge".equals(notThis) && zip.getEntry(NEO_CORE) != null) return " (it looks like NeoForge instead)";
 		if (!"MinecraftForge".equals(notThis) && zip.getEntry(FORGE_CORE) != null) {
 			return " (it looks like MinecraftForge instead)";
 		}

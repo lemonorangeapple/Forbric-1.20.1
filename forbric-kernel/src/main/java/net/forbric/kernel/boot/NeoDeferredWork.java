@@ -53,7 +53,7 @@ import net.forbric.kernel.util.ForbricLog;
  * see under NeoForge.
  */
 public final class NeoDeferredWork {
-	private static final String WORK_MANAGER = "net.neoforged.fml.ModWorkManager";
+	private static final String WORK_MANAGER = "net.minecraftforge.fml.ModWorkManager";
 
 	private NeoDeferredWork() {
 	}

@@ -84,7 +84,7 @@ class MergedBaseTooltipOrderScrapeTest {
 		ClassNode before = parse(original), after = parse(new TooltipOrderScrapeInjector().transform(ITEM_STACK.replace('/', '.'), original, null));
 		MethodNode was = find(before, TooltipOrderScrapeInjector.METHOD, TooltipOrderScrapeInjector.DESC);
 		MethodNode now = find(after, TooltipOrderScrapeInjector.METHOD, TooltipOrderScrapeInjector.DESC);
-		AbstractInsnNode insn = now.instructions.getFirst();
+		AbstractInsnNode insn = now.instructions.get(0);
 		while (insn != null && insn.getOpcode() < 0) insn = insn.getNext();
 		assertTrue(insn instanceof FieldInsnNode f && f.getOpcode() == Opcodes.GETSTATIC, "the first instruction is a GETSTATIC — the order sits at the HEAD");
 		int pairs = 0;
@@ -139,7 +139,7 @@ class MergedBaseTooltipOrderScrapeTest {
 	static List<String> scrape(ClassNode node) {
 		MethodNode method = find(node, TooltipOrderScrapeInjector.METHOD, TooltipOrderScrapeInjector.DESC);
 		Set<String> seen = new LinkedHashSet<>();
-		for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof FieldInsnNode f && f.getOpcode() == Opcodes.GETSTATIC && TooltipOrderScrapeInjector.DATA_COMPONENTS.equals(f.owner)
 					&& TooltipOrderScrapeInjector.DATA_COMPONENT_TYPE.equals(f.desc)) {
 				seen.add(f.name);
@@ -157,7 +157,7 @@ class MergedBaseTooltipOrderScrapeTest {
 	}
 
 	private static AbstractInsnNode firstReal(MethodNode m) {
-		AbstractInsnNode insn = m.instructions.getFirst();
+		AbstractInsnNode insn = m.instructions.get(0);
 		while (insn != null && insn.getOpcode() < 0) insn = insn.getNext();
 		return insn;
 	}

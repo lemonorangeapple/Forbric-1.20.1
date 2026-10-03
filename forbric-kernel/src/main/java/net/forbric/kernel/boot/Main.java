@@ -46,14 +46,14 @@ public final class Main {
 
 	public static void main(String[] args) throws Exception {
 		Args parsed = Args.parse(args);
-		switch (parsed.mode) {
-			case SCAN -> runScan(parsed);
-			case null, default -> {
-				System.err.println("forbric-kernel: no runnable mode selected.");
-				System.err.println(USAGE);
-				System.exit(2);
-			}
+		// A plain if, not a switch: `case null, default` is Java 21 and the kernel targets Java 17.
+		if (parsed.mode == Mode.SCAN) {
+			runScan(parsed);
+			return;
 		}
+		System.err.println("forbric-kernel: no runnable mode selected.");
+		System.err.println(USAGE);
+		System.exit(2);
 	}
 
 	private static void runScan(Args a) throws IOException {

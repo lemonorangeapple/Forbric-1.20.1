@@ -83,7 +83,7 @@ public final class CarrierLanguages {
 
 	private static final List<Carrier> CARRIERS = List.of(
 			new Carrier("neoforge", ForeignType.LANGUAGE_HOOK.binary(Ecosystem.NEOFORGE), "loadBuiltinLanguages",
-					"net.neoforged.fml.i18n.I18nManager", "currentLocale", "fml.menu.branding"),
+					"net.minecraftforge.fml.i18n.I18nManager", "currentLocale", "fml.menu.branding"),
 			new Carrier("forge", ForeignType.LANGUAGE_HOOK.binary(Ecosystem.FORGE), "loadForgeAndMCLangs",
 					"net.minecraftforge.common.ForgeI18n", "i18n", "fml.menu.mods"));
 

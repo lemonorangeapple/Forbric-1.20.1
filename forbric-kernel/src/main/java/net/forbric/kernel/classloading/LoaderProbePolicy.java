@@ -28,7 +28,7 @@ import net.forbric.kernel.util.ForbricLog;
  * <p>Multi-platform mods pick their platform branch by probing for a marker class:
  *
  * <pre>{@code
- * if (doesClassExist("net.neoforged.fml.loading.FMLLoader"))      use NeoForgeAbstractions;
+ * if (doesClassExist("net.minecraftforge.fml.loading.FMLLoader"))      use NeoForgeAbstractions;
  * if (doesClassExist("net.minecraftforge.fml.loading.FMLLoader")) use ForgeAbstractions;
  * if (doesClassExist("net.fabricmc.loader.api.FabricLoader"))     use FabricAbstractions;
  * }</pre>
@@ -78,7 +78,7 @@ public final class LoaderProbePolicy {
 	 * {@code FORGE_FAMILY} constant on the reasoning that a NeoForge mod "is running on FML" and should be told
 	 * yes when it probes for MinecraftForge's loader. That reasoning does not survive contact with the class
 	 * names: the two families' marker classes are {@code net.minecraftforge.fml.loading.FMLLoader} and
-	 * {@code net.neoforged.fml.loading.FMLLoader}, and on a real NeoForge instance the first one is absent. That
+	 * {@code net.minecraftforge.fml.loading.FMLLoader}, and on a real NeoForge instance the first one is absent. That
 	 * probe is a mod asking "is TRADITIONAL Forge here", and the grouping answered yes to a NeoForge-only mod,
 	 * sending it down the branch written for the other family.
 	 *
@@ -120,8 +120,7 @@ public final class LoaderProbePolicy {
 			// no here, as it always was by their absence; a Fabric class is told yes, as on Fabric.
 			"net.fabricmc.loader.impl.FabricLoaderImpl", Family.FABRIC,
 			"net.fabricmc.loader.FabricLoader", Family.FABRIC,
-			ForeignType.FML_LOADER.binary(Ecosystem.FORGE), Family.FORGE,
-			ForeignType.FML_LOADER.binary(Ecosystem.NEOFORGE), Family.NEOFORGE);
+			ForeignType.FML_LOADER.binary(Ecosystem.FORGE), Family.FORGE);
 
 	private static final boolean ENABLED = !"off".equalsIgnoreCase(System.getProperty("forbric.loaderProbes", "on"));
 

@@ -109,7 +109,7 @@ class MethodBodyNeuterTest {
 				.transform(OWNER, methodWith("()V"), ctx());
 
 		MethodNode m = method(parse(out), "stubbed");
-		for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 			assertTrue(insn.getOpcode() != Opcodes.INVOKESTATIC,
 					"the neutered body still calls something — the original code survived");
 		}

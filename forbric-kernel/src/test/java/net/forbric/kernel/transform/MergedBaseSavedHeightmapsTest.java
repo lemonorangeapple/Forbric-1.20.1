@@ -126,7 +126,7 @@ class MergedBaseSavedHeightmapsTest {
 		List<String> out = new ArrayList<>();
 		for (MethodNode method : node.methods) {
 			if (!"getChunkSaveHeightmaps".equals(method.name)) continue;
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn instanceof FieldInsnNode read && read.getOpcode() == Opcodes.GETFIELD
 						&& CHUNK_STATUS.equals(read.owner)) {
 					out.add(read.name);

@@ -36,7 +36,7 @@ import net.forbric.kernel.util.ForbricLog;
  *
  * <p>Measured cost of not having this: JEI 30.14.0.87 declares {@code neoforge [26.2.0.16-beta,)} and the carrier
  * was {@code 26.2.0.7-beta}. It loaded. Nine releases of drift later, {@code NeoForgeGuiPlugin} died on
- * {@code NoClassDefFoundError: net/neoforged/neoforge/common/extensions/TooltipFlagExtension} — an interface that
+ * {@code NoClassDefFoundError: net/minecraftforge/common/extensions/TooltipFlagExtension} — an interface that
  * genuinely does not exist in .7, where those methods are inlined on {@code TooltipFlag} instead. Tracing that
  * back to a version range took a disassembler. One warning line would have said it.
  *
@@ -53,7 +53,8 @@ import net.forbric.kernel.util.ForbricLog;
  */
 public final class EcosystemVersions {
 	/** The ecosystem mod ids a carrier can claim, and the only ones a range is checked against. */
-	private static final List<String> ECOSYSTEMS = List.of("neoforge", "forge", "minecraft");
+	// 1.20.1 is Fabric + MinecraftForge; no NeoForge carrier exists, so nothing can claim that id.
+	private static final List<String> ECOSYSTEMS = List.of("forge", "minecraft");
 
 	private static final Map<String, String> PROVIDED = new LinkedHashMap<>();
 

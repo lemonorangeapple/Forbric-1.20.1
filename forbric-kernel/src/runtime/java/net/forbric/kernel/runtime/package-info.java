@@ -16,7 +16,7 @@
 
 /**
  * The kernel's GAME-side half — the only kernel code that may name {@code net.minecraft.*},
- * {@code net.minecraftforge.*} and {@code net.neoforged.*} as TYPES rather than as strings.
+ * {@code net.minecraftforge.*} and {@code net.minecraftforge.*} as TYPES rather than as strings.
  *
  * <h2>Why this package exists</h2>
  *
@@ -39,8 +39,8 @@
  *
  * <ul>
  *   <li><b>Yes:</b> public types of the merged base, and public types of the two carriers
- *       ({@code net.neoforged.fml.ModContainer}, {@code net.neoforged.neoforgespi.language.IModInfo},
- *       {@code net.neoforged.bus.api.IEventBus}, {@code net.minecraftforge.*} equivalents).
+ *       ({@code net.minecraftforge.fml.ModContainer}, {@code net.minecraftforge.forgespi.language.IModInfo},
+ *       {@code net.minecraftforge.eventbus.api.IEventBus}, {@code net.minecraftforge.*} equivalents).
  *   <li><b>No:</b> anything from fabric-api. It is a mod the USER installs, not a staged artifact, so it is not
  *       on this classpath and never will be. A class that must implement a fabric-api interface (the HUD layer
  *       that is simultaneously a fabric-api {@code HudElement} and a NeoForge {@code GuiLayer}) still has to be

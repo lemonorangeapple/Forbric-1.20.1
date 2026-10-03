@@ -201,27 +201,26 @@ class MergedBasePipelineDriftTest {
 	/** One token per real instruction, with everything a recompile may legally change erased. */
 	private static List<String> normalise(MethodNode method) {
 		List<String> out = new ArrayList<>();
-		for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 			int op = insn.getOpcode();
 			if (op < 0 || op == Opcodes.GOTO || op == Opcodes.NOP) continue;
-			switch (insn) {
-				case VarInsnNode ignored -> out.add(name(op).replaceAll("_\\d$", ""));
-				case IincInsnNode i -> out.add("IINC:" + i.incr);
-				case IntInsnNode i -> out.add(op == Opcodes.NEWARRAY ? "NEWARRAY:" + i.operand : "CONST_I:" + i.operand);
-				case LdcInsnNode l -> out.add("CONST:" + l.cst.getClass().getSimpleName() + ":" + l.cst);
-				case MethodInsnNode c -> out.add("INVOKE:" + name(op) + ":" + c.owner + "." + c.name + c.desc);
-				case FieldInsnNode f -> out.add("FIELD:" + name(op) + ":" + f.owner + "." + f.name + ":" + f.desc);
-				case TypeInsnNode t -> out.add(name(op) + ":" + t.desc);
-				case MultiANewArrayInsnNode a -> out.add("MULTIANEWARRAY:" + a.desc + ":" + a.dims);
-				case InvokeDynamicInsnNode d -> out.add("INDY:" + d.name + d.desc + ":" + d.bsm.getName());
-				case JumpInsnNode ignored -> out.add("JUMP:" + name(op));
-				case TableSwitchInsnNode t -> out.add("TABLESWITCH:" + t.min + "-" + t.max);
-				case LookupSwitchInsnNode l -> out.add("LOOKUPSWITCH:" + l.keys);
-				default -> {
-					String n = name(op);
-					if (n.matches("ICONST_M1|ICONST_\\d")) out.add("CONST_I:" + (op - Opcodes.ICONST_0));
-					else out.add(n);
-				}
+			// Java 17: pattern `instanceof`, not a pattern switch.
+			if (insn instanceof VarInsnNode) out.add(name(op).replaceAll("_\\d$", ""));
+			else if (insn instanceof IincInsnNode i) out.add("IINC:" + i.incr);
+			else if (insn instanceof IntInsnNode i) out.add(op == Opcodes.NEWARRAY ? "NEWARRAY:" + i.operand : "CONST_I:" + i.operand);
+			else if (insn instanceof LdcInsnNode l) out.add("CONST:" + l.cst.getClass().getSimpleName() + ":" + l.cst);
+			else if (insn instanceof MethodInsnNode c) out.add("INVOKE:" + name(op) + ":" + c.owner + "." + c.name + c.desc);
+			else if (insn instanceof FieldInsnNode f) out.add("FIELD:" + name(op) + ":" + f.owner + "." + f.name + ":" + f.desc);
+			else if (insn instanceof TypeInsnNode t) out.add(name(op) + ":" + t.desc);
+			else if (insn instanceof MultiANewArrayInsnNode a) out.add("MULTIANEWARRAY:" + a.desc + ":" + a.dims);
+			else if (insn instanceof InvokeDynamicInsnNode d) out.add("INDY:" + d.name + d.desc + ":" + d.bsm.getName());
+			else if (insn instanceof JumpInsnNode) out.add("JUMP:" + name(op));
+			else if (insn instanceof TableSwitchInsnNode t) out.add("TABLESWITCH:" + t.min + "-" + t.max);
+			else if (insn instanceof LookupSwitchInsnNode l) out.add("LOOKUPSWITCH:" + l.keys);
+			else {
+				String n = name(op);
+				if (n.matches("ICONST_M1|ICONST_\\d")) out.add("CONST_I:" + (op - Opcodes.ICONST_0));
+				else out.add(n);
 			}
 		}
 		return out;

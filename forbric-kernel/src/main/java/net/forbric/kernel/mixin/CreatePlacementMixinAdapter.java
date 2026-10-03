@@ -21,7 +21,7 @@ final class CreatePlacementMixinAdapter {
 		for(MethodNode original:List.of(cache,use)) {
 			boolean caching=original==cache;AnnotationNode inject=MixinFit.injectorOf(original);
 			List<AnnotationNode> points=MixinFit.atNodes(inject);if(points.size()!=1)return 0;
-			AnnotationNode at=points.getFirst();at.values=new ArrayList<>(List.of("value",caching?"HEAD":"RETURN"));
+			AnnotationNode at=points.get(0);at.values=new ArrayList<>(List.of("value",caching?"HEAD":"RETURN"));
 			MethodNode wrapper=new MethodNode(Opcodes.ACC_PRIVATE,original.name,"(L"+CONTEXT+";L"+CIR+";L"+REF+";)V",null,null);
 			wrapper.visibleAnnotations=new ArrayList<>(List.of(inject));
 			if(original.invisibleParameterAnnotations!=null){wrapper.invisibleParameterAnnotations=new List[3];wrapper.invisibleParameterAnnotations[2]=original.invisibleParameterAnnotations[3];}

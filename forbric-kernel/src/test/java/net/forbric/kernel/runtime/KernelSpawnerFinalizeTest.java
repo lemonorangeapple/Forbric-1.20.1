@@ -109,7 +109,7 @@ class KernelSpawnerFinalizeTest {
 		try (SpawnerFinalizeFixture f = fixture("tag")) {
 			Object replacement = f.input(); f.set("forge", (Consumer<Object>) event -> set(event, "setSpawnTag", replacement)); f.tick();
 			assertEquals(1, f.count("finalizes")); assertEquals(1, f.findings().size());
-			Object finding = f.findings().getFirst();
+			Object finding = f.findings().get(0);
 			assertEquals("spawner-finalize-tag-replacement", get(finding, "id")); assertEquals(false, get(finding, "required"));
 			assertEquals("RESOLVED", get(finding, "confidence").toString());
 			assertNotSame(replacement, f.value("loadedInput"), "do not invent a second entity-load pass for a native-unused setter");
@@ -120,7 +120,7 @@ class KernelSpawnerFinalizeTest {
 		try (SpawnerFinalizeFixture f = fixture("missing")) {
 			f.set("input", null); f.tick();
 			assertEquals(0, f.count("forgePosts")); assertEquals(1, f.count("finalizes"), "the supported Neo path remains native");
-			assertEquals(1, f.findings().size()); Object finding = f.findings().getFirst();
+			assertEquals(1, f.findings().size()); Object finding = f.findings().get(0);
 			assertEquals("spawner-finalize-input", get(finding, "id")); assertEquals(true, get(finding, "required"));
 		}
 	}

@@ -10,7 +10,8 @@ parsing, the Mixin service, the game-provider framework — **is**
 under the **Apache License 2.0**.
 
 This repository does not contain that source. `bootstrap.sh` clones the upstream
-repository, at the release pinned as `fabric_loader_ref` in `gradle.properties`,
+repository, at the release pinned as `forbric.fabric.loader` in the repository-root
+`VERSIONS.properties`,
 into a sibling `fabric-loader/` directory, and `build.gradle` compiles its source
 roots alongside Forbric's own. So no file here carries a FabricMC copyright
 header — but the jar the build produces does contain compiled FabricMC code,

@@ -41,9 +41,9 @@ public final class FabricEntityMixinAnchors {
   if(mixin.name.equals(BASE+"effect/LivingEntityMixin")) {
    MethodNode force=method(target,"forceAddEffect","("+EFFECT+ENTITY+")V");
    String old="L"+LIVING+";canBeAffected("+EFFECT+")Z";
-   String moved="Lnet/neoforged/neoforge/common/CommonHooks;canMobEffectBeApplied(L"+LIVING+";"+EFFECT+ENTITY+")Z";
+   String moved="Lnet/minecraftforge/common/CommonHooks;canMobEffectBeApplied(L"+LIVING+";"+EFFECT+ENTITY+")Z";
    if(force!=null && countCalls(force,LIVING,"canBeAffected","("+EFFECT+")Z")==0
-      && countCalls(force,"net/neoforged/neoforge/common/CommonHooks","canMobEffectBeApplied","(L"+LIVING+";"+EFFECT+ENTITY+")Z")==1)
+      && countCalls(force,"net/minecraftforge/common/CommonHooks","canMobEffectBeApplied","(L"+LIVING+";"+EFFECT+ENTITY+")Z")==1)
     changed+=move(mixin,"beforeForceAddEffect","("+EFFECT+ENTITY+CI+")V","forceAddEffect",null,"INVOKE",old,"INVOKE",moved);
    MethodNode remove=method(target,"removeAllEffects","()Z");
    if(remove!=null && countCalls(remove,"com/google/common/collect/Maps","newHashMap","(Ljava/util/Map;)Ljava/util/HashMap;")==0
@@ -58,7 +58,7 @@ public final class FabricEntityMixinAnchors {
    if(delegatesToAttributePath(plain) && attributeAfterMovementChecks(extended))
     changed+=move(mixin,"injectElytraCheck","("+CIR+")V","canGlide","canGlide(Z)Z","FIELD",
       "Lnet/minecraft/world/entity/EquipmentSlot;VALUES:Ljava/util/List;","FIELD",
-      "Lnet/neoforged/neoforge/common/NeoForgeMod;GLIDING_FLIGHT:Lnet/minecraft/core/Holder;");
+      "Lnet/minecraftforge/common/NeoForgeMod;GLIDING_FLIGHT:Lnet/minecraft/core/Holder;");
    if(!"off".equalsIgnoreCase(System.getProperty(TICK_PROPERTY,"on"))&&damageChoiceBehindEmptyGuard(method(target,"updateFallFlying","()V"))
      &&plainPoint(mixin,"injectElytraTick","("+CI+")V")) {
     int tick=move(mixin,"injectElytraTick","("+CI+")V","updateFallFlying()V",null,"INVOKE",GET_RANDOM,"INVOKE","Ljava/util/List;isEmpty()Z");
@@ -82,7 +82,7 @@ public final class FabricEntityMixinAnchors {
   if(inject==null||!inject.desc.equals("Lorg/spongepowered/asm/mixin/injection/Redirect;")
     ||!MixinFit.stringList(MixinFit.value(inject,"method")).equals(List.of("startSleepInBed")))return 0;
   List<AnnotationNode> points=MixinFit.atNodes(inject);
-  if(points.size()!=1||!"Ljava/util/List;isEmpty()Z".equals(MixinFit.value(points.getFirst(),"target")))return 0;
+  if(points.size()!=1||!"Ljava/util/List;isEmpty()Z".equals(MixinFit.value(points.get(0),"target")))return 0;
   List<AbstractInsnNode> body=code(host);if(body.size()<4||!(body.get(0) instanceof VarInsnNode self)||self.var!=0||self.getOpcode()!=Opcodes.ALOAD
     ||!(body.get(1) instanceof VarInsnNode pos)||pos.var!=1||pos.getOpcode()!=Opcodes.ALOAD
     ||!(body.get(2) instanceof InvokeDynamicInsnNode capture)||!capture.bsm.getOwner().equals("java/lang/invoke/LambdaMetafactory")
@@ -95,7 +95,7 @@ public final class FabricEntityMixinAnchors {
    MethodNode lambda=method(target,h.getName(),h.getDesc());if(lambda!=null&&countCalls(lambda,"java/util/List","isEmpty","()Z")==1)matches.add(lambda);
   }
   if(matches.size()!=1)return 0;
-  set(inject,"method",new ArrayList<>(List.of(matches.getFirst().name+matches.getFirst().desc)));return 1;
+  set(inject,"method",new ArrayList<>(List.of(matches.get(0).name+matches.get(0).desc)));return 1;
  }
  private static final String STATE="net/minecraft/world/level/block/state/BlockState";
  private static final String LEVEL="net/minecraft/world/level/Level";
@@ -111,7 +111,7 @@ public final class FabricEntityMixinAnchors {
   List<String> selectors=MixinFit.stringList(MixinFit.value(redirect,"method"));
   if(!new java.util.HashSet<>(selectors).equals(java.util.Set.of("startSleeping","lambda$stopSleeping$0")))return 0;
   List<AnnotationNode> points=MixinFit.atNodes(redirect);
-  if(points.size()!=1||!("L"+LEVEL+";setBlock("+POSITION+"L"+STATE+";I)Z").equals(MixinFit.value(points.getFirst(),"target")))return 0;
+  if(points.size()!=1||!("L"+LEVEL+";setBlock("+POSITION+"L"+STATE+";I)Z").equals(MixinFit.value(points.get(0),"target")))return 0;
   for(String name:selectors){MethodNode host=method(target,name,"("+POSITION+")V");
    if(host==null||countCalls(host,LEVEL,"setBlock","("+POSITION+"L"+STATE+";I)Z")!=0||countCalls(host,STATE,"setBedOccupied",BED_CALL)!=1)return 0;
   }
@@ -120,7 +120,7 @@ public final class FabricEntityMixinAnchors {
   MethodNode bridge=new MethodNode(Opcodes.ACC_PRIVATE,"forbric$setBedOccupied",desc,null,null);
   bridge.visibleAnnotations=new ArrayList<>(List.of(redirect));
   if(old.visibleAnnotations!=null)old.visibleAnnotations.remove(redirect);if(old.invisibleAnnotations!=null)old.invisibleAnnotations.remove(redirect);
-  set(points.getFirst(),"target","L"+STATE+";setBedOccupied"+BED_CALL);
+  set(points.get(0),"target","L"+STATE+";setBedOccupied"+BED_CALL);
   InsnList code=bridge.instructions;LabelNode nativePath=new LabelNode(),perform=new LabelNode(),end=new LabelNode();
   code.add(new VarInsnNode(Opcodes.ALOAD,2));code.add(new VarInsnNode(Opcodes.ALOAD,3));
   code.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL,LEVEL,"getBlockState","("+POSITION+")L"+STATE+";",false));code.add(new VarInsnNode(Opcodes.ASTORE,6));
@@ -160,8 +160,8 @@ public final class FabricEntityMixinAnchors {
   if(wrap==null||!wrap.desc.equals("Lcom/llamalad7/mixinextras/injector/wrapoperation/WrapOperation;")
     ||!MixinFit.stringList(MixinFit.value(wrap,"method")).equals(List.of("getBedOrientation")))return 0;
   List<AnnotationNode> points=MixinFit.atNodes(wrap);
-  if(points.size()!=1||!"INVOKE".equals(MixinFit.value(points.getFirst(),"value"))
-    ||!("Lnet/minecraft/world/level/block/BedBlock;getBedOrientation(Lnet/minecraft/world/level/BlockGetter;"+POSITION+")"+DIRECTION).equals(MixinFit.value(points.getFirst(),"target")))return 0;
+  if(points.size()!=1||!"INVOKE".equals(MixinFit.value(points.get(0),"value"))
+    ||!("Lnet/minecraft/world/level/block/BedBlock;getBedOrientation(Lnet/minecraft/world/level/BlockGetter;"+POSITION+")"+DIRECTION).equals(MixinFit.value(points.get(0),"target")))return 0;
   String desc="("+DIRECTION+")"+DIRECTION;
   if(method(mixin,"forbric$modifySleepingDirection",desc)!=null)return 0;
   if(old.visibleAnnotations!=null)old.visibleAnnotations.remove(wrap);if(old.invisibleAnnotations!=null)old.invisibleAnnotations.remove(wrap);
@@ -229,7 +229,7 @@ public final class FabricEntityMixinAnchors {
    new ClearAllVeto(BALM_MIXIN,"clearAllEffects","(Ljava/util/Map;L"+OPERATION+";Ljava/util/Map;)V",BALM_VETO_PROPERTY,
      "forbric$balmAllowRemove",FabricEntityMixinAnchors::balmVeto,FabricEntityMixinAnchors::askBalm));
  private static int earlyRemoveVeto(ClassNode mixin,MethodNode remove) {
-  if(countCalls(remove,"java/util/Map","clear","()V")!=0||countCalls(remove,"net/neoforged/neoforge/event/EventHooks","onEffectRemoved",EFFECT_REMOVED)!=1)return 0;
+  if(countCalls(remove,"java/util/Map","clear","()V")!=0||countCalls(remove,"net/minecraftforge/event/EventHooks","onEffectRemoved",EFFECT_REMOVED)!=1)return 0;
   int changed=0;
   for(ClearAllVeto veto:CLEAR_ALL_VETOES) {
    if(!veto.mixin().equals(mixin.name)||(veto.property()!=null&&"off".equalsIgnoreCase(System.getProperty(veto.property(),"on"))))continue;
@@ -239,15 +239,15 @@ public final class FabricEntityMixinAnchors {
    if(wrap==null||!wrap.desc.equals("Lcom/llamalad7/mixinextras/injector/wrapoperation/WrapOperation;")
      ||!List.of(List.of("removeAllEffects"),List.of("removeAllEffects()Z")).contains(MixinFit.stringList(MixinFit.value(wrap,"method"))))continue;
    List<AnnotationNode> points=MixinFit.atNodes(wrap);
-   if(points.size()!=1||!"INVOKE".equals(MixinFit.value(points.getFirst(),"value"))||!"Ljava/util/Map;clear()V".equals(MixinFit.value(points.getFirst(),"target"))
-     ||MixinFit.value(points.getFirst(),"ordinal")!=null||MixinFit.value(wrap,"slice")!=null)continue;
+   if(points.size()!=1||!"INVOKE".equals(MixinFit.value(points.get(0),"value"))||!"Ljava/util/Map;clear()V".equals(MixinFit.value(points.get(0),"target"))
+     ||MixinFit.value(points.get(0),"ordinal")!=null||MixinFit.value(wrap,"slice")!=null)continue;
    if(!veto.recognised().test(mixin,old))continue;
    String desc="(L"+LIVING+";"+EFFECT+"L"+OPERATION+";)Z";
    if(method(mixin,veto.generated(),desc)!=null)continue;
    MethodNode handler=new MethodNode(Opcodes.ACC_PRIVATE,veto.generated(),desc,null,null);
    handler.visibleAnnotations=new ArrayList<>(List.of(wrap));
    if(old.visibleAnnotations!=null)old.visibleAnnotations.remove(wrap);if(old.invisibleAnnotations!=null)old.invisibleAnnotations.remove(wrap);
-   set(points.getFirst(),"target","Lnet/neoforged/neoforge/event/EventHooks;onEffectRemoved"+EFFECT_REMOVED);
+   set(points.get(0),"target","Lnet/minecraftforge/event/EventHooks;onEffectRemoved"+EFFECT_REMOVED);
    InsnList code=handler.instructions;LabelNode removable=new LabelNode();
    code.add(new VarInsnNode(Opcodes.ALOAD,3));code.add(new InsnNode(Opcodes.ICONST_2));code.add(new TypeInsnNode(Opcodes.ANEWARRAY,"java/lang/Object"));
    code.add(new InsnNode(Opcodes.DUP));code.add(new InsnNode(Opcodes.ICONST_0));code.add(new VarInsnNode(Opcodes.ALOAD,1));code.add(new InsnNode(Opcodes.AASTORE));
@@ -310,10 +310,10 @@ public final class FabricEntityMixinAnchors {
   AnnotationNode injector=MixinFit.injectorOf(handler);
   if(injector==null||!injector.desc.equals("Lorg/spongepowered/asm/mixin/injection/Inject;"))return 0;
   List<String> selected=MixinFit.stringList(MixinFit.value(injector,"method"));
-  if(selected.size()!=1||!selected.getFirst().equals(selector))return 0;
+  if(selected.size()!=1||!selected.get(0).equals(selector))return 0;
   List<AnnotationNode> points=MixinFit.atNodes(injector);
   if(points.size()!=1)return 0;
-  AnnotationNode at=points.getFirst();
+  AnnotationNode at=points.get(0);
   if(!oldKind.equals(MixinFit.value(at,"value"))||!oldTarget.equals(MixinFit.value(at,"target")))return 0;
   if(!oldKind.equals(newKind)&&(MixinFit.value(at,"shift")!=null||MixinFit.value(at,"by")!=null))return 0;
   set(at,"value",newKind);set(at,"target",newTarget);
@@ -363,7 +363,7 @@ public final class FabricEntityMixinAnchors {
   if(injector==null||MixinFit.value(injector,"slice")!=null||MixinFit.value(injector,"locals")!=null)return false;
   List<AnnotationNode> points=MixinFit.atNodes(injector);
   if(points.size()!=1)return false;
-  for(String key:List.of("shift","by","ordinal","opcode"))if(MixinFit.value(points.getFirst(),key)!=null)return false;
+  for(String key:List.of("shift","by","ordinal","opcode"))if(MixinFit.value(points.get(0),key)!=null)return false;
   return true;
  }
  private static boolean delegatesToAttributePath(MethodNode method) {
@@ -381,7 +381,7 @@ public final class FabricEntityMixinAnchors {
   if(!(code.get(2) instanceof JumpInsnNode a)||!(code.get(5) instanceof JumpInsnNode b)||!(code.get(9) instanceof JumpInsnNode c)
     ||a.getOpcode()!=Opcodes.IFNE||b.getOpcode()!=Opcodes.IFNE||c.getOpcode()!=Opcodes.IFNE||a.label!=b.label||a.label!=c.label)return false;
   return code.get(11) instanceof FieldInsnNode field && field.getOpcode()==Opcodes.GETSTATIC
-    &&field.owner.equals("net/neoforged/neoforge/common/NeoForgeMod")&&field.name.equals("GLIDING_FLIGHT")
+    &&field.owner.equals("net/minecraftforge/common/NeoForgeMod")&&field.name.equals("GLIDING_FLIGHT")
     &&field.desc.equals("Lnet/minecraft/core/Holder;")&&countField(method,field)==1;
  }
  private static int countField(MethodNode method,FieldInsnNode wanted){int count=0;for(var i:method.instructions)if(i instanceof FieldInsnNode f&&f.owner.equals(wanted.owner)&&f.name.equals(wanted.name)&&f.desc.equals(wanted.desc))count++;return count;}

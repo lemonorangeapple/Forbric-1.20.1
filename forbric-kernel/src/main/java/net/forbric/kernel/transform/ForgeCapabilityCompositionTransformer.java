@@ -149,7 +149,10 @@ public final class ForgeCapabilityCompositionTransformer implements ClassTransfo
 	}
 
 	public static boolean enabled() {
-		return !"off".equalsIgnoreCase(System.getProperty(PROPERTY, "on"));
+		// The 26.2 merged base put Entity/BlockEntity/Level under NeoForge's AttachmentHolder, so composition was
+		// needed to give them Forge capabilities. On the 1.20.1 Forge-patched base, Forge's own patches already
+		// make those types ICapabilityProviders, so the repair is off by default (enable with -Dforbric.forgeCapabilities=on).
+		return !"off".equalsIgnoreCase(System.getProperty(PROPERTY, "off"));
 	}
 
 	/** The roots composed so far this boot (for the audit that names mods losing the feature). */
@@ -290,7 +293,7 @@ public final class ForgeCapabilityCompositionTransformer implements ClassTransfo
 		int inits = 0;
 		for (MethodNode method : node.methods) {
 			if (!"<init>".equals(method.name)) continue;
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn instanceof MethodInsnNode call && "initCapabilities".equals(call.name) && SERVER_LEVEL.equals(call.owner)) return false;
 			}
 		}
@@ -298,9 +301,9 @@ public final class ForgeCapabilityCompositionTransformer implements ClassTransfo
 		MethodNode ctor = null;
 		for (MethodNode method : node.methods) {
 			if (!"<init>".equals(method.name)) continue;
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn instanceof MethodInsnNode call && call.getOpcode() == Opcodes.INVOKESTATIC
-						&& "net/neoforged/neoforge/attachment/LevelAttachmentsSavedData".equals(call.owner) && "init".equals(call.name)) {
+						&& "net/minecraftforge/attachment/LevelAttachmentsSavedData".equals(call.owner) && "init".equals(call.name)) {
 					inits++;
 					anchor = call;
 					ctor = method;
@@ -325,7 +328,7 @@ public final class ForgeCapabilityCompositionTransformer implements ClassTransfo
 	private static boolean initLevelChunkProvider(ClassNode node) {
 		if (!hasField(node, "capProvider")) return false;
 		for (MethodNode method : node.methods) {
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn instanceof FieldInsnNode field && field.getOpcode() == Opcodes.PUTFIELD && "capProvider".equals(field.name)) return false;
 			}
 		}
@@ -339,7 +342,7 @@ public final class ForgeCapabilityCompositionTransformer implements ClassTransfo
 		}
 		FieldInsnNode anchor = null;
 		int anchors = 0, returns = 0;
-		for (AbstractInsnNode insn = ctor.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = ctor.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof FieldInsnNode field && field.getOpcode() == Opcodes.PUTFIELD && "unsavedListener".equals(field.name)) {
 				anchors++;
 				anchor = field;
@@ -359,7 +362,7 @@ public final class ForgeCapabilityCompositionTransformer implements ClassTransfo
 		create.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, LEVEL_CHUNKS_PROVIDER, "<init>", "(L" + LEVEL_CHUNK + ";)V", false));
 		create.add(new FieldInsnNode(Opcodes.PUTFIELD, LEVEL_CHUNK, "capProvider", "L" + LEVEL_CHUNKS_PROVIDER + ";"));
 		ctor.instructions.insert(anchor, create);
-		for (AbstractInsnNode insn = ctor.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = ctor.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn.getOpcode() != Opcodes.RETURN) continue;
 			InsnList init = new InsnList();
 			init.add(new VarInsnNode(Opcodes.ALOAD, 0));
@@ -404,7 +407,7 @@ public final class ForgeCapabilityCompositionTransformer implements ClassTransfo
 		// The sequence: from the instruction after the super reviveCaps call to the PUTFIELD, straight-line.
 		AbstractInsnNode start = null;
 		FieldInsnNode put = null;
-		for (AbstractInsnNode insn = revive.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = revive.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (start == null && insn instanceof MethodInsnNode call && call.getOpcode() == Opcodes.INVOKESPECIAL
 					&& "reviveCaps".equals(call.name)) {
 				start = call.getNext();
@@ -424,7 +427,7 @@ public final class ForgeCapabilityCompositionTransformer implements ClassTransfo
 		// Labels, line numbers and frames are not instructions and are not copied; a label that something JUMPS to
 		// means control can enter the sequence sideways, which is the one thing that makes it not an initializer.
 		Set<LabelNode> jumpedTo = new java.util.HashSet<>();
-		for (AbstractInsnNode insn = revive.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = revive.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof JumpInsnNode jump) jumpedTo.add(jump.label);
 			if (insn instanceof TableSwitchInsnNode sw) { jumpedTo.add(sw.dflt); jumpedTo.addAll(sw.labels); }
 			if (insn instanceof LookupSwitchInsnNode sw) { jumpedTo.add(sw.dflt); jumpedTo.addAll(sw.labels); }
@@ -456,7 +459,7 @@ public final class ForgeCapabilityCompositionTransformer implements ClassTransfo
 		for (MethodNode ctor : node.methods) {
 			if (!"<init>".equals(ctor.name)) continue;
 			MethodInsnNode superCall = null;
-			for (AbstractInsnNode insn = ctor.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+			for (AbstractInsnNode insn = ctor.instructions.get(0); insn != null; insn = insn.getNext()) {
 				if (insn instanceof MethodInsnNode call && call.getOpcode() == Opcodes.INVOKESPECIAL
 						&& "<init>".equals(call.name) && (node.superName.equals(call.owner) || node.name.equals(call.owner))) {
 					superCall = call;
@@ -484,7 +487,7 @@ public final class ForgeCapabilityCompositionTransformer implements ClassTransfo
 	}
 
 	private static boolean assigns(MethodNode method, String owner, String field) {
-		for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof FieldInsnNode f && f.getOpcode() == Opcodes.PUTFIELD && owner.equals(f.owner)
 					&& field.equals(f.name)) {
 				return true;
@@ -507,7 +510,7 @@ public final class ForgeCapabilityCompositionTransformer implements ClassTransfo
 		String inserted = ((MethodInsnNode) insert.getLast()).name;
 		MethodInsnNode anchor = null;
 		int anchors = 0;
-		for (AbstractInsnNode insn = target.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = target.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (!(insn instanceof MethodInsnNode call) || !node.name.equals(call.owner) && !anchorOwner.equals(call.owner)) continue;
 			if (inserted.equals(call.name) && "()V".equals(call.desc)) return false;    // already there
 			if (anchorName.equals(call.name) && anchorDesc.equals(call.desc)) {
@@ -529,7 +532,7 @@ public final class ForgeCapabilityCompositionTransformer implements ClassTransfo
 		MethodNode target = findMethod(node, method, desc);
 		if (target == null || callsRuntime(target)) return false;
 		int returns = 0;
-		for (AbstractInsnNode insn = target.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = target.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn.getOpcode() != Opcodes.RETURN) continue;
 			InsnList save = new InsnList();
 			save.add(new VarInsnNode(Opcodes.ALOAD, 0));
@@ -550,7 +553,7 @@ public final class ForgeCapabilityCompositionTransformer implements ClassTransfo
 		MethodNode target = findMethod(node, method, desc);
 		if (target == null || callsRuntime(target)) return false;
 		int returns = 0;
-		for (AbstractInsnNode insn = target.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = target.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn.getOpcode() != Opcodes.RETURN) continue;
 			InsnList load = new InsnList();
 			load.add(new VarInsnNode(Opcodes.ALOAD, 0));
@@ -567,7 +570,7 @@ public final class ForgeCapabilityCompositionTransformer implements ClassTransfo
 	}
 
 	private static boolean callsRuntime(MethodNode method) {
-		for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = method.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof MethodInsnNode call && RUNTIME.equals(call.owner)) return true;
 		}
 		return false;

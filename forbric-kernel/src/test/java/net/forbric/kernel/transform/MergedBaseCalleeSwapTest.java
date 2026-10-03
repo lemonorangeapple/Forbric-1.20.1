@@ -231,14 +231,14 @@ class MergedBaseCalleeSwapTest {
 
 	private static List<AbstractInsnNode> real(MethodNode m) {
 		List<AbstractInsnNode> out = new ArrayList<>();
-		for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) if (insn.getOpcode() >= 0) out.add(insn);
+		for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) if (insn.getOpcode() >= 0) out.add(insn);
 		return out;
 	}
 
 	/** Where a label lands, counted in real instructions, so two bodies with different constant pools compare. */
 	private static int at(MethodNode m, LabelNode label) {
 		int index = 0;
-		for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null && insn != label; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = m.instructions.get(0); insn != null && insn != label; insn = insn.getNext()) {
 			if (insn.getOpcode() >= 0) index++;
 		}
 		return index;
@@ -355,7 +355,7 @@ class MergedBaseCalleeSwapTest {
 	private static Map<String, Integer> calls(MethodNode m) {
 		Map<String, Integer> out = new LinkedHashMap<>();
 		if (m.instructions == null) return out;
-		for (AbstractInsnNode insn = m.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = m.instructions.get(0); insn != null; insn = insn.getNext()) {
 			if (insn instanceof MethodInsnNode c) out.merge(c.owner + "|" + c.name + "|" + c.desc, 1, Integer::sum);
 		}
 		return out;
@@ -376,7 +376,7 @@ class MergedBaseCalleeSwapTest {
 	private static boolean delegatesTo(MethodNode body, String callee, String desc) {
 		if (body.instructions == null || body.instructions.size() == 0) return false;
 		MethodInsnNode call = null;
-		for (AbstractInsnNode insn = body.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+		for (AbstractInsnNode insn = body.instructions.get(0); insn != null; insn = insn.getNext()) {
 			int op = insn.getOpcode();
 			if (op < 0) continue;
 			if (insn instanceof VarInsnNode) continue;

@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -80,6 +81,47 @@ public final class TransformChain {
 	 */
 	private volatile Set<String> watched;
 
+	/**
+	 * The binary names (slash form, no {@code .class}) of every runtime class actually shipped in an owned runtime
+	 * jar. A transformer that injects a call into a runtime class absent from this set is registered, then throws
+	 * {@code NoClassDefFoundError} the first time the injected path runs — deep inside worldgen or a client screen.
+	 * Knowing the set up front turns that into a skip at bootstrap.
+	 */
+	private volatile Set<String> presentRuntimeClasses = Set.of();
+
+	/** Tells the chain which {@code net/forbric/kernel/runtime} classes exist, so it can drop the ones that don't. */
+	public void acceptRuntimeClasses(Set<String> presentRuntimeClasses) {
+		this.presentRuntimeClasses = presentRuntimeClasses == null ? Set.of() : Set.copyOf(presentRuntimeClasses);
+	}
+
+	/**
+	 * The {@code net/forbric/kernel/runtime/...} names a transformer's own bytecode names. Injected calls are built
+	 * from string constants, so they are visible in the constant pool and nothing else needs to be declared.
+	 */
+	private static Set<String> referencedRuntimeClasses(Class<?> transformer) {
+		Set<String> out = new HashSet<>();
+		try (java.io.InputStream in = transformer.getClassLoader()
+				.getResourceAsStream(transformer.getName().replace('.', '/') + ".class")) {
+			if (in == null) return out;
+			String text = new String(in.readAllBytes(), java.nio.charset.StandardCharsets.ISO_8859_1);
+			String prefix = "net/forbric/kernel/runtime/";
+			int i = 0;
+			while ((i = text.indexOf(prefix, i)) >= 0) {
+				int j = i + prefix.length();
+				while (j < text.length()) {
+					char c = text.charAt(j);
+					if (c == '/' || c == '$' || Character.isLetterOrDigit(c) || c == '_') j++;
+					else break;
+				}
+				out.add(text.substring(i, j));
+				i = j;
+			}
+		} catch (java.io.IOException ignored) {
+			// no bytes to inspect: do not skip a transformer on a classpath we cannot read
+		}
+		return out;
+	}
+
 	/** Registers a transformer with default ordering (sort index 0, no pre-depends). */
 	public void register(TransformPhase phase, ClassTransformer transformer) {
 		register(phase, transformer, 0);
@@ -104,6 +146,18 @@ public final class TransformChain {
 
 		if (phase == TransformPhase.MIXIN) {
 			throw new IllegalArgumentException("MIXIN is terminal and exclusive; it cannot be registered into the chain");
+		}
+
+		Set<String> present = presentRuntimeClasses;
+		if (!present.isEmpty()) {
+			for (String referenced : referencedRuntimeClasses(transformer.getClass())) {
+				if (!present.contains(referenced)) {
+					ForbricLog.warn("[Forbric/Transform] skipping %s — it injects a call into %s, which is not in the "
+							+ "runtime jar; leaving the target untransformed instead of failing at runtime",
+							transformer.name(), referenced.replace('/', '.'));
+					return;
+				}
+			}
 		}
 
 		String[] deps = predepends == null ? new String[0] : predepends.clone();

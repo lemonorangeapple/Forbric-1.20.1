@@ -2,6 +2,9 @@ plugins {
 	id 'java'
 }
 
+// Target versions come from VERSIONS.properties -- the single source of truth.
+apply from: file('../gradle/forbric-versions.gradle')
+
 group = 'net.forbric'
 version = '0.3.1-beta2'
 
@@ -37,6 +40,21 @@ def genResources = layout.buildDirectory.dir('generated-resources')
 // machine with no prebuilt artifacts into one that can make them; fetching them over the network
 // would add a way for the build step to fail before it starts, to save a quarter of a megabyte.
 def genTools = layout.buildDirectory.dir('generated-tools')
+// VERSIONS.properties (the repository's single source of truth for target versions) travels into the
+// installer jar so Pins (and the artifact builder) read the same values this build did. Declared here,
+// early, so devToolsJar can carry it too. Both the slim and the bundled build carry it.
+def genVersions = layout.buildDirectory.dir('generated-versions')
+tasks.register('bundleVersions') {
+	description = "Copy VERSIONS.properties into the installer's resources."
+	inputs.file(forbricVersionsFile).withPropertyName('versions')
+	outputs.dir(genVersions)
+	doLast {
+		def outDir = genVersions.get().asFile
+		outDir.deleteDir()
+		outDir.mkdirs()
+		new File(outDir, 'forbric-versions.properties').text = forbricVersionsFile.getText('UTF-8')
+	}
+}
 def isWindows = System.getProperty('os.name').toLowerCase().contains('win')
 // The reviewed link baseline the merge-tools jar carries: the same file build-merged-base.sh and gate-m0 read.
 def linkBaseline = file("${loaderDir}/src/test/resources/merge/link-check-baseline.txt")
@@ -86,9 +104,10 @@ tasks.register('buildMergeTools', Exec) {
 tasks.register('devToolsJar', Jar) {
 	group = 'development'
 	description = 'Build the portable development artifact preparer without the player payload.'
-	dependsOn 'compileJava', 'buildMergeTools'
+	dependsOn 'compileJava', 'buildMergeTools', 'bundleVersions', 'buildLoaderJars'
 	archiveFileName = 'forbric-dev-tools.jar'
 	from sourceSets.main.output.classesDirs
+	from genVersions
 	into('forbric/tools') {
 		from(mergeToolsJar) { rename '.*', 'forbric-merge-tools.jar' }
 	}
@@ -97,22 +116,21 @@ tasks.register('devToolsJar', Jar) {
 
 def linkGateClasses = tasks.register('compileLinkGateTest', JavaCompile) {
 	dependsOn 'compileJava'
-	// The supplied-artifact content check and the window's path fields ride along: the gate's main calls both, so
-	// every runner of linkGateTest (CI, the kernel's linkToolTest) exercises them too.
+	// The merge-repair pipeline this gate exercised is gone: 1.20.1 runs one Forge family on a single merged base,
+	// so there is no link gate to prove. What remains is the installer window's path/input handling.
 	source = fileTree('src/test/java') {
-		include '**/MergedBaseLinkGateTest.java', '**/SuppliedArtifactContentTest.java',
-				'**/InstallerWindowInputTest.java'
+		include '**/InstallerWindowInputTest.java'
 	}
 	classpath = files(sourceSets.main.output.classesDirs)
 	destinationDirectory = layout.buildDirectory.dir('link-gate-classes')
 }
 tasks.register('linkGateTest', JavaExec) {
 	group = 'verification'
-	description = 'Exercise the packaged merge link gate with synthetic positive and negative controls.'
+	description = "Exercise the installer window's input handling headlessly."
 	dependsOn linkGateClasses, 'devToolsJar'
 	classpath = files(linkGateClasses.flatMap { it.destinationDirectory },
 			tasks.named('devToolsJar').flatMap { it.archiveFile })
-	mainClass = 'net.forbric.installer.kernel.MergedBaseLinkGateTest'
+	mainClass = 'net.forbric.installer.kernel.InstallerWindowInputTest'
 	doFirst {
 		def scratch = layout.buildDirectory.dir('link-gate-test').get().asFile
 		scratch.deleteDir()
@@ -179,9 +197,12 @@ tasks.register('bundleForbric') {
 		cpOut.readLines().findAll { it.contains(File.pathSeparator) }.last()
 				.split(File.pathSeparator).each { String entry ->
 			def jar = new File(entry)
-			if (!jar.isFile() || !entry.contains(cacheRoot)) return   // Forbric's own jars are added above
+			// Windows classpath entries spell the cache with backslashes; a forward-slash needle matches nothing and
+			// every kernel dependency is silently dropped from the bundle (the installed profile then cannot boot).
+			def normalized = entry.replace('\\', '/')
+			if (!jar.isFile() || !normalized.contains(cacheRoot)) return   // Forbric's own jars are added above
 			// <cache>/files-2.1/<group>/<name>/<version>/<sha>/<file>.jar
-			def rest = entry.substring(entry.indexOf(cacheRoot) + cacheRoot.length()).split('/')
+			def rest = normalized.substring(normalized.indexOf(cacheRoot) + cacheRoot.length()).split('/')
 			if (rest.length < 5) return
 			add("${rest[0]}:${rest[1]}:${rest[2]}".toString(), jar)
 		}
@@ -225,6 +246,9 @@ tasks.register('bundleTools') {
 
 sourceSets.main.resources.srcDir genTools
 processResources.dependsOn 'bundleTools'
+
+sourceSets.main.resources.srcDir genVersions
+processResources.dependsOn 'bundleVersions'
 
 // A slim installer carries no library payload and downloads it from the release at install time. The bundled
 // build stays the default because it is the one that works with no network.

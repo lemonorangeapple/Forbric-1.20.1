@@ -109,7 +109,7 @@ class CarrierStubCensusTest {
 	private static void assertRow(TreeSet<String> rows, String head, String columns) {
 		List<String> matching = rows.stream().filter(r -> r.startsWith(head)).toList();
 		assertEquals(1, matching.size(), head + ": " + matching);
-		assertTrue(matching.getFirst().endsWith(" " + columns), matching.getFirst());
+		assertTrue(matching.get(0).endsWith(" " + columns), matching.get(0));
 	}
 
 	private static ClassNode entry(ZipFile jar, String name) throws Exception {
